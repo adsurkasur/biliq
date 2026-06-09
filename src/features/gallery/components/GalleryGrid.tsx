@@ -53,7 +53,7 @@ export function GalleryGrid({ eventSlug }: GalleryGridProps) {
   if (status === "Loading gallery...") {
     return (
       <Card className="p-8 text-center">
-        <Spinner label={status} className="justify-center text-stone-600" />
+        <Spinner label={status} className="justify-center text-[var(--booth-on-surface-variant)]" />
       </Card>
     );
   }
@@ -77,7 +77,7 @@ export function GalleryGrid({ eventSlug }: GalleryGridProps) {
             interactive
             className="motion-card overflow-hidden"
           >
-            <Link href={routes.photo(photo.id)} className="group block bg-stone-100">
+            <Link href={routes.photo(photo.id)} className="group block bg-[var(--booth-surface-container)]">
               <img
                 src={photo.thumbnailDataUrl ?? photo.imageDataUrl}
                 alt="Saved booth output"
@@ -86,7 +86,7 @@ export function GalleryGrid({ eventSlug }: GalleryGridProps) {
             </Link>
 
             <div className="grid gap-3 p-3">
-              <div className="text-xs font-semibold uppercase tracking-wide text-stone-500">
+              <div className="text-xs font-semibold uppercase tracking-wide text-[var(--booth-on-surface-variant)]">
                 {new Date(photo.createdAt).toLocaleString()}
               </div>
 

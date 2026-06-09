@@ -35,7 +35,7 @@ export function PrintClient({ photoId }: PrintClientProps) {
       return (
         <main className="grid min-h-screen place-items-center px-5 py-8">
           <Card className="p-6">
-            <Spinner label={status} className="text-stone-600" />
+            <Spinner label={status} className="text-[var(--booth-on-surface-variant)]" />
           </Card>
         </main>
       );
@@ -72,8 +72,8 @@ export function PrintClient({ photoId }: PrintClientProps) {
   }
 
   return (
-    <main className="print-shell min-h-screen bg-white px-5 py-6 sm:px-8 lg:px-10">
-      <div className="no-print motion-enter mx-auto mb-5 flex max-w-5xl flex-wrap items-center justify-between gap-3 rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
+    <main className="print-shell min-h-screen bg-white px-5 py-8 sm:px-8 lg:px-10">
+      <div className="no-print motion-enter mx-auto mb-5 flex max-w-5xl flex-wrap items-center justify-between gap-3 rounded-[var(--booth-radius-xl)] border border-[var(--booth-outline-variant)]/20 bg-[var(--booth-surface-container-lowest)] p-4 shadow-[var(--booth-elevation-1)]">
         <Link
           href={routes.photo(photo.id)}
           className={buttonClassName({ variant: "secondary" })}
@@ -95,7 +95,7 @@ export function PrintClient({ photoId }: PrintClientProps) {
       <img
         src={photo.imageDataUrl}
         alt="Printable photo booth output"
-        className="print-image result-reveal mx-auto max-h-[calc(100vh-120px)] w-auto max-w-full rounded-md object-contain shadow-booth"
+        className="print-image result-reveal mx-auto max-h-[calc(100vh-120px)] w-auto max-w-full rounded-[var(--booth-radius-md)] object-contain shadow-[var(--booth-elevation-3)]"
       />
     </main>
   );

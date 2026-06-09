@@ -18,10 +18,13 @@ export function Toast({ children, tone = "info", className }: ToastProps) {
     <div
       role="status"
       className={cn(
-        "motion-toast inline-flex items-start gap-2 rounded-md border px-4 py-3 text-sm font-semibold shadow-sm",
-        tone === "success" && "border-teal-200 bg-teal-50 text-teal-900",
-        tone === "info" && "border-stone-200 bg-white text-stone-700",
-        tone === "error" && "border-red-200 bg-red-50 text-red-900",
+        "motion-toast inline-flex items-start gap-3 rounded-[var(--booth-radius-lg)] px-4 py-3 text-sm font-semibold shadow-[var(--booth-elevation-2)]",
+        tone === "success" &&
+          "bg-[var(--booth-primary-container)] text-[var(--booth-on-primary-container)]",
+        tone === "info" &&
+          "bg-[var(--booth-surface-container-high)] text-[var(--booth-on-surface)]",
+        tone === "error" &&
+          "bg-[var(--booth-error-container)] text-[var(--booth-on-error-container)]",
         className
       )}
     >

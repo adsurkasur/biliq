@@ -27,27 +27,27 @@ export function DesignerOverlayPanel({
     overlayDimensions?.height === outputHeight;
 
   return (
-    <Card className="motion-card p-4">
+    <Card className="motion-card p-5">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-teal-800">
+          <p className="text-sm font-semibold uppercase tracking-wide text-[var(--booth-primary)]">
             Overlay PNG
           </p>
-          <h2 className="mt-1 text-xl font-bold text-stone-950">
+          <h2 className="mt-1 text-xl font-bold text-[var(--booth-on-surface)]">
             Transparent frame
           </h2>
         </div>
-        <ImagePlus className="h-5 w-5 text-teal-700" aria-hidden="true" />
+        <ImagePlus className="h-5 w-5 text-[var(--booth-primary)]" aria-hidden="true" />
       </div>
 
-      <p className="mt-3 rounded-md bg-teal-50 p-3 text-sm font-medium leading-6 text-teal-950">
+      <p className="mt-3 rounded-[var(--booth-radius-md)] bg-[var(--booth-primary-container)]/30 p-3 text-sm font-medium leading-6 text-[var(--booth-on-primary-container)]">
         Recommended size: {outputWidth} x {outputHeight} px. Mismatched PNGs are
         allowed, but may not line up perfectly with the live viewfinder and final
         output.
       </p>
 
-      <label className="booth-focus-ring mt-4 flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-stone-300 bg-stone-50 px-4 py-5 text-sm font-semibold text-stone-800 transition hover:-translate-y-0.5 hover:border-teal-700 hover:bg-teal-50/50">
-        <ImagePlus className="h-5 w-5 text-stone-500" aria-hidden="true" />
+      <label className="booth-focus-ring mt-4 flex cursor-pointer items-center justify-center gap-2 rounded-[var(--booth-radius-lg)] border border-dashed border-[var(--booth-outline-variant)] bg-[var(--booth-surface-container)] px-4 py-5 text-sm font-semibold text-[var(--booth-on-surface)] transition-all hover:border-[var(--booth-primary)] hover:bg-[var(--booth-primary-container)]/15 hover:-translate-y-0.5">
+        <ImagePlus className="h-5 w-5 text-[var(--booth-on-surface-variant)]" aria-hidden="true" />
         Upload or replace overlay
         <input
           type="file"
@@ -57,20 +57,20 @@ export function DesignerOverlayPanel({
         />
       </label>
 
-      <div className="mt-4 rounded-md border border-stone-200 bg-stone-50 p-3">
-        <p className="text-sm font-semibold text-stone-950">Current overlay</p>
-        <p className="mt-1 text-sm font-medium text-stone-600">
+      <div className="mt-4 rounded-[var(--booth-radius-md)] border border-[var(--booth-outline-variant)]/30 bg-[var(--booth-surface-container)] p-3">
+        <p className="text-sm font-semibold text-[var(--booth-on-surface)]">Current overlay</p>
+        <p className="mt-1 text-sm font-medium text-[var(--booth-on-surface-variant)]">
           {overlayDataUrl ? overlayFileName || "Overlay uploaded" : "None uploaded"}
         </p>
 
         {overlayDimensions ? (
           <div className="mt-3 flex items-start gap-2 text-sm font-medium">
             {overlayMatches ? (
-              <CheckCircle2 className="mt-0.5 h-4 w-4 flex-none text-teal-700" />
+              <CheckCircle2 className="mt-0.5 h-4 w-4 flex-none text-[var(--booth-primary)]" />
             ) : (
-              <AlertTriangle className="mt-0.5 h-4 w-4 flex-none text-amber-600" />
+              <AlertTriangle className="mt-0.5 h-4 w-4 flex-none text-[var(--booth-tertiary)]" />
             )}
-            <p className={overlayMatches ? "text-teal-800" : "text-amber-800"}>
+            <p className={overlayMatches ? "text-[var(--booth-on-primary-container)]" : "text-[var(--booth-on-tertiary-container)]"}>
               Uploaded size: {overlayDimensions.width} x {overlayDimensions.height} px.
               {overlayMatches
                 ? " Matches this event output."
@@ -91,7 +91,7 @@ export function DesignerOverlayPanel({
           Remove overlay
         </Button>
       ) : (
-        <div className="motion-pop mt-4 rounded-md border border-dashed border-stone-300 bg-stone-50 p-4 text-sm font-medium text-stone-600">
+        <div className="motion-pop mt-4 rounded-[var(--booth-radius-md)] border border-dashed border-[var(--booth-outline-variant)] bg-[var(--booth-surface-container)] p-4 text-sm font-medium text-[var(--booth-on-surface-variant)]">
           No overlay yet. Upload a transparent PNG to preview it above the layout
           slots.
         </div>

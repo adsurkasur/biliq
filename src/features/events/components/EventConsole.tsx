@@ -9,7 +9,7 @@ import {
   Palette,
   Pencil,
   Plus,
-  Settings,
+  Sparkles,
   Trash2,
 } from "lucide-react";
 import { deleteEventConfig, getEvents } from "@/domain/events/storage";
@@ -66,20 +66,20 @@ export function EventConsole() {
   }
 
   return (
-    <main className="min-h-screen px-5 py-6 sm:px-8 lg:px-10">
-      <div className="mx-auto grid max-w-6xl gap-8">
-        <header className="flex flex-wrap items-center justify-between gap-4 border-b border-stone-200 pb-6">
+    <main className="min-h-screen px-5 py-8 sm:px-8 lg:px-10">
+      <div className="mx-auto grid max-w-6xl gap-8 motion-enter">
+        <header className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--booth-outline-variant)]/30 pb-6">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-teal-800">
+            <p className="text-sm font-semibold uppercase tracking-wide text-[var(--booth-primary)]">
               Local Web Photo Booth
             </p>
-            <h1 className="mt-2 text-3xl font-bold text-stone-950 sm:text-4xl">
+            <h1 className="mt-2 text-3xl font-bold text-[var(--booth-on-surface)] sm:text-4xl">
               Event console
             </h1>
           </div>
           <Link
             href={routes.setup()}
-            className="booth-focus-ring inline-flex min-h-12 items-center gap-2 rounded-md bg-teal-700 px-5 py-3 font-semibold text-white hover:bg-teal-800"
+            className={buttonClassName({ variant: "primary", size: "lg" })}
           >
             <Plus className="h-5 w-5" aria-hidden="true" />
             New event
@@ -90,9 +90,9 @@ export function EventConsole() {
 
         {events.length ? (
           <section className="grid gap-4">
-            <div className="flex items-center gap-2 text-stone-700">
-              <Settings className="h-5 w-5 text-teal-700" aria-hidden="true" />
-              <h2 className="text-xl font-semibold text-stone-950">Local events</h2>
+            <div className="flex items-center gap-2 text-[var(--booth-on-surface-variant)]">
+              <Sparkles className="h-5 w-5 text-[var(--booth-primary)]" aria-hidden="true" />
+              <h2 className="text-xl font-semibold text-[var(--booth-on-surface)]">Local events</h2>
             </div>
 
             <div className="grid gap-3">
@@ -101,18 +101,18 @@ export function EventConsole() {
                   as="article"
                   key={event.id}
                   interactive
-                  className="motion-card flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between"
+                  className="motion-card flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="truncate text-lg font-semibold text-stone-950">
+                      <h3 className="truncate text-lg font-semibold text-[var(--booth-on-surface)]">
                         {event.name}
                       </h3>
                       <Badge tone={event.customLayout ? "teal" : "neutral"}>
                         {event.customLayout ? "Custom layout" : "Preset"}
                       </Badge>
                     </div>
-                    <p className="mt-2 text-sm font-medium text-stone-500">
+                    <p className="mt-2 text-sm font-medium text-[var(--booth-on-surface-variant)]">
                       /booth/{event.slug} · {event.outputWidth} x {event.outputHeight}
                     </p>
                   </div>
@@ -120,28 +120,28 @@ export function EventConsole() {
                   <div className="grid grid-cols-2 gap-2 sm:flex">
                     <Link
                       href={routes.booth(event.slug)}
-                      className={buttonClassName({ variant: "dark" })}
+                      className={buttonClassName({ variant: "dark", size: "sm" })}
                     >
                       <Camera className="h-4 w-4" aria-hidden="true" />
                       Booth
                     </Link>
                     <Link
                       href={routes.gallery(event.slug)}
-                      className={buttonClassName({ variant: "secondary" })}
+                      className={buttonClassName({ variant: "secondary", size: "sm" })}
                     >
                       <GalleryHorizontal className="h-4 w-4" aria-hidden="true" />
                       Gallery
                     </Link>
                     <Link
                       href={routes.designer(event.slug)}
-                      className={buttonClassName({ variant: "secondary" })}
+                      className={buttonClassName({ variant: "secondary", size: "sm" })}
                     >
                       <Palette className="h-4 w-4" aria-hidden="true" />
                       Designer
                     </Link>
                     <Link
                       href={routes.setup(event.slug)}
-                      className={buttonClassName({ variant: "secondary" })}
+                      className={buttonClassName({ variant: "secondary", size: "sm" })}
                     >
                       <Pencil className="h-4 w-4" aria-hidden="true" />
                       Edit
@@ -150,6 +150,7 @@ export function EventConsole() {
                       type="button"
                       onClick={() => setDeleteTarget(event)}
                       variant="danger"
+                      size="sm"
                     >
                       <Trash2 className="h-4 w-4" aria-hidden="true" />
                       Delete
@@ -181,18 +182,18 @@ export function EventConsole() {
       {deleteTarget ? (
         <Modal title="Delete event?" onClose={() => setDeleteTarget(null)}>
           <div className="mt-4 flex items-start gap-3">
-            <span className="grid h-10 w-10 flex-none place-items-center rounded-full bg-red-50 text-red-700">
+            <span className="grid h-10 w-10 flex-none place-items-center rounded-[var(--booth-radius-full)] bg-[var(--booth-error-container)] text-[var(--booth-on-error-container)]">
               <AlertTriangle className="h-5 w-5" aria-hidden="true" />
             </span>
             <div>
-              <p className="text-sm font-medium leading-6 text-stone-600">
-                This removes "{deleteTarget.name}" from this browser and deletes the
+              <p className="text-sm font-medium leading-6 text-[var(--booth-on-surface-variant)]">
+                This removes &ldquo;{deleteTarget.name}&rdquo; from this browser and deletes the
                 saved local photos for this event. This cannot be undone.
               </p>
             </div>
           </div>
 
-          <div className="mt-5 grid gap-2 sm:grid-cols-2">
+          <div className="mt-6 grid gap-2 sm:grid-cols-2">
             <Button
               type="button"
               onClick={() => setDeleteTarget(null)}

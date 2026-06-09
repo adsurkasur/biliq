@@ -41,7 +41,7 @@ export function PhotoDetailClient({ photoId }: PhotoDetailClientProps) {
       return (
         <main className="grid min-h-screen place-items-center px-5 py-8">
           <Card className="p-6">
-            <Spinner label={status} className="text-stone-600" />
+            <Spinner label={status} className="text-[var(--booth-on-surface-variant)]" />
           </Card>
         </main>
       );
@@ -72,14 +72,14 @@ export function PhotoDetailClient({ photoId }: PhotoDetailClientProps) {
   }
 
   return (
-    <main className="min-h-screen px-5 py-6 sm:px-8 lg:px-10">
+    <main className="min-h-screen px-5 py-8 sm:px-8 lg:px-10">
       <div className="mx-auto grid max-w-6xl gap-6 motion-enter">
-        <header className="flex flex-wrap items-center justify-between gap-4 border-b border-stone-200 pb-6">
+        <header className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--booth-outline-variant)]/30 pb-6">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-teal-800">
+            <p className="text-sm font-semibold uppercase tracking-wide text-[var(--booth-primary)]">
               {photo.eventSlug}
             </p>
-            <h1 className="mt-2 text-3xl font-bold text-stone-950 sm:text-4xl">
+            <h1 className="mt-2 text-3xl font-bold text-[var(--booth-on-surface)] sm:text-4xl">
               Photo
             </h1>
           </div>
@@ -97,16 +97,16 @@ export function PhotoDetailClient({ photoId }: PhotoDetailClientProps) {
             <img
               src={photo.imageDataUrl}
               alt="Saved photo booth output"
-              className="mx-auto max-h-[78vh] w-auto max-w-full rounded-md object-contain"
+              className="mx-auto max-h-[78vh] w-auto max-w-full rounded-[var(--booth-radius-md)] object-contain"
             />
           </Card>
 
           <aside className="grid content-start gap-4">
-            <Card className="motion-card p-4">
-              <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+            <Card className="motion-card p-5">
+              <p className="text-sm font-semibold uppercase tracking-wide text-[var(--booth-on-surface-variant)]">
                 Saved
               </p>
-              <p className="mt-1 font-semibold text-stone-950">
+              <p className="mt-1 font-semibold text-[var(--booth-on-surface)]">
                 {new Date(photo.createdAt).toLocaleString()}
               </p>
               <div className="mt-4 grid gap-3">

@@ -16,30 +16,30 @@ export function DesignerCanvasPreview({
   onSelectSlot
 }: DesignerCanvasPreviewProps) {
   return (
-    <section className="motion-card rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
+    <section className="motion-card rounded-[var(--booth-radius-xl)] border border-[var(--booth-outline-variant)]/20 bg-[var(--booth-surface-container-lowest)] p-5 shadow-[var(--booth-elevation-1)]">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-teal-800">
+          <p className="text-sm font-semibold uppercase tracking-wide text-[var(--booth-primary)]">
             Live layout preview
           </p>
-          <h2 className="mt-1 text-xl font-bold text-stone-950">
+          <h2 className="mt-1 text-xl font-bold text-[var(--booth-on-surface)]">
             {eventConfig.outputWidth} x {eventConfig.outputHeight} px
           </h2>
         </div>
-        <p className="text-sm font-semibold text-stone-500">
+        <p className="text-sm font-semibold text-[var(--booth-on-surface-variant)]">
           {layout.slots.length} slot{layout.slots.length === 1 ? "" : "s"}
         </p>
       </div>
 
       <div
-        className="relative mx-auto w-full max-w-[720px] overflow-hidden rounded-md border border-stone-300 bg-stone-100"
+        className="relative mx-auto w-full max-w-[720px] overflow-hidden rounded-[var(--booth-radius-lg)] border border-[var(--booth-outline-variant)]/30 bg-[var(--booth-surface-container)]"
         style={{ aspectRatio: `${eventConfig.outputWidth} / ${eventConfig.outputHeight}` }}
       >
         <div
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(45deg, rgba(20,184,166,0.08) 25%, transparent 25%), linear-gradient(-45deg, rgba(20,184,166,0.08) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, rgba(20,184,166,0.08) 75%), linear-gradient(-45deg, transparent 75%, rgba(20,184,166,0.08) 75%)",
+              "linear-gradient(45deg, rgba(0,121,107,0.06) 25%, transparent 25%), linear-gradient(-45deg, rgba(0,121,107,0.06) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, rgba(0,121,107,0.06) 75%), linear-gradient(-45deg, transparent 75%, rgba(0,121,107,0.06) 75%)",
             backgroundPosition: "0 0, 0 16px, 16px -16px, -16px 0",
             backgroundSize: "32px 32px"
           }}
@@ -51,10 +51,10 @@ export function DesignerCanvasPreview({
             key={`${slot.x}-${slot.y}-${slot.width}-${slot.height}-${index}`}
             onClick={() => onSelectSlot(index)}
             className={cn(
-              "booth-focus-ring absolute grid place-items-center border-2 text-center text-xs font-black uppercase tracking-wide shadow-sm transition-all duration-200",
+              "booth-focus-ring absolute grid place-items-center border-2 text-center text-xs font-black uppercase tracking-wide shadow-[var(--booth-elevation-1)] transition-all duration-200",
               selectedSlotIndex === index
-                ? "z-20 border-teal-700 bg-teal-200/85 text-teal-950 ring-4 ring-teal-500/25"
-                : "z-10 border-teal-600 bg-teal-100/70 text-teal-950 hover:bg-teal-200/80"
+                ? "z-20 border-[var(--booth-primary)] bg-[var(--booth-primary-container)]/80 text-[var(--booth-on-primary-container)] ring-4 ring-[var(--booth-primary)]/20"
+                : "z-10 border-[var(--booth-primary)]/60 bg-[var(--booth-primary-container)]/50 text-[var(--booth-on-primary-container)] hover:bg-[var(--booth-primary-container)]/70"
             )}
             style={{
               left: `${(slot.x / layout.canvasWidth) * 100}%`,

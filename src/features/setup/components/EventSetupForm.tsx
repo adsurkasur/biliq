@@ -21,6 +21,11 @@ import { Spinner } from "@/shared/components/ui/Spinner";
 import { Toast } from "@/shared/components/ui/Toast";
 import { routes } from "@/shared/config/routes";
 
+const inputClass =
+  "booth-focus-ring min-h-12 rounded-[var(--booth-radius-md)] border border-[var(--booth-outline-variant)] bg-[var(--booth-surface-container-lowest)] px-4 py-3 text-[var(--booth-on-surface)] transition-colors focus:border-[var(--booth-primary)]";
+
+const labelClass = "text-sm font-semibold text-[var(--booth-on-surface-variant)]";
+
 export function EventSetupForm() {
   const {
     eventConfig,
@@ -41,7 +46,7 @@ export function EventSetupForm() {
   if (!eventConfig) {
     return (
       <Card className="p-6">
-        <Spinner label="Loading setup" className="text-stone-600" />
+        <Spinner label="Loading setup" className="text-[var(--booth-on-surface-variant)]" />
       </Card>
     );
   }
@@ -50,23 +55,23 @@ export function EventSetupForm() {
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-[1fr_380px]">
-      <Card className="motion-card grid gap-5 p-5">
+      <Card className="motion-card grid gap-5 p-6">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-teal-800">
+          <p className="text-sm font-semibold uppercase tracking-wide text-[var(--booth-primary)]">
             Event details
           </p>
-          <h2 className="mt-1 text-xl font-bold text-stone-950">
+          <h2 className="mt-1 text-xl font-bold text-[var(--booth-on-surface)]">
             Capture session
           </h2>
         </div>
 
         <div className="grid gap-2">
-          <label className="text-sm font-semibold text-stone-800" htmlFor="event-name">
+          <label className={labelClass} htmlFor="event-name">
             Event name
           </label>
           <input
             id="event-name"
-            className="booth-focus-ring min-h-12 rounded-md border border-stone-300 bg-white px-4 py-3 text-stone-950 transition focus:border-teal-700"
+            className={inputClass}
             value={eventConfig.name}
             onChange={(event) =>
               updateConfig({
@@ -86,12 +91,12 @@ export function EventSetupForm() {
         </div>
 
         <div className="grid gap-2">
-          <label className="text-sm font-semibold text-stone-800" htmlFor="event-slug">
+          <label className={labelClass} htmlFor="event-slug">
             Event slug
           </label>
           <input
             id="event-slug"
-            className="booth-focus-ring min-h-12 rounded-md border border-stone-300 bg-white px-4 py-3 text-stone-950 transition focus:border-teal-700"
+            className={inputClass}
             value={eventConfig.slug}
             onChange={(event) => updateConfig({ slug: event.target.value })}
             required
@@ -101,7 +106,7 @@ export function EventSetupForm() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="grid gap-2">
             <label
-              className="text-sm font-semibold text-stone-800"
+              className={labelClass}
               htmlFor="countdown"
             >
               Countdown seconds
@@ -111,7 +116,7 @@ export function EventSetupForm() {
               type="number"
               min={0}
               max={10}
-              className="booth-focus-ring min-h-12 rounded-md border border-stone-300 bg-white px-4 py-3 text-stone-950 transition focus:border-teal-700"
+              className={inputClass}
               value={eventConfig.countdownSeconds}
               onChange={(event) =>
                 updateConfig({ countdownSeconds: Number(event.target.value) })
@@ -121,14 +126,14 @@ export function EventSetupForm() {
 
           <div className="grid gap-2">
             <label
-              className="text-sm font-semibold text-stone-800"
+              className={labelClass}
               htmlFor="capture-count"
             >
               Capture count
             </label>
             <select
               id="capture-count"
-              className="booth-focus-ring min-h-12 rounded-md border border-stone-300 bg-white px-4 py-3 text-stone-950 transition focus:border-teal-700"
+              className={inputClass}
               value={clampCaptureCount(eventConfig.captureCount)}
               onChange={(event) =>
                 handleCaptureCountChange(Number(event.target.value))
@@ -146,14 +151,14 @@ export function EventSetupForm() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="grid gap-2">
             <label
-              className="text-sm font-semibold text-stone-800"
+              className={labelClass}
               htmlFor="output-preset"
             >
               Output size
             </label>
             <select
               id="output-preset"
-              className="booth-focus-ring min-h-12 rounded-md border border-stone-300 bg-white px-4 py-3 text-stone-950 transition focus:border-teal-700"
+              className={inputClass}
               value={selectedPresetId}
               onChange={(event) => handleOutputPresetChange(event.target.value)}
             >
@@ -171,12 +176,12 @@ export function EventSetupForm() {
           </div>
 
           <div className="grid gap-2">
-            <label className="text-sm font-semibold text-stone-800" htmlFor="layout">
+            <label className={labelClass} htmlFor="layout">
               Layout preset
             </label>
             <select
               id="layout"
-              className="booth-focus-ring min-h-12 rounded-md border border-stone-300 bg-white px-4 py-3 text-stone-950 transition focus:border-teal-700"
+              className={inputClass}
               value={eventConfig.layoutId}
               onChange={(event) => handleLayoutChange(event.target.value)}
             >
@@ -202,12 +207,12 @@ export function EventSetupForm() {
         />
 
         <div className="grid gap-2">
-          <label className="text-sm font-semibold text-stone-800" htmlFor="printer">
+          <label className={labelClass} htmlFor="printer">
             Printer mode
           </label>
           <select
             id="printer"
-            className="booth-focus-ring min-h-12 rounded-md border border-stone-300 bg-white px-4 py-3 text-stone-950 transition focus:border-teal-700"
+            className={inputClass}
             value={eventConfig.printerMode}
             onChange={() => updateConfig({ printerMode: "browser-print" })}
           >
@@ -227,7 +232,7 @@ export function EventSetupForm() {
           {eventConfig.slug !== "new-event" ? (
             <Link
               href={routes.designer(eventConfig.slug)}
-              className={buttonClassName({ variant: "secondary", size: "lg" })}
+              className={buttonClassName({ variant: "tonal", size: "lg" })}
             >
               <Palette className="h-5 w-5" aria-hidden="true" />
               Open designer

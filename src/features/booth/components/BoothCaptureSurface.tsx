@@ -43,10 +43,10 @@ export function BoothCaptureSurface({
 
   return (
     <main className="h-dvh overflow-hidden bg-stone-950 text-white">
-      <div className="relative flex h-dvh items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_center,rgba(20,184,166,0.14),transparent_32rem)]">
+      <div className="relative flex h-dvh items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_center,rgba(0,121,107,0.12),transparent_32rem)]">
         <header className="motion-enter absolute left-3 right-3 top-3 z-40 flex items-center justify-between gap-3 sm:left-5 sm:right-5">
-          <div className="min-w-0 rounded-full border border-white/10 bg-stone-950/55 px-4 py-2 shadow-booth backdrop-blur">
-            <p className="truncate text-sm font-semibold uppercase tracking-wide text-teal-100">
+          <div className="min-w-0 rounded-[var(--booth-radius-full)] border border-white/10 bg-stone-950/60 px-4 py-2 shadow-[var(--booth-elevation-2)] backdrop-blur-md">
+            <p className="truncate text-sm font-semibold uppercase tracking-wide text-teal-200">
               {eventConfig.name}
             </p>
           </div>
@@ -54,7 +54,7 @@ export function BoothCaptureSurface({
           <div className="flex gap-2">
             <Link
               href={routes.home}
-              className="booth-focus-ring inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-stone-950/55 text-white backdrop-blur transition hover:-translate-y-0.5 hover:bg-stone-800"
+              className="booth-focus-ring inline-flex h-10 w-10 items-center justify-center rounded-[var(--booth-radius-full)] border border-white/10 bg-stone-950/60 text-white backdrop-blur-md transition-all hover:bg-white/15 active:scale-95"
               aria-label="Events"
               title="Events"
             >
@@ -62,7 +62,7 @@ export function BoothCaptureSurface({
             </Link>
             <Link
               href={routes.setup(eventConfig.slug)}
-              className="booth-focus-ring inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-stone-950/55 text-white backdrop-blur transition hover:-translate-y-0.5 hover:bg-stone-800"
+              className="booth-focus-ring inline-flex h-10 w-10 items-center justify-center rounded-[var(--booth-radius-full)] border border-white/10 bg-stone-950/60 text-white backdrop-blur-md transition-all hover:bg-white/15 active:scale-95"
               aria-label="Setup"
               title="Setup"
             >
@@ -70,7 +70,7 @@ export function BoothCaptureSurface({
             </Link>
             <Link
               href={routes.designer(eventConfig.slug)}
-              className="booth-focus-ring inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-stone-950/55 text-white backdrop-blur transition hover:-translate-y-0.5 hover:bg-stone-800"
+              className="booth-focus-ring inline-flex h-10 w-10 items-center justify-center rounded-[var(--booth-radius-full)] border border-white/10 bg-stone-950/60 text-white backdrop-blur-md transition-all hover:bg-white/15 active:scale-95"
               aria-label="Designer"
               title="Designer"
             >
@@ -87,7 +87,7 @@ export function BoothCaptureSurface({
           overlayDataUrl={eventConfig.overlayDataUrl}
           onReady={onCameraReady}
           onError={onCameraError}
-          className="booth-viewfinder-enter rounded-none ring-1 ring-white/10 sm:rounded-xl"
+          className="booth-viewfinder-enter rounded-none ring-1 ring-white/10 sm:rounded-[var(--booth-radius-xl)]"
           style={{
             width: `min(100vw, calc(100dvh * ${frameRatio}))`,
             height: `min(100dvh, calc(100vw * ${frameHeightRatio}))`,
@@ -115,7 +115,7 @@ export function BoothCaptureSurface({
           {captureFeedbackKey > 0 && captureState === "processing" ? (
             <div
               key={`pulse-${captureFeedbackKey}`}
-              className="capture-success-pulse pointer-events-none absolute left-1/2 top-1/2 z-40 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/95 px-5 py-2 text-lg font-black text-stone-950 shadow-booth"
+              className="capture-success-pulse pointer-events-none absolute left-1/2 top-1/2 z-40 -translate-x-1/2 -translate-y-1/2 rounded-[var(--booth-radius-full)] bg-white/95 px-5 py-2 text-lg font-black text-stone-950 shadow-[var(--booth-elevation-3)]"
             >
               Captured
             </div>
@@ -133,7 +133,7 @@ export function BoothCaptureSurface({
               type="button"
               disabled={!canStart}
               onClick={onStart}
-              className="booth-focus-ring booth-start-button pointer-events-auto inline-flex min-h-16 items-center gap-3 rounded-full bg-teal-600 px-8 py-4 text-xl font-black text-white shadow-booth transition hover:bg-teal-500 active:scale-95 disabled:cursor-not-allowed disabled:animate-none disabled:opacity-40"
+              className="booth-focus-ring booth-start-button pointer-events-auto inline-flex min-h-16 items-center gap-3 rounded-[var(--booth-radius-full)] bg-[var(--booth-primary)] px-8 py-4 text-xl font-black text-white shadow-[var(--booth-elevation-3)] transition-all hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:animate-none disabled:opacity-40"
             >
               <Camera className="h-7 w-7" aria-hidden="true" />
               {totalShots > 1 ? `Start ${totalShots} Photos` : "Start"}

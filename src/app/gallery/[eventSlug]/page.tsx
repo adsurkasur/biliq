@@ -16,12 +16,12 @@ export default async function GalleryPage({ params }: GalleryPageProps) {
 
   return (
     <PageShell>
-        <header className="flex flex-wrap items-center justify-between gap-4 border-b border-stone-200 pb-6">
+        <header className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--booth-outline-variant)]/30 pb-6">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-teal-800">
+            <p className="text-sm font-semibold uppercase tracking-wide text-[var(--booth-primary)]">
               {eventSlug}
             </p>
-            <h1 className="mt-2 text-3xl font-bold text-stone-950 sm:text-4xl">
+            <h1 className="mt-2 text-3xl font-bold text-[var(--booth-on-surface)] sm:text-4xl">
               Gallery
             </h1>
           </div>

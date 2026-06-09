@@ -23,6 +23,9 @@ interface SlotEditorProps {
   ) => void;
 }
 
+const fieldInputClass =
+  "booth-focus-ring min-h-11 rounded-[var(--booth-radius-md)] border border-[var(--booth-outline-variant)] bg-[var(--booth-surface-container-lowest)] px-3 py-2 text-[var(--booth-on-surface)] transition-colors focus:border-[var(--booth-primary)]";
+
 export function SlotEditor({
   layout,
   selectedSlotIndex,
@@ -34,13 +37,13 @@ export function SlotEditor({
   onUpdateSlotNumber
 }: SlotEditorProps) {
   return (
-    <Card className="motion-card p-4">
+    <Card className="motion-card p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-teal-800">
+          <p className="text-sm font-semibold uppercase tracking-wide text-[var(--booth-primary)]">
             Photo slots
           </p>
-          <h2 className="mt-1 text-xl font-bold text-stone-950">
+          <h2 className="mt-1 text-xl font-bold text-[var(--booth-on-surface)]">
             Numeric layout
           </h2>
         </div>
@@ -75,16 +78,16 @@ export function SlotEditor({
           <article
             key={`${index}-${slot.x}-${slot.y}`}
             className={cn(
-              "rounded-md border bg-stone-50 p-3 transition-all duration-200",
+              "rounded-[var(--booth-radius-lg)] border p-4 transition-all duration-200",
               selectedSlotIndex === index
-                ? "border-teal-400 shadow-[0_0_0_3px_rgba(20,184,166,0.14)]"
-                : "border-stone-200 hover:border-stone-300"
+                ? "border-[var(--booth-primary)] bg-[var(--booth-primary-container)]/10 shadow-[0_0_0_3px_var(--booth-state-hover-primary)]"
+                : "border-[var(--booth-outline-variant)]/40 bg-[var(--booth-surface-container)] hover:border-[var(--booth-outline-variant)]"
             )}
             onFocus={() => onSelectSlot(index)}
             onMouseEnter={() => onSelectSlot(index)}
           >
             <div className="mb-3 flex items-center justify-between gap-3">
-              <h3 className="font-bold text-stone-950">Photo {index + 1}</h3>
+              <h3 className="font-bold text-[var(--booth-on-surface)]">Photo {index + 1}</h3>
               <Button
                 type="button"
                 onClick={() => onRemoveSlot(index)}
@@ -128,14 +131,14 @@ export function SlotEditor({
                   onUpdateSlotNumber(index, "borderRadius", value)
                 }
               />
-              <label className="grid gap-1 text-sm font-semibold text-stone-700">
+              <label className="grid gap-1 text-sm font-semibold text-[var(--booth-on-surface-variant)]">
                 Fit
                 <select
                   value={slot.fit}
                   onChange={(event) =>
                     onUpdateSlotFit(index, event.target.value as SlotFit)
                   }
-                  className="booth-focus-ring min-h-11 rounded-md border border-stone-300 bg-white px-3 py-2 text-stone-950"
+                  className={fieldInputClass}
                 >
                   <option value="cover">Cover</option>
                   <option value="contain">Contain</option>
@@ -158,7 +161,7 @@ interface NumberFieldProps {
 
 function NumberField({ label, value, min = 0, onChange }: NumberFieldProps) {
   return (
-    <label className="grid gap-1 text-sm font-semibold text-stone-700">
+    <label className="grid gap-1 text-sm font-semibold text-[var(--booth-on-surface-variant)]">
       {label}
       <input
         type="number"
@@ -168,7 +171,7 @@ function NumberField({ label, value, min = 0, onChange }: NumberFieldProps) {
           const nextValue = event.target.valueAsNumber;
           onChange(Number.isNaN(nextValue) ? undefined : nextValue);
         }}
-        className="booth-focus-ring min-h-11 rounded-md border border-stone-300 bg-white px-3 py-2 text-stone-950"
+        className={fieldInputClass}
       />
     </label>
   );

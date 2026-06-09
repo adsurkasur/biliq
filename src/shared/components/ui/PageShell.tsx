@@ -13,7 +13,7 @@ export function PageShell({
   className
 }: PageShellProps) {
   return (
-    <main className={cn("min-h-screen px-5 py-6 sm:px-8 lg:px-10", className)}>
+    <main className={cn("min-h-screen px-5 py-8 sm:px-8 lg:px-10", className)}>
       <div
         className={cn(
           "mx-auto grid gap-8 motion-enter",

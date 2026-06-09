@@ -1,10 +1,13 @@
 import type { HTMLAttributes, ReactNode } from "react";
 import { cn } from "@/shared/lib/classNames";
 
+type CardElevation = 0 | 1 | 2;
+
 interface CardProps extends HTMLAttributes<HTMLElement> {
   children: ReactNode;
   as?: "article" | "aside" | "section" | "div";
   interactive?: boolean;
+  elevation?: CardElevation;
 }
 
 export function Card({
@@ -12,14 +15,18 @@ export function Card({
   children,
   className,
   interactive = false,
+  elevation = 1,
   ...props
 }: CardProps) {
   return (
     <Component
       className={cn(
-        "rounded-lg border border-stone-200 bg-white shadow-sm",
+        "rounded-[var(--booth-radius-xl)] bg-[var(--booth-surface-container-lowest)] border border-[var(--booth-outline-variant)]/20",
+        elevation === 0 && "shadow-none",
+        elevation === 1 && "shadow-[var(--booth-elevation-1)]",
+        elevation === 2 && "shadow-[var(--booth-elevation-2)]",
         interactive &&
-          "transition-all duration-200 ease-out motion-safe:hover:-translate-y-1 motion-safe:hover:shadow-booth",
+          "transition-all duration-[var(--booth-duration-short)] ease-[var(--booth-ease-standard)] hover:shadow-[var(--booth-elevation-3)] hover:-translate-y-0.5",
         className
       )}
       {...props}

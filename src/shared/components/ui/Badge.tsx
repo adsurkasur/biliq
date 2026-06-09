@@ -17,12 +17,17 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide",
-        tone === "neutral" && "bg-stone-100 text-stone-700",
-        tone === "teal" && "bg-teal-50 text-teal-800",
-        tone === "amber" && "bg-amber-50 text-amber-800",
-        tone === "red" && "bg-red-50 text-red-800",
-        tone === "dark" && "bg-stone-900 text-white",
+        "inline-flex items-center gap-1 rounded-[var(--booth-radius-full)] px-3 py-1 text-xs font-bold uppercase tracking-wide",
+        tone === "neutral" &&
+          "bg-[var(--booth-surface-container-high)] text-[var(--booth-on-surface-variant)]",
+        tone === "teal" &&
+          "bg-[var(--booth-primary-container)] text-[var(--booth-on-primary-container)]",
+        tone === "amber" &&
+          "bg-[var(--booth-tertiary-container)] text-[var(--booth-on-tertiary-container)]",
+        tone === "red" &&
+          "bg-[var(--booth-error-container)] text-[var(--booth-on-error-container)]",
+        tone === "dark" &&
+          "bg-[var(--booth-on-surface)] text-[var(--booth-surface)]",
         className
       )}
       {...props}

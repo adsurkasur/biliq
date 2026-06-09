@@ -14,12 +14,12 @@ export function OutputPresetInfo({
   layoutName
 }: OutputPresetInfoProps) {
   return (
-    <Card className="grid gap-4 bg-teal-50/45 p-4 sm:grid-cols-2">
+    <Card elevation={0} className="grid gap-4 bg-[var(--booth-primary-container)]/20 p-4 sm:grid-cols-2">
       <div>
-        <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+        <p className="text-sm font-semibold uppercase tracking-wide text-[var(--booth-on-surface-variant)]">
           Selected output
         </p>
-        <p className="mt-1 text-xl font-bold text-stone-950">
+        <p className="mt-1 text-xl font-bold text-[var(--booth-on-surface)]">
           {outputWidth} x {outputHeight} px
         </p>
         <div className="mt-2">
@@ -27,13 +27,13 @@ export function OutputPresetInfo({
         </div>
       </div>
       <div>
-        <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+        <p className="text-sm font-semibold uppercase tracking-wide text-[var(--booth-on-surface-variant)]">
           Overlay recommendation
         </p>
-        <p className="mt-1 text-xl font-bold text-stone-950">
+        <p className="mt-1 text-xl font-bold text-[var(--booth-on-surface)]">
           {outputWidth} x {outputHeight} px
         </p>
-        <p className="mt-1 text-sm font-medium text-stone-600">
+        <p className="mt-1 text-sm font-medium text-[var(--booth-on-surface-variant)]">
           Transparent PNG, full canvas. Active layout: {layoutName}.
         </p>
       </div>

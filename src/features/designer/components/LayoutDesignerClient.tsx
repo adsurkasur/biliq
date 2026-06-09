@@ -41,7 +41,7 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
     return (
       <main className="grid min-h-screen place-items-center px-5 py-8">
         <Card className="p-6">
-          <Spinner label="Loading designer" className="text-stone-600" />
+          <Spinner label="Loading designer" className="text-[var(--booth-on-surface-variant)]" />
         </Card>
       </main>
     );
@@ -69,14 +69,14 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
   }
 
   return (
-    <main className="min-h-screen px-5 py-6 sm:px-8 lg:px-10">
+    <main className="min-h-screen px-5 py-8 sm:px-8 lg:px-10">
       <div className="mx-auto grid max-w-7xl gap-6 motion-enter">
-        <header className="flex flex-wrap items-center justify-between gap-4 border-b border-stone-200 pb-6">
+        <header className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--booth-outline-variant)]/30 pb-6">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-teal-800">
+            <p className="text-sm font-semibold uppercase tracking-wide text-[var(--booth-primary)]">
               Layout designer
             </p>
-            <h1 className="mt-2 text-3xl font-bold text-stone-950 sm:text-4xl">
+            <h1 className="mt-2 text-3xl font-bold text-[var(--booth-on-surface)] sm:text-4xl">
               {eventConfig.name}
             </h1>
           </div>
@@ -144,7 +144,7 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
               onUpdateSlotNumber={updateSlotNumber}
             />
 
-            <Card className="motion-card flex flex-wrap items-center gap-3 p-4">
+            <Card className="motion-card flex flex-wrap items-center gap-3 p-5">
               <Button
                 type="button"
                 onClick={saveLayout}
@@ -157,7 +157,7 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
               {status ? (
                 <Toast tone="success">{status}</Toast>
               ) : (
-                <span className="text-sm font-medium text-stone-600">
+                <span className="text-sm font-medium text-[var(--booth-on-surface-variant)]">
                   Saving syncs capture count to the number of slots.
                 </span>
               )}

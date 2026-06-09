@@ -2,9 +2,78 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Material You-Inspired Design Tokens ─── */
+
 :root {
   color-scheme: light;
-  background: #f6f4ef;
+
+  /* Primary – warm teal */
+  --booth-primary: #00796b;
+  --booth-on-primary: #ffffff;
+  --booth-primary-container: #b2dfdb;
+  --booth-on-primary-container: #00352e;
+
+  /* Secondary – muted rose */
+  --booth-secondary: #7c5262;
+  --booth-secondary-container: #ffd9e5;
+  --booth-on-secondary-container: #311120;
+
+  /* Tertiary – warm amber */
+  --booth-tertiary: #7d5700;
+  --booth-tertiary-container: #ffdea6;
+  --booth-on-tertiary-container: #271900;
+
+  /* Surface hierarchy */
+  --booth-surface: #fef7ff;
+  --booth-surface-dim: #e0d8df;
+  --booth-surface-bright: #fef7ff;
+  --booth-surface-container-lowest: #ffffff;
+  --booth-surface-container-low: #faf1f8;
+  --booth-surface-container: #f3ecf4;
+  --booth-surface-container-high: #ede6ed;
+  --booth-surface-container-high-alt: #e7e0e8;
+  --booth-on-surface: #1d1a20;
+  --booth-on-surface-variant: #4a454e;
+
+  /* Outline */
+  --booth-outline: #7c757f;
+  --booth-outline-variant: #cdc4ce;
+
+  /* Error */
+  --booth-error: #ba1a1a;
+  --booth-error-container: #ffdad6;
+  --booth-on-error-container: #410002;
+
+  /* Radius – Material You inspired rounding */
+  --booth-radius-xs: 4px;
+  --booth-radius-sm: 8px;
+  --booth-radius-md: 12px;
+  --booth-radius-lg: 16px;
+  --booth-radius-xl: 24px;
+  --booth-radius-2xl: 28px;
+  --booth-radius-full: 9999px;
+
+  /* Elevation shadows – tonal, soft */
+  --booth-elevation-0: none;
+  --booth-elevation-1: 0 1px 3px 1px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --booth-elevation-2: 0 2px 6px 2px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  --booth-elevation-3: 0 4px 12px 3px rgba(0,0,0,0.10), 0 1px 3px rgba(0,0,0,0.06);
+  --booth-elevation-4: 0 8px 24px 4px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.06);
+
+  /* State layers */
+  --booth-state-hover: rgba(29, 26, 32, 0.08);
+  --booth-state-focus: rgba(29, 26, 32, 0.12);
+  --booth-state-pressed: rgba(29, 26, 32, 0.12);
+  --booth-state-hover-primary: rgba(0, 121, 107, 0.08);
+
+  /* Transition */
+  --booth-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --booth-ease-emphasized: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --booth-duration-short: 200ms;
+  --booth-duration-medium: 350ms;
+  --booth-duration-long: 500ms;
+
+  background: var(--booth-surface-container-low);
 }
 
 * {
@@ -19,10 +88,12 @@ body {
 body {
   margin: 0;
   background:
-    radial-gradient(circle at top left, rgba(20, 184, 166, 0.10), transparent 34rem),
-    linear-gradient(180deg, rgba(246, 244, 239, 0.94), rgba(250, 250, 249, 0.98)),
-    #f6f4ef;
-  color: #1f2933;
+    radial-gradient(ellipse at top left, rgba(0, 121, 107, 0.06), transparent 38rem),
+    radial-gradient(ellipse at bottom right, rgba(124, 82, 98, 0.04), transparent 40rem),
+    var(--booth-surface-container-low);
+  color: var(--booth-on-surface);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 button,
@@ -31,28 +102,32 @@ select {
   font: inherit;
 }
 
+/* ─── Focus Ring ─── */
+
 .booth-focus-ring {
   @apply focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700;
 }
 
+/* ─── Motion Helpers ─── */
+
 .motion-enter {
-  animation: motion-enter 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: motion-enter 420ms var(--booth-ease-emphasized) both;
 }
 
 .motion-card {
-  animation: motion-card 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: motion-card 420ms var(--booth-ease-emphasized) both;
 }
 
 .motion-pop {
-  animation: motion-pop 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: motion-pop 260ms var(--booth-ease-emphasized) both;
 }
 
 .motion-toast {
-  animation: motion-toast 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: motion-toast 320ms var(--booth-ease-emphasized) both;
 }
 
 .booth-viewfinder-enter {
-  animation: booth-viewfinder-enter 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: booth-viewfinder-enter 520ms var(--booth-ease-emphasized) both;
 }
 
 .booth-start-button {
@@ -72,8 +147,19 @@ select {
 }
 
 .result-reveal {
-  animation: result-reveal 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: result-reveal 560ms var(--booth-ease-emphasized) both;
 }
+
+/* Modal-specific animations */
+.modal-backdrop-enter {
+  animation: modal-backdrop-enter 250ms ease-out both;
+}
+
+.modal-panel-enter {
+  animation: modal-panel-enter 350ms var(--booth-ease-emphasized) both;
+}
+
+/* ─── Keyframes ─── */
 
 @keyframes motion-enter {
   from {
@@ -89,7 +175,7 @@ select {
 @keyframes motion-card {
   from {
     opacity: 0;
-    transform: translateY(10px) scale(0.98);
+    transform: translateY(8px) scale(0.985);
   }
   to {
     opacity: 1;
@@ -100,7 +186,7 @@ select {
 @keyframes motion-pop {
   from {
     opacity: 0;
-    transform: translateY(8px) scale(0.96);
+    transform: translateY(6px) scale(0.96);
   }
   to {
     opacity: 1;
@@ -111,11 +197,27 @@ select {
 @keyframes motion-toast {
   from {
     opacity: 0;
-    transform: translateY(-6px);
+    transform: translateY(-8px) scale(0.98);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes modal-backdrop-enter {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes modal-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -135,11 +237,11 @@ select {
 @keyframes booth-start-ready {
   0%,
   100% {
-    box-shadow: 0 18px 60px rgba(13, 148, 136, 0.24);
+    box-shadow: 0 16px 48px rgba(0, 121, 107, 0.28);
     transform: translateY(0) scale(1);
   }
   50% {
-    box-shadow: 0 22px 72px rgba(13, 148, 136, 0.38);
+    box-shadow: 0 20px 64px rgba(0, 121, 107, 0.40);
     transform: translateY(-1px) scale(1.015);
   }
 }
@@ -199,6 +301,8 @@ select {
   }
 }
 
+/* ─── Reduced Motion ─── */
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -209,6 +313,8 @@ select {
     transition-duration: 1ms !important;
   }
 }
+
+/* ─── Print ─── */
 
 @media print {
   body {

@@ -52,14 +52,14 @@ export function BoothReviewPanel({
     captureState === "error";
 
   return (
-    <main className="min-h-screen px-5 py-5 sm:px-8 lg:px-10">
+    <main className="min-h-screen px-5 py-8 sm:px-8 lg:px-10">
       <div className="mx-auto grid max-w-7xl gap-5 motion-enter">
-        <header className="flex flex-wrap items-center justify-between gap-4 border-b border-stone-200 pb-5">
+        <header className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--booth-outline-variant)]/30 pb-5">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-teal-800">
+            <p className="text-sm font-semibold uppercase tracking-wide text-[var(--booth-primary)]">
               {eventConfig.name}
             </p>
-            <h1 className="mt-1 text-3xl font-bold text-stone-950">Review</h1>
+            <h1 className="mt-1 text-3xl font-bold text-[var(--booth-on-surface)]">Review</h1>
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -126,7 +126,7 @@ export function BoothReviewPanel({
                     setDownloaded(true);
                     window.setTimeout(() => setDownloaded(false), 1800);
                   }}
-                  variant="secondary"
+                  variant="tonal"
                   size="lg"
                 >
                   <Download className="h-5 w-5" aria-hidden="true" />
@@ -139,13 +139,13 @@ export function BoothReviewPanel({
 
           <aside className="grid content-start gap-4">
             <Card className="motion-card p-5">
-              <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+              <p className="text-sm font-semibold uppercase tracking-wide text-[var(--booth-on-surface-variant)]">
                 Session
               </p>
-              <p className="mt-1 text-lg font-bold text-stone-950">
+              <p className="mt-1 text-lg font-bold text-[var(--booth-on-surface)]">
                 {getCaptureCountForEvent(eventConfig)} photo layout
               </p>
-              <p className="mt-2 text-sm font-medium text-stone-600">
+              <p className="mt-2 text-sm font-medium text-[var(--booth-on-surface-variant)]">
                 Countdown used: {Math.max(0, Math.round(eventConfig.countdownSeconds))}s
                 before each shot.
               </p>
@@ -156,7 +156,7 @@ export function BoothReviewPanel({
                 <Badge tone="dark">Browser print</Badge>
               </div>
               {cameraMessage ? (
-                <p className="mt-3 rounded-md bg-red-50 p-3 text-sm font-semibold text-red-800">
+                <p className="mt-3 rounded-[var(--booth-radius-md)] bg-[var(--booth-error-container)] p-3 text-sm font-semibold text-[var(--booth-on-error-container)]">
                   {cameraMessage}
                 </p>
               ) : null}
@@ -169,19 +169,19 @@ export function BoothReviewPanel({
                 <Toast tone="success">Saved to the local gallery.</Toast>
                 <QrPreview value={createQrValue(savedPhoto.id)} />
                 <Card className="p-5">
-                  <p className="text-sm font-semibold uppercase tracking-wide text-teal-800">
+                  <p className="text-sm font-semibold uppercase tracking-wide text-[var(--booth-primary)]">
                     Saved photo
                   </p>
                   <Link
                     href={routes.photo(savedPhoto.id)}
-                    className="mt-2 inline-block text-lg font-bold text-stone-950 underline decoration-teal-700 underline-offset-4"
+                    className="mt-2 inline-block text-lg font-bold text-[var(--booth-on-surface)] underline decoration-[var(--booth-primary)] underline-offset-4"
                   >
                     Open photo detail
                   </Link>
                 </Card>
               </div>
             ) : (
-              <Card className="motion-card p-5 text-sm font-medium text-stone-600">
+              <Card className="motion-card p-5 text-sm font-medium text-[var(--booth-on-surface-variant)]">
                 Save the output to generate the local photo page and QR preview.
               </Card>
             )}

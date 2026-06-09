@@ -19,7 +19,7 @@ export function QrPreview({ value }: QrPreviewProps) {
       width: 192,
       margin: 1,
       color: {
-        dark: "#1f2933",
+        dark: "#1d1a20",
         light: "#ffffff"
       }
     }).then((dataUrl) => {
@@ -36,7 +36,7 @@ export function QrPreview({ value }: QrPreviewProps) {
   if (!qrDataUrl) {
     return (
       <Card className="grid max-w-xs gap-3 p-4">
-        <Spinner label="Preparing QR" className="text-stone-600" />
+        <Spinner label="Preparing QR" className="text-[var(--booth-on-surface-variant)]" />
       </Card>
     );
   }
@@ -44,7 +44,7 @@ export function QrPreview({ value }: QrPreviewProps) {
   return (
     <Card className="motion-enter grid max-w-xs gap-3 p-4">
       <img src={qrDataUrl} alt="QR code for local photo page" className="w-48" />
-      <p className="text-sm font-medium text-stone-600">
+      <p className="text-sm font-medium text-[var(--booth-on-surface-variant)]">
         Local QR: opens this photo in the same browser storage until cloud sharing is
         added.
       </p>
