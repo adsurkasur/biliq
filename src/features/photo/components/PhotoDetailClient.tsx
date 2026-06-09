@@ -7,6 +7,11 @@ import { getPhotoById } from "@/domain/photos/storage";
 import type { PhotoRecord } from "@/domain/photos/types";
 import { PrintButton } from "@/features/print/components/PrintButton";
 import { QrPreview } from "@/shared/components/QrPreview";
+import { Button, buttonClassName } from "@/shared/components/ui/Button";
+import { Card } from "@/shared/components/ui/Card";
+import { EmptyState } from "@/shared/components/ui/EmptyState";
+import { Spinner } from "@/shared/components/ui/Spinner";
+import { Toast } from "@/shared/components/ui/Toast";
 import { routes } from "@/shared/config/routes";
 import { createQrValue } from "@/shared/lib/createQrValue";
 import { downloadDataUrl, photoFilename } from "@/shared/lib/download";
@@ -18,6 +23,7 @@ interface PhotoDetailClientProps {
 export function PhotoDetailClient({ photoId }: PhotoDetailClientProps) {
   const [photo, setPhoto] = useState<PhotoRecord | null>(null);
   const [status, setStatus] = useState("Loading photo...");
+  const [downloaded, setDownloaded] = useState(false);
 
   useEffect(() => {
     getPhotoById(photoId)
@@ -31,20 +37,32 @@ export function PhotoDetailClient({ photoId }: PhotoDetailClientProps) {
   }, [photoId]);
 
   if (status) {
+    if (status === "Loading photo...") {
+      return (
+        <main className="grid min-h-screen place-items-center px-5 py-8">
+          <Card className="p-6">
+            <Spinner label={status} className="text-stone-600" />
+          </Card>
+        </main>
+      );
+    }
+
     return (
       <main className="grid min-h-screen place-items-center px-5 py-8">
-        <div className="max-w-md rounded-lg border border-stone-200 bg-white p-8 text-center shadow-sm">
-          <h1 className="text-2xl font-bold text-stone-950">{status}</h1>
-          <p className="mt-3 text-stone-600">
-            Local photos only exist on the device and browser that saved them.
-          </p>
-          <Link
-            href={routes.home}
-            className="booth-focus-ring mt-6 inline-flex min-h-12 items-center rounded-md bg-teal-700 px-5 py-3 font-semibold text-white hover:bg-teal-800"
-          >
-            Events
-          </Link>
-        </div>
+        <EmptyState
+          icon={Download}
+          title={status}
+          action={
+            <Link
+              href={routes.home}
+              className={buttonClassName({ variant: "primary", size: "lg" })}
+            >
+              Events
+            </Link>
+          }
+        >
+          Local photos only exist on the device and browser that saved them.
+        </EmptyState>
       </main>
     );
   }
@@ -55,7 +73,7 @@ export function PhotoDetailClient({ photoId }: PhotoDetailClientProps) {
 
   return (
     <main className="min-h-screen px-5 py-6 sm:px-8 lg:px-10">
-      <div className="mx-auto grid max-w-6xl gap-6">
+      <div className="mx-auto grid max-w-6xl gap-6 motion-enter">
         <header className="flex flex-wrap items-center justify-between gap-4 border-b border-stone-200 pb-6">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-teal-800">
@@ -67,7 +85,7 @@ export function PhotoDetailClient({ photoId }: PhotoDetailClientProps) {
           </div>
           <Link
             href={routes.gallery(photo.eventSlug)}
-            className="booth-focus-ring inline-flex min-h-11 items-center gap-2 rounded-md border border-stone-300 bg-white px-4 py-2 font-semibold text-stone-800 hover:bg-stone-100"
+            className={buttonClassName({ variant: "secondary" })}
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             Gallery
@@ -75,16 +93,16 @@ export function PhotoDetailClient({ photoId }: PhotoDetailClientProps) {
         </header>
 
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <section className="rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
+          <Card className="result-reveal p-4">
             <img
               src={photo.imageDataUrl}
               alt="Saved photo booth output"
               className="mx-auto max-h-[78vh] w-auto max-w-full rounded-md object-contain"
             />
-          </section>
+          </Card>
 
           <aside className="grid content-start gap-4">
-            <div className="rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
+            <Card className="motion-card p-4">
               <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
                 Saved
               </p>
@@ -92,23 +110,27 @@ export function PhotoDetailClient({ photoId }: PhotoDetailClientProps) {
                 {new Date(photo.createdAt).toLocaleString()}
               </p>
               <div className="mt-4 grid gap-3">
-                <button
+                <Button
                   type="button"
-                  onClick={() =>
+                  onClick={() => {
                     downloadDataUrl(
                       photo.imageDataUrl,
                       photoFilename(photo.eventSlug, photo.id)
-                    )
-                  }
-                  className="booth-focus-ring inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-teal-700 px-5 py-3 font-semibold text-white hover:bg-teal-800"
+                    );
+                    setDownloaded(true);
+                    window.setTimeout(() => setDownloaded(false), 1800);
+                  }}
+                  variant="primary"
+                  size="lg"
                 >
                   <Download className="h-5 w-5" aria-hidden="true" />
                   Download
-                </button>
+                </Button>
                 <PrintButton photoId={photo.id} />
               </div>
-            </div>
+            </Card>
 
+            {downloaded ? <Toast tone="success">Download started.</Toast> : null}
             <QrPreview value={createQrValue(photo.id)} />
           </aside>
         </div>

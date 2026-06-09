@@ -1,17 +1,22 @@
 import type { EventConfig } from "@/domain/events/types";
 import type { LayoutDefinition } from "@/domain/layouts/types";
+import { cn } from "@/shared/lib/classNames";
 
 interface DesignerCanvasPreviewProps {
   eventConfig: EventConfig;
   layout: LayoutDefinition;
+  selectedSlotIndex: number;
+  onSelectSlot: (index: number) => void;
 }
 
 export function DesignerCanvasPreview({
   eventConfig,
-  layout
+  layout,
+  selectedSlotIndex,
+  onSelectSlot
 }: DesignerCanvasPreviewProps) {
   return (
-    <section className="rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
+    <section className="motion-card rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-teal-800">
@@ -41,9 +46,16 @@ export function DesignerCanvasPreview({
         />
 
         {layout.slots.map((slot, index) => (
-          <div
+          <button
+            type="button"
             key={`${slot.x}-${slot.y}-${slot.width}-${slot.height}-${index}`}
-            className="absolute grid place-items-center border-2 border-teal-600 bg-teal-100/70 text-center text-xs font-black uppercase tracking-wide text-teal-950 shadow-sm"
+            onClick={() => onSelectSlot(index)}
+            className={cn(
+              "booth-focus-ring absolute grid place-items-center border-2 text-center text-xs font-black uppercase tracking-wide shadow-sm transition-all duration-200",
+              selectedSlotIndex === index
+                ? "z-20 border-teal-700 bg-teal-200/85 text-teal-950 ring-4 ring-teal-500/25"
+                : "z-10 border-teal-600 bg-teal-100/70 text-teal-950 hover:bg-teal-200/80"
+            )}
             style={{
               left: `${(slot.x / layout.canvasWidth) * 100}%`,
               top: `${(slot.y / layout.canvasHeight) * 100}%`,
@@ -53,7 +65,7 @@ export function DesignerCanvasPreview({
             }}
           >
             Photo {index + 1}
-          </div>
+          </button>
         ))}
 
         {eventConfig.overlayDataUrl ? (

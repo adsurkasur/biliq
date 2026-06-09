@@ -58,11 +58,13 @@ Feature components may use browser APIs only when they are client components or 
 Contains cross-feature code.
 
 - `shared/config` - App metadata, route builders, and storage keys.
-- `shared/components` - Shared UI such as QR preview.
+- `shared/components` - Shared UI such as QR preview and small UI primitives.
 - `shared/lib` - Small reusable browser, download, image, ID, slug, validation, and QR URL helpers.
 - `shared/types` - Re-export surface for common domain types.
 
 Avoid placing broad `utils.ts` files here. Name helpers by responsibility.
+
+Motion guidance lives in `docs/ui-motion-guidelines.md`.
 
 ## Import Guidance
 

@@ -4,7 +4,12 @@ import Link from "next/link";
 import { BoothCaptureSurface } from "@/features/booth/components/BoothCaptureSurface";
 import { BoothReviewPanel } from "@/features/booth/components/BoothReviewPanel";
 import { useBoothSession } from "@/features/booth/hooks/useBoothSession";
+import { buttonClassName } from "@/shared/components/ui/Button";
+import { Card } from "@/shared/components/ui/Card";
+import { EmptyState } from "@/shared/components/ui/EmptyState";
+import { Spinner } from "@/shared/components/ui/Spinner";
 import { routes } from "@/shared/config/routes";
+import { Camera } from "lucide-react";
 
 interface BoothClientProps {
   eventSlug: string;
@@ -13,10 +18,12 @@ interface BoothClientProps {
 export function BoothClient({ eventSlug }: BoothClientProps) {
   const {
     cameraMessage,
+    captureFeedbackKey,
     captureState,
     countdown,
     eventConfig,
     finalOutput,
+    isEventLoaded,
     savedPhoto,
     shotProgress,
     videoRef,
@@ -27,21 +34,33 @@ export function BoothClient({ eventSlug }: BoothClientProps) {
     handleStart
   } = useBoothSession(eventSlug);
 
+  if (!isEventLoaded) {
+    return (
+      <main className="grid min-h-screen place-items-center px-5 py-8">
+        <Card className="p-6">
+          <Spinner label="Loading booth" className="text-stone-600" />
+        </Card>
+      </main>
+    );
+  }
+
   if (!eventConfig) {
     return (
       <main className="grid min-h-screen place-items-center px-5 py-8">
-        <div className="max-w-md rounded-lg border border-stone-200 bg-white p-8 text-center shadow-sm">
-          <h1 className="text-2xl font-bold text-stone-950">Event not found</h1>
-          <p className="mt-3 text-stone-600">
-            Create or edit a local event before opening the booth route.
-          </p>
-          <Link
-            href={routes.setup()}
-            className="booth-focus-ring mt-6 inline-flex min-h-12 items-center rounded-md bg-teal-700 px-5 py-3 font-semibold text-white hover:bg-teal-800"
-          >
-            Open setup
-          </Link>
-        </div>
+        <EmptyState
+          icon={Camera}
+          title="Event not found"
+          action={
+            <Link
+              href={routes.setup()}
+              className={buttonClassName({ variant: "primary", size: "lg" })}
+            >
+              Open setup
+            </Link>
+          }
+        >
+          Create or edit a local event before opening the booth route.
+        </EmptyState>
       </main>
     );
   }
@@ -52,6 +71,7 @@ export function BoothClient({ eventSlug }: BoothClientProps) {
         eventConfig={eventConfig}
         captureState={captureState}
         cameraMessage={cameraMessage}
+        captureFeedbackKey={captureFeedbackKey}
         countdown={countdown}
         shotProgress={shotProgress}
         videoRef={videoRef}

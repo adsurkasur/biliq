@@ -4,12 +4,17 @@ import {
   MAX_CAPTURE_COUNT
 } from "@/domain/layouts/defaultLayouts";
 import type { LayoutDefinition, SlotFit } from "@/domain/layouts/types";
+import { Button } from "@/shared/components/ui/Button";
+import { Card } from "@/shared/components/ui/Card";
+import { cn } from "@/shared/lib/classNames";
 
 interface SlotEditorProps {
   layout: LayoutDefinition;
+  selectedSlotIndex: number;
   onAddSlot: () => void;
   onRemoveSlot: (index: number) => void;
   onResetToDefault: (captureCount: number) => void;
+  onSelectSlot: (index: number) => void;
   onUpdateSlotFit: (index: number, fit: SlotFit) => void;
   onUpdateSlotNumber: (
     index: number,
@@ -20,14 +25,16 @@ interface SlotEditorProps {
 
 export function SlotEditor({
   layout,
+  selectedSlotIndex,
   onAddSlot,
   onRemoveSlot,
   onResetToDefault,
+  onSelectSlot,
   onUpdateSlotFit,
   onUpdateSlotNumber
 }: SlotEditorProps) {
   return (
-    <section className="rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
+    <Card className="motion-card p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-teal-800">
@@ -37,28 +44,29 @@ export function SlotEditor({
             Numeric layout
           </h2>
         </div>
-        <button
+        <Button
           type="button"
           onClick={onAddSlot}
           disabled={layout.slots.length >= MAX_CAPTURE_COUNT}
-          className="booth-focus-ring inline-flex min-h-11 items-center gap-2 rounded-md bg-teal-700 px-4 py-2 font-semibold text-white hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-50"
+          variant="primary"
         >
           <Plus className="h-4 w-4" aria-hidden="true" />
           Add slot
-        </button>
+        </Button>
       </div>
 
       <div className="mt-4 grid gap-2 sm:grid-cols-4">
         {defaultLayouts.map((preset) => (
-          <button
+          <Button
             key={preset.id}
             type="button"
             onClick={() => onResetToDefault(preset.slots.length)}
-            className="booth-focus-ring inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-stone-300 bg-white px-3 py-2 text-sm font-semibold text-stone-800 hover:bg-stone-100"
+            variant="secondary"
+            size="sm"
           >
             <RotateCcw className="h-4 w-4" aria-hidden="true" />
             {preset.slots.length} photo
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -66,19 +74,27 @@ export function SlotEditor({
         {layout.slots.map((slot, index) => (
           <article
             key={`${index}-${slot.x}-${slot.y}`}
-            className="rounded-md border border-stone-200 bg-stone-50 p-3"
+            className={cn(
+              "rounded-md border bg-stone-50 p-3 transition-all duration-200",
+              selectedSlotIndex === index
+                ? "border-teal-400 shadow-[0_0_0_3px_rgba(20,184,166,0.14)]"
+                : "border-stone-200 hover:border-stone-300"
+            )}
+            onFocus={() => onSelectSlot(index)}
+            onMouseEnter={() => onSelectSlot(index)}
           >
             <div className="mb-3 flex items-center justify-between gap-3">
               <h3 className="font-bold text-stone-950">Photo {index + 1}</h3>
-              <button
+              <Button
                 type="button"
                 onClick={() => onRemoveSlot(index)}
                 disabled={layout.slots.length <= 1}
-                className="booth-focus-ring inline-flex min-h-9 items-center gap-2 rounded-md border border-red-200 bg-white px-3 py-1.5 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+                variant="danger"
+                size="sm"
               >
                 <Trash2 className="h-4 w-4" aria-hidden="true" />
                 Remove
-              </button>
+              </Button>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3">
@@ -129,7 +145,7 @@ export function SlotEditor({
           </article>
         ))}
       </div>
-    </section>
+    </Card>
   );
 }
 

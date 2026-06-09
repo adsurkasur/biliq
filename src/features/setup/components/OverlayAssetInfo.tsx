@@ -1,5 +1,7 @@
 import { AlertTriangle, Camera, CheckCircle2, ImagePlus, Trash2 } from "lucide-react";
 import type { ImageDimensions } from "@/shared/lib/image";
+import { Button } from "@/shared/components/ui/Button";
+import { Card } from "@/shared/components/ui/Card";
 
 interface OverlayAssetInfoProps {
   outputWidth: number;
@@ -25,7 +27,7 @@ export function OverlayAssetInfo({
     overlayDimensions?.height === outputHeight;
 
   return (
-    <aside className="rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
+    <Card as="aside" className="motion-card p-4">
       <div className="mb-4 flex items-center justify-between gap-3">
         <h2 className="text-lg font-semibold text-stone-950">Overlay</h2>
         <ImagePlus className="h-5 w-5 text-teal-700" aria-hidden="true" />
@@ -37,7 +39,7 @@ export function OverlayAssetInfo({
         viewfinder and final output.
       </div>
 
-      <label className="booth-focus-ring flex cursor-pointer flex-col items-center justify-center gap-3 rounded-md border border-dashed border-stone-300 bg-stone-50 px-4 py-8 text-center hover:border-teal-700">
+      <label className="booth-focus-ring flex cursor-pointer flex-col items-center justify-center gap-3 rounded-md border border-dashed border-stone-300 bg-stone-50 px-4 py-8 text-center transition hover:-translate-y-0.5 hover:border-teal-700 hover:bg-teal-50/50">
         <Camera className="h-8 w-8 text-stone-500" aria-hidden="true" />
         <span className="text-sm font-semibold text-stone-800">
           Upload transparent PNG
@@ -86,16 +88,16 @@ export function OverlayAssetInfo({
               className="h-full w-full object-contain"
             />
           </div>
-          <button
+          <Button
             type="button"
             onClick={onRemove}
-            className="booth-focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-stone-300 bg-white px-4 py-2 font-semibold text-stone-800 hover:bg-stone-100"
+            variant="secondary"
           >
             <Trash2 className="h-4 w-4" aria-hidden="true" />
             Remove overlay
-          </button>
+          </Button>
         </div>
       ) : null}
-    </aside>
+    </Card>
   );
 }

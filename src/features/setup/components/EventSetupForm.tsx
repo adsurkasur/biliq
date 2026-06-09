@@ -1,6 +1,7 @@
 "use client";
 
-import { Save } from "lucide-react";
+import Link from "next/link";
+import { Palette, Save } from "lucide-react";
 import { OUTPUT_PRESETS } from "@/domain/events/defaults";
 import {
   clampCaptureCount,
@@ -13,6 +14,12 @@ import { useEventSetupForm } from "@/features/setup/hooks/useEventSetupForm";
 import { useOverlayDimensions } from "@/features/setup/hooks/useOverlayDimensions";
 import { OverlayAssetInfo } from "@/features/setup/components/OverlayAssetInfo";
 import { OutputPresetInfo } from "@/features/setup/components/OutputPresetInfo";
+import { Button } from "@/shared/components/ui/Button";
+import { buttonClassName } from "@/shared/components/ui/Button";
+import { Card } from "@/shared/components/ui/Card";
+import { Spinner } from "@/shared/components/ui/Spinner";
+import { Toast } from "@/shared/components/ui/Toast";
+import { routes } from "@/shared/config/routes";
 
 export function EventSetupForm() {
   const {
@@ -32,21 +39,34 @@ export function EventSetupForm() {
   const overlayDimensions = useOverlayDimensions(eventConfig?.overlayDataUrl);
 
   if (!eventConfig) {
-    return <p className="text-sm font-medium text-stone-600">Loading setup...</p>;
+    return (
+      <Card className="p-6">
+        <Spinner label="Loading setup" className="text-stone-600" />
+      </Card>
+    );
   }
 
   const selectedLayout = eventConfig.customLayout ?? getLayoutById(eventConfig.layoutId);
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-[1fr_380px]">
-      <div className="grid gap-5">
+      <Card className="motion-card grid gap-5 p-5">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-wide text-teal-800">
+            Event details
+          </p>
+          <h2 className="mt-1 text-xl font-bold text-stone-950">
+            Capture session
+          </h2>
+        </div>
+
         <div className="grid gap-2">
           <label className="text-sm font-semibold text-stone-800" htmlFor="event-name">
             Event name
           </label>
           <input
             id="event-name"
-            className="booth-focus-ring rounded-md border border-stone-300 bg-white px-4 py-3 text-stone-950"
+            className="booth-focus-ring min-h-12 rounded-md border border-stone-300 bg-white px-4 py-3 text-stone-950 transition focus:border-teal-700"
             value={eventConfig.name}
             onChange={(event) =>
               updateConfig({
@@ -71,7 +91,7 @@ export function EventSetupForm() {
           </label>
           <input
             id="event-slug"
-            className="booth-focus-ring rounded-md border border-stone-300 bg-white px-4 py-3 text-stone-950"
+            className="booth-focus-ring min-h-12 rounded-md border border-stone-300 bg-white px-4 py-3 text-stone-950 transition focus:border-teal-700"
             value={eventConfig.slug}
             onChange={(event) => updateConfig({ slug: event.target.value })}
             required
@@ -91,7 +111,7 @@ export function EventSetupForm() {
               type="number"
               min={0}
               max={10}
-              className="booth-focus-ring rounded-md border border-stone-300 bg-white px-4 py-3 text-stone-950"
+              className="booth-focus-ring min-h-12 rounded-md border border-stone-300 bg-white px-4 py-3 text-stone-950 transition focus:border-teal-700"
               value={eventConfig.countdownSeconds}
               onChange={(event) =>
                 updateConfig({ countdownSeconds: Number(event.target.value) })
@@ -108,7 +128,7 @@ export function EventSetupForm() {
             </label>
             <select
               id="capture-count"
-              className="booth-focus-ring rounded-md border border-stone-300 bg-white px-4 py-3 text-stone-950"
+              className="booth-focus-ring min-h-12 rounded-md border border-stone-300 bg-white px-4 py-3 text-stone-950 transition focus:border-teal-700"
               value={clampCaptureCount(eventConfig.captureCount)}
               onChange={(event) =>
                 handleCaptureCountChange(Number(event.target.value))
@@ -133,7 +153,7 @@ export function EventSetupForm() {
             </label>
             <select
               id="output-preset"
-              className="booth-focus-ring rounded-md border border-stone-300 bg-white px-4 py-3 text-stone-950"
+              className="booth-focus-ring min-h-12 rounded-md border border-stone-300 bg-white px-4 py-3 text-stone-950 transition focus:border-teal-700"
               value={selectedPresetId}
               onChange={(event) => handleOutputPresetChange(event.target.value)}
             >
@@ -156,7 +176,7 @@ export function EventSetupForm() {
             </label>
             <select
               id="layout"
-              className="booth-focus-ring rounded-md border border-stone-300 bg-white px-4 py-3 text-stone-950"
+              className="booth-focus-ring min-h-12 rounded-md border border-stone-300 bg-white px-4 py-3 text-stone-950 transition focus:border-teal-700"
               value={eventConfig.layoutId}
               onChange={(event) => handleLayoutChange(event.target.value)}
             >
@@ -187,7 +207,7 @@ export function EventSetupForm() {
           </label>
           <select
             id="printer"
-            className="booth-focus-ring rounded-md border border-stone-300 bg-white px-4 py-3 text-stone-950"
+            className="booth-focus-ring min-h-12 rounded-md border border-stone-300 bg-white px-4 py-3 text-stone-950 transition focus:border-teal-700"
             value={eventConfig.printerMode}
             onChange={() => updateConfig({ printerMode: "browser-print" })}
           >
@@ -196,20 +216,28 @@ export function EventSetupForm() {
         </div>
 
         <div className="flex flex-wrap gap-3 pt-2">
-          <button
+          <Button
             type="submit"
-            className="booth-focus-ring inline-flex min-h-12 items-center gap-2 rounded-md bg-teal-700 px-5 py-3 font-semibold text-white hover:bg-teal-800"
+            variant="primary"
+            size="lg"
           >
             <Save className="h-5 w-5" aria-hidden="true" />
             Save and open booth
-          </button>
+          </Button>
+          {eventConfig.slug !== "new-event" ? (
+            <Link
+              href={routes.designer(eventConfig.slug)}
+              className={buttonClassName({ variant: "secondary", size: "lg" })}
+            >
+              <Palette className="h-5 w-5" aria-hidden="true" />
+              Open designer
+            </Link>
+          ) : null}
           {status ? (
-            <span className="inline-flex items-center text-sm font-semibold text-teal-800">
-              {status}
-            </span>
+            <Toast tone="success">{status}</Toast>
           ) : null}
         </div>
-      </div>
+      </Card>
 
       <OverlayAssetInfo
         outputWidth={eventConfig.outputWidth}

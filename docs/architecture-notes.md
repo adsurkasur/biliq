@@ -36,3 +36,7 @@ Prepared but unused cloud contracts live in:
 - `src/domain/auth`
 - `src/domain/cloud`
 - `src/shared/config/env.ts`
+
+## Motion And UI
+
+UI motion is implemented with CSS transitions and keyframes in `src/app/globals.css`, not a runtime animation library. Shared UI primitives live in `src/shared/components/ui`. Motion should use opacity and transform so camera preview, overlay alignment, and canvas-related interactions stay performant.

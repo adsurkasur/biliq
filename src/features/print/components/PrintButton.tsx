@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Printer } from "lucide-react";
+import { Button } from "@/shared/components/ui/Button";
 import { routes } from "@/shared/config/routes";
 
 interface PrintButtonProps {
@@ -15,21 +16,20 @@ export function PrintButton({ photoId, disabled, className }: PrintButtonProps) 
   const isDisabled = disabled || !photoId;
 
   return (
-    <button
+    <Button
       type="button"
       disabled={isDisabled}
+      variant="secondary"
+      size="lg"
       onClick={() => {
         if (photoId) {
           router.push(routes.print(photoId));
         }
       }}
-      className={
-        className ??
-        "booth-focus-ring inline-flex min-h-12 items-center gap-2 rounded-md border border-stone-300 bg-white px-5 py-3 font-semibold text-stone-800 hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-50"
-      }
+      className={className}
     >
       <Printer className="h-5 w-5" aria-hidden="true" />
       Print
-    </button>
+    </Button>
   );
 }

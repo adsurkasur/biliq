@@ -26,15 +26,18 @@ export function useBoothSession(eventSlug: string) {
   const captureTokenRef = useRef(0);
 
   const [eventConfig, setEventConfig] = useState<EventConfig | null>(null);
+  const [isEventLoaded, setIsEventLoaded] = useState(false);
   const [captureState, setCaptureState] = useState<CaptureState>("idle");
   const [cameraMessage, setCameraMessage] = useState("");
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [captureFeedbackKey, setCaptureFeedbackKey] = useState(0);
   const [shotProgress, setShotProgress] = useState<ShotProgress | null>(null);
   const [finalOutput, setFinalOutput] = useState<ComposedPhoto | null>(null);
   const [savedPhoto, setSavedPhoto] = useState<PhotoRecord | null>(null);
 
   useEffect(() => {
     setEventConfig(getEventBySlug(eventSlug) ?? null);
+    setIsEventLoaded(true);
 
     return () => {
       captureTokenRef.current += 1;
@@ -96,6 +99,7 @@ export function useBoothSession(eventSlug: string) {
 
         setCaptureState("capturing");
         capturedFrames.push(captureFrame(video));
+        setCaptureFeedbackKey((current) => current + 1);
 
         if (index < totalShots - 1) {
           setCaptureState("processing");
@@ -182,7 +186,9 @@ export function useBoothSession(eventSlug: string) {
     cameraMessage,
     captureState,
     countdown,
+    captureFeedbackKey,
     eventConfig,
+    isEventLoaded,
     finalOutput,
     savedPhoto,
     shotProgress,

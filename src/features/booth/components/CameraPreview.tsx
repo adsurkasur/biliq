@@ -3,6 +3,7 @@
 import { type CSSProperties, type ReactNode, type RefObject } from "react";
 import { Camera, VideoOff } from "lucide-react";
 import { useCameraStream } from "@/features/booth/hooks/useCameraStream";
+import { Spinner } from "@/shared/components/ui/Spinner";
 
 interface CameraPreviewProps {
   videoRef: RefObject<HTMLVideoElement | null>;
@@ -59,13 +60,14 @@ export function CameraPreview({
       ) : null}
 
       {state !== "ready" ? (
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-stone-950/86 p-8 text-center text-white">
+        <div className="motion-enter absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-stone-950/86 p-8 text-center text-white backdrop-blur-sm">
           {state === "error" ? (
             <VideoOff className="h-12 w-12 text-amber-300" aria-hidden="true" />
           ) : (
             <Camera className="h-12 w-12 text-teal-200" aria-hidden="true" />
           )}
           <p className="max-w-sm text-lg font-semibold leading-snug">{message}</p>
+          {state !== "error" ? <Spinner label="Opening camera" /> : null}
         </div>
       ) : null}
 

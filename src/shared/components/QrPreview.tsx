@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
+import { Card } from "@/shared/components/ui/Card";
+import { Spinner } from "@/shared/components/ui/Spinner";
 
 interface QrPreviewProps {
   value: string;
@@ -32,16 +34,20 @@ export function QrPreview({ value }: QrPreviewProps) {
   }, [value]);
 
   if (!qrDataUrl) {
-    return null;
+    return (
+      <Card className="grid max-w-xs gap-3 p-4">
+        <Spinner label="Preparing QR" className="text-stone-600" />
+      </Card>
+    );
   }
 
   return (
-    <div className="grid max-w-xs gap-3 rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
+    <Card className="motion-enter grid max-w-xs gap-3 p-4">
       <img src={qrDataUrl} alt="QR code for local photo page" className="w-48" />
       <p className="text-sm font-medium text-stone-600">
         Local QR: opens this photo in the same browser storage until cloud sharing is
         added.
       </p>
-    </div>
+    </Card>
   );
 }

@@ -1,5 +1,7 @@
 import { AlertTriangle, CheckCircle2, ImagePlus, Trash2 } from "lucide-react";
 import type { ImageDimensions } from "@/shared/lib/image";
+import { Button } from "@/shared/components/ui/Button";
+import { Card } from "@/shared/components/ui/Card";
 
 interface DesignerOverlayPanelProps {
   outputWidth: number;
@@ -25,7 +27,7 @@ export function DesignerOverlayPanel({
     overlayDimensions?.height === outputHeight;
 
   return (
-    <section className="rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
+    <Card className="motion-card p-4">
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-teal-800">
@@ -44,7 +46,7 @@ export function DesignerOverlayPanel({
         output.
       </p>
 
-      <label className="booth-focus-ring mt-4 flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-stone-300 bg-stone-50 px-4 py-5 text-sm font-semibold text-stone-800 hover:border-teal-700">
+      <label className="booth-focus-ring mt-4 flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-stone-300 bg-stone-50 px-4 py-5 text-sm font-semibold text-stone-800 transition hover:-translate-y-0.5 hover:border-teal-700 hover:bg-teal-50/50">
         <ImagePlus className="h-5 w-5 text-stone-500" aria-hidden="true" />
         Upload or replace overlay
         <input
@@ -79,15 +81,21 @@ export function DesignerOverlayPanel({
       </div>
 
       {overlayDataUrl ? (
-        <button
+        <Button
           type="button"
           onClick={onRemove}
-          className="booth-focus-ring mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md border border-stone-300 bg-white px-4 py-2 font-semibold text-stone-800 hover:bg-stone-100"
+          variant="secondary"
+          className="mt-4 w-full"
         >
           <Trash2 className="h-4 w-4" aria-hidden="true" />
           Remove overlay
-        </button>
-      ) : null}
-    </section>
+        </Button>
+      ) : (
+        <div className="motion-pop mt-4 rounded-md border border-dashed border-stone-300 bg-stone-50 p-4 text-sm font-medium text-stone-600">
+          No overlay yet. Upload a transparent PNG to preview it above the layout
+          slots.
+        </div>
+      )}
+    </Card>
   );
 }

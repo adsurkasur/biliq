@@ -24,6 +24,7 @@ export function useLayoutDesigner(eventSlug: string) {
   const [overlayDimensions, setOverlayDimensions] = useState<ImageDimensions | null>(
     null
   );
+  const [selectedSlotIndex, setSelectedSlotIndex] = useState(0);
   const [status, setStatus] = useState("");
 
   useEffect(() => {
@@ -89,6 +90,7 @@ export function useLayoutDesigner(eventSlug: string) {
   }
 
   function addSlot() {
+    const nextSelectedIndex = layout?.slots.length ?? 0;
     updateLayout((current) => {
       if (!current || current.slots.length >= MAX_CAPTURE_COUNT) {
         return current;
@@ -111,6 +113,8 @@ export function useLayoutDesigner(eventSlug: string) {
         slots: [...current.slots, nextSlot]
       });
     });
+    setSelectedSlotIndex(Math.min(nextSelectedIndex, MAX_CAPTURE_COUNT - 1));
+    setStatus("Added a photo slot. Save to apply it to the booth.");
   }
 
   function removeSlot(index: number) {
@@ -119,12 +123,17 @@ export function useLayoutDesigner(eventSlug: string) {
         return current;
       }
 
-      return normalizeDraftLayout({
+      const nextLayout = normalizeDraftLayout({
         ...current,
         name: `Custom ${current.slots.length - 1}-photo layout`,
         slots: current.slots.filter((_, slotIndex) => slotIndex !== index)
       });
+      setSelectedSlotIndex((currentIndex) =>
+        Math.min(currentIndex, nextLayout.slots.length - 1)
+      );
+      return nextLayout;
     });
+    setStatus("Removed a photo slot. Save to apply it to the booth.");
   }
 
   function updateSlotNumber(index: number, field: SlotNumberField, value?: number) {
@@ -172,7 +181,7 @@ export function useLayoutDesigner(eventSlug: string) {
       eventConfig.outputHeight
     );
 
-    setStatus("");
+    setStatus(`Reset to the default ${captureCount}-photo layout. Save to apply it.`);
     setLayout(
       normalizeDraftLayout({
         ...preset,
@@ -180,6 +189,7 @@ export function useLayoutDesigner(eventSlug: string) {
         name: `Custom ${preset.slots.length}-photo layout`
       })
     );
+    setSelectedSlotIndex(0);
   }
 
   function saveLayout() {
@@ -237,6 +247,7 @@ export function useLayoutDesigner(eventSlug: string) {
     layout,
     overlayDimensions,
     overlayFileName,
+    selectedSlotIndex,
     status,
     addSlot,
     handleOverlayUpload,
@@ -244,6 +255,7 @@ export function useLayoutDesigner(eventSlug: string) {
     removeSlot,
     resetToDefaultLayout,
     saveLayout,
+    setSelectedSlotIndex,
     updateSlotFit,
     updateSlotNumber
   };
