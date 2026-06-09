@@ -4,6 +4,7 @@ import { Save } from "lucide-react";
 import { OUTPUT_PRESETS } from "@/domain/events/defaults";
 import {
   clampCaptureCount,
+  CUSTOM_LAYOUT_ID,
   defaultLayouts,
   getLayoutById
 } from "@/domain/layouts/defaultLayouts";
@@ -34,7 +35,7 @@ export function EventSetupForm() {
     return <p className="text-sm font-medium text-stone-600">Loading setup...</p>;
   }
 
-  const selectedLayout = getLayoutById(eventConfig.layoutId);
+  const selectedLayout = eventConfig.customLayout ?? getLayoutById(eventConfig.layoutId);
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-[1fr_380px]">
@@ -159,6 +160,12 @@ export function EventSetupForm() {
               value={eventConfig.layoutId}
               onChange={(event) => handleLayoutChange(event.target.value)}
             >
+              {eventConfig.customLayout ? (
+                <option value={CUSTOM_LAYOUT_ID}>
+                  Custom layout - {eventConfig.customLayout.slots.length} photo
+                  {eventConfig.customLayout.slots.length > 1 ? "s" : ""}
+                </option>
+              ) : null}
               {defaultLayouts.map((layout) => (
                 <option key={layout.id} value={layout.id}>
                   {layout.name}

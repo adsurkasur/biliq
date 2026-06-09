@@ -2,9 +2,9 @@
 
 import type { RefObject } from "react";
 import Link from "next/link";
-import { Camera, Home, Settings } from "lucide-react";
+import { Camera, Home, Palette, Settings } from "lucide-react";
 import type { EventConfig } from "@/domain/events/types";
-import { clampCaptureCount } from "@/domain/layouts/defaultLayouts";
+import { getCaptureCountForEvent } from "@/domain/layouts/defaultLayouts";
 import { CameraPreview } from "@/features/booth/components/CameraPreview";
 import { CaptureProgress } from "@/features/booth/components/CaptureProgress";
 import { CountdownOverlay } from "@/features/booth/components/CountdownOverlay";
@@ -34,12 +34,14 @@ export function BoothCaptureSurface({
   onCameraError,
   onStart
 }: BoothCaptureSurfaceProps) {
-  const totalShots = clampCaptureCount(eventConfig.captureCount);
+  const totalShots = getCaptureCountForEvent(eventConfig);
   const canStart = captureState === "ready";
+  const frameRatio = eventConfig.outputWidth / eventConfig.outputHeight;
+  const frameHeightRatio = eventConfig.outputHeight / eventConfig.outputWidth;
 
   return (
     <main className="h-dvh overflow-hidden bg-stone-950 text-white">
-      <div className="relative flex h-dvh items-center justify-center px-3 py-4 sm:px-5">
+      <div className="relative flex h-dvh items-center justify-center overflow-hidden">
         <header className="absolute left-3 right-3 top-3 z-40 flex items-center justify-between gap-3 sm:left-5 sm:right-5">
           <div className="min-w-0 rounded-full bg-stone-950/55 px-4 py-2 backdrop-blur">
             <p className="truncate text-sm font-semibold uppercase tracking-wide text-teal-100">
@@ -64,6 +66,14 @@ export function BoothCaptureSurface({
             >
               <Settings className="h-4 w-4" aria-hidden="true" />
             </Link>
+            <Link
+              href={routes.designer(eventConfig.slug)}
+              className="booth-focus-ring inline-flex h-10 w-10 items-center justify-center rounded-full bg-stone-950/55 text-white backdrop-blur hover:bg-stone-800"
+              aria-label="Designer"
+              title="Designer"
+            >
+              <Palette className="h-4 w-4" aria-hidden="true" />
+            </Link>
           </div>
         </header>
 
@@ -75,7 +85,13 @@ export function BoothCaptureSurface({
           overlayDataUrl={eventConfig.overlayDataUrl}
           onReady={onCameraReady}
           onError={onCameraError}
-          className="max-h-[calc(100dvh-2rem)] max-w-[min(96vw,calc((100dvh-2rem)*0.75))] rounded-xl"
+          className="rounded-none sm:rounded-xl"
+          style={{
+            width: `min(100vw, calc(100dvh * ${frameRatio}))`,
+            height: `min(100dvh, calc(100vw * ${frameHeightRatio}))`,
+            maxWidth: "100vw",
+            maxHeight: "100dvh"
+          }}
         >
           <CountdownOverlay
             value={countdown}

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getEventBySlug } from "@/domain/events/storage";
 import type { EventConfig } from "@/domain/events/types";
 import {
-  clampCaptureCount,
+  getCaptureCountForEvent,
   getScaledLayoutForEvent
 } from "@/domain/layouts/defaultLayouts";
 import { captureFrame } from "@/domain/media/captureFrame";
@@ -72,7 +72,8 @@ export function useBoothSession(eventSlug: string) {
     setCameraMessage("");
 
     try {
-      const totalShots = clampCaptureCount(eventConfig.captureCount);
+      const layout = getScaledLayoutForEvent(eventConfig);
+      const totalShots = getCaptureCountForEvent(eventConfig);
       const capturedFrames: CapturedFrame[] = [];
 
       for (let index = 0; index < totalShots; index += 1) {
@@ -107,7 +108,7 @@ export function useBoothSession(eventSlug: string) {
       const composed = await composePhoto({
         capturedFrames,
         eventConfig,
-        layout: getScaledLayoutForEvent(eventConfig)
+        layout
       });
 
       if (captureTokenRef.current !== token) {

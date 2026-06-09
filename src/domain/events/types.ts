@@ -1,3 +1,5 @@
+import type { LayoutDefinition } from "@/domain/layouts/types";
+
 export type PrinterMode = "browser-print";
 
 export interface EventConfig {
@@ -9,6 +11,7 @@ export interface EventConfig {
   outputWidth: number;
   outputHeight: number;
   layoutId: string;
+  customLayout?: LayoutDefinition;
   overlayDataUrl?: string;
   overlayUrl?: string;
   printerMode: PrinterMode;

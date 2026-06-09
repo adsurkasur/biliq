@@ -1,7 +1,10 @@
 import type { EventConfig } from "@/domain/events/types";
 import {
   clampCaptureCount,
-  getRecommendedLayoutIdForCaptureCount
+  CUSTOM_LAYOUT_ID,
+  getLayoutById,
+  getRecommendedLayoutIdForCaptureCount,
+  normalizeLayoutDefinition
 } from "@/domain/layouts/defaultLayouts";
 import { isBrowser } from "@/shared/lib/browser";
 import { toSlug } from "@/shared/lib/slug";
@@ -36,11 +39,31 @@ export function getEventById(id: string): EventConfig | undefined {
 export function upsertEventConfig(eventConfig: EventConfig): EventConfig {
   const events = getEvents();
   const existingIndex = events.findIndex((event) => event.id === eventConfig.id);
-  const captureCount = clampCaptureCount(eventConfig.captureCount);
+  const customLayout = eventConfig.customLayout
+    ? normalizeLayoutDefinition(eventConfig.customLayout, {
+        canvasWidth: eventConfig.outputWidth,
+        canvasHeight: eventConfig.outputHeight,
+        id: CUSTOM_LAYOUT_ID,
+        name: eventConfig.customLayout.name || "Custom layout"
+      })
+    : undefined;
+  const captureCount = customLayout
+    ? clampCaptureCount(customLayout.slots.length)
+    : clampCaptureCount(eventConfig.captureCount);
+  let layoutId = CUSTOM_LAYOUT_ID;
+
+  if (!customLayout) {
+    const presetLayout = getLayoutById(eventConfig.layoutId);
+    layoutId =
+      presetLayout.slots.length === captureCount
+        ? presetLayout.id
+        : getRecommendedLayoutIdForCaptureCount(captureCount);
+  }
   const nextEvent = {
     ...eventConfig,
+    customLayout,
     captureCount,
-    layoutId: getRecommendedLayoutIdForCaptureCount(captureCount),
+    layoutId,
     slug: toSlug(eventConfig.slug || eventConfig.name),
     updatedAt: new Date().toISOString()
   };
@@ -57,6 +80,22 @@ export function upsertEventConfig(eventConfig: EventConfig): EventConfig {
 export function deleteEventConfig(id: string): void {
   const nextEvents = getEvents().filter((event) => event.id !== id);
   window.localStorage.setItem(storageKeys.events, JSON.stringify(nextEvents));
+}
+
+export function deleteEventBySlug(slug: string): EventConfig | undefined {
+  const events = getEvents();
+  const eventToDelete = events.find((event) => event.slug === slug);
+
+  if (!eventToDelete) {
+    return undefined;
+  }
+
+  window.localStorage.setItem(
+    storageKeys.events,
+    JSON.stringify(events.filter((event) => event.id !== eventToDelete.id))
+  );
+
+  return eventToDelete;
 }
 
 export function ensureUniqueSlug(slug: string, eventId?: string): string {

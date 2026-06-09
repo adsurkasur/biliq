@@ -20,6 +20,7 @@ Current routes:
 
 - `src/app/page.tsx`
 - `src/app/setup/page.tsx`
+- `src/app/designer/[eventSlug]/page.tsx`
 - `src/app/booth/[eventSlug]/page.tsx`
 - `src/app/gallery/[eventSlug]/page.tsx`
 - `src/app/photo/[photoId]/page.tsx`
@@ -33,6 +34,8 @@ Contains product/domain logic that should not depend on React UI.
 - `domain/photos` - Photo types and IndexedDB persistence.
 - `domain/layouts` - Layout types and 1/2/3/4-photo layout definitions.
 - `domain/media` - Camera access, video frame capture, canvas composition, and media types.
+- `domain/auth` - Future Firebase Auth-facing user and provider contracts.
+- `domain/cloud` - Future Google Drive storage contracts and folder strategy.
 
 Future cloud upload, offline sync, and print bridge work should integrate from this layer outward rather than being embedded in React components.
 
@@ -42,6 +45,7 @@ Contains feature-specific UI, hooks, and small feature helpers.
 
 - `features/events` - Home/event console.
 - `features/setup` - Event setup form, overlay info, output info, and setup hooks.
+- `features/designer` - Custom layout and overlay designer foundation.
 - `features/booth` - Booth session hook, camera hook, fullscreen capture UI, review UI, countdown, and progress display.
 - `features/gallery` - Gallery grid and gallery actions.
 - `features/photo` - Photo detail client UI.

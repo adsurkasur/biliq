@@ -1,9 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Download, GalleryHorizontal, RotateCcw, Save } from "lucide-react";
+import {
+  ArrowLeft,
+  Download,
+  GalleryHorizontal,
+  Palette,
+  RotateCcw,
+  Save
+} from "lucide-react";
 import type { EventConfig } from "@/domain/events/types";
-import { clampCaptureCount } from "@/domain/layouts/defaultLayouts";
+import { getCaptureCountForEvent } from "@/domain/layouts/defaultLayouts";
 import type { ComposedPhoto } from "@/domain/media/types";
 import type { PhotoRecord } from "@/domain/photos/types";
 import { FinalOutputPreview } from "@/features/booth/components/FinalOutputPreview";
@@ -64,6 +71,13 @@ export function BoothReviewPanel({
               <GalleryHorizontal className="h-4 w-4" aria-hidden="true" />
               Gallery
             </Link>
+            <Link
+              href={routes.designer(eventConfig.slug)}
+              className="booth-focus-ring inline-flex min-h-11 items-center gap-2 rounded-md border border-stone-300 bg-white px-4 py-2 font-semibold text-stone-800 hover:bg-stone-100"
+            >
+              <Palette className="h-4 w-4" aria-hidden="true" />
+              Designer
+            </Link>
           </div>
         </header>
 
@@ -118,7 +132,7 @@ export function BoothReviewPanel({
                 Session
               </p>
               <p className="mt-1 text-lg font-bold text-stone-950">
-                {clampCaptureCount(eventConfig.captureCount)} photo layout
+                {getCaptureCountForEvent(eventConfig)} photo layout
               </p>
               <p className="mt-2 text-sm font-medium text-stone-600">
                 Countdown used: {Math.max(0, Math.round(eventConfig.countdownSeconds))}s

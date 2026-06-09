@@ -2,17 +2,60 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Camera, GalleryHorizontal, Pencil, Plus, Settings } from "lucide-react";
-import { getEvents } from "@/domain/events/storage";
+import {
+  AlertTriangle,
+  Camera,
+  GalleryHorizontal,
+  Palette,
+  Pencil,
+  Plus,
+  Settings,
+  Trash2,
+  X
+} from "lucide-react";
+import { deleteEventConfig, getEvents } from "@/domain/events/storage";
 import type { EventConfig } from "@/domain/events/types";
+import { deletePhotosByEventId } from "@/domain/photos/storage";
 import { routes } from "@/shared/config/routes";
 
 export function EventConsole() {
   const [events, setEvents] = useState<EventConfig[]>([]);
+  const [deleteTarget, setDeleteTarget] = useState<EventConfig | null>(null);
+  const [status, setStatus] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     setEvents(getEvents());
   }, []);
+
+  async function handleDeleteEvent() {
+    if (!deleteTarget || isDeleting) {
+      return;
+    }
+
+    setIsDeleting(true);
+    setStatus("");
+
+    try {
+      const deletedPhotos = await deletePhotosByEventId(deleteTarget.id);
+      deleteEventConfig(deleteTarget.id);
+      setEvents(getEvents());
+      setStatus(
+        `Deleted "${deleteTarget.name}" and ${deletedPhotos} saved photo${
+          deletedPhotos === 1 ? "" : "s"
+        }.`
+      );
+      setDeleteTarget(null);
+    } catch (error) {
+      setStatus(
+        error instanceof Error
+          ? error.message
+          : "The event could not be deleted. Nothing was removed."
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  }
 
   return (
     <main className="min-h-screen px-5 py-6 sm:px-8 lg:px-10">
@@ -34,6 +77,12 @@ export function EventConsole() {
             New event
           </Link>
         </header>
+
+        {status ? (
+          <div className="rounded-md border border-stone-200 bg-white px-4 py-3 text-sm font-semibold text-stone-700 shadow-sm">
+            {status}
+          </div>
+        ) : null}
 
         {events.length ? (
           <section className="grid gap-4">
@@ -57,7 +106,7 @@ export function EventConsole() {
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2 sm:flex">
+                  <div className="grid grid-cols-2 gap-2 sm:flex">
                     <Link
                       href={routes.booth(event.slug)}
                       className="booth-focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-stone-900 px-4 py-2 font-semibold text-white hover:bg-stone-800"
@@ -73,12 +122,27 @@ export function EventConsole() {
                       Gallery
                     </Link>
                     <Link
+                      href={routes.designer(event.slug)}
+                      className="booth-focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-stone-300 bg-white px-4 py-2 font-semibold text-stone-800 hover:bg-stone-100"
+                    >
+                      <Palette className="h-4 w-4" aria-hidden="true" />
+                      Designer
+                    </Link>
+                    <Link
                       href={routes.setup(event.slug)}
                       className="booth-focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-stone-300 bg-white px-4 py-2 font-semibold text-stone-800 hover:bg-stone-100"
                     >
                       <Pencil className="h-4 w-4" aria-hidden="true" />
                       Edit
                     </Link>
+                    <button
+                      type="button"
+                      onClick={() => setDeleteTarget(event)}
+                      className="booth-focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-red-200 bg-white px-4 py-2 font-semibold text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                      Delete
+                    </button>
                   </div>
                 </article>
               ))}
@@ -105,6 +169,64 @@ export function EventConsole() {
           </section>
         )}
       </div>
+
+      {deleteTarget ? (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-stone-950/55 px-4 py-6">
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-event-title"
+            className="w-full max-w-md rounded-lg bg-white p-5 shadow-booth"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <span className="grid h-10 w-10 flex-none place-items-center rounded-full bg-red-50 text-red-700">
+                  <AlertTriangle className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <div>
+                  <h2
+                    id="delete-event-title"
+                    className="text-xl font-bold text-stone-950"
+                  >
+                    Delete event?
+                  </h2>
+                  <p className="mt-2 text-sm font-medium leading-6 text-stone-600">
+                    This removes "{deleteTarget.name}" from this browser and deletes
+                    the saved local photos for this event. This cannot be undone.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                className="booth-focus-ring inline-flex h-9 w-9 items-center justify-center rounded-md border border-stone-300 text-stone-700 hover:bg-stone-100"
+                aria-label="Cancel"
+              >
+                <X className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
+
+            <div className="mt-5 grid gap-2 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                className="booth-focus-ring inline-flex min-h-11 items-center justify-center rounded-md border border-stone-300 bg-white px-4 py-2 font-semibold text-stone-800 hover:bg-stone-100"
+              >
+                Keep event
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteEvent}
+                disabled={isDeleting}
+                className="booth-focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-red-700 px-4 py-2 font-semibold text-white hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
+                {isDeleting ? "Deleting..." : "Delete event"}
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </main>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, type RefObject } from "react";
+import { type CSSProperties, type ReactNode, type RefObject } from "react";
 import { Camera, VideoOff } from "lucide-react";
 import { useCameraStream } from "@/features/booth/hooks/useCameraStream";
 
@@ -11,6 +11,7 @@ interface CameraPreviewProps {
   outputHeight?: number;
   overlayDataUrl?: string;
   className?: string;
+  style?: CSSProperties;
   children?: ReactNode;
   onReady?: () => void;
   onError?: (message: string) => void;
@@ -23,6 +24,7 @@ export function CameraPreview({
   outputHeight = 1600,
   overlayDataUrl,
   className = "",
+  style,
   children,
   onReady,
   onError
@@ -37,7 +39,7 @@ export function CameraPreview({
   return (
     <div
       className={`relative w-full overflow-hidden rounded-lg bg-stone-950 shadow-booth ${className}`}
-      style={{ aspectRatio: `${outputWidth} / ${outputHeight}` }}
+      style={{ aspectRatio: `${outputWidth} / ${outputHeight}`, ...style }}
     >
       <video
         ref={videoRef}

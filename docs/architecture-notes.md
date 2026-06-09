@@ -25,8 +25,14 @@ Server-rendered route files should not call these browser APIs directly.
 
 ## Layout And Composition
 
-Layout definitions live in `src/domain/layouts/defaultLayouts.ts`. The composition engine accepts an array of captured frames and fills the active layout slots using cover-fit behavior, then draws the optional full-canvas overlay above all photo slots.
+Layout definitions live in `src/domain/layouts/defaultLayouts.ts`. The designer can save an optional custom layout on the event config. The composition engine accepts an array of captured frames and fills the active layout slots using cover-fit behavior, then draws the optional full-canvas overlay above all photo slots.
 
 ## Future Integration Points
 
-Cloud upload should be added behind a media/photo persistence boundary rather than inside the booth UI. PWA/offline sync should build around IndexedDB photo records. Camera switching should extend the camera hook and media domain without changing composition or gallery behavior.
+Cloud upload should be added behind auth and storage provider interfaces rather than inside the booth UI. PWA/offline sync should build around IndexedDB photo records. Camera switching should extend the camera hook and media domain without changing composition or gallery behavior.
+
+Prepared but unused cloud contracts live in:
+
+- `src/domain/auth`
+- `src/domain/cloud`
+- `src/shared/config/env.ts`

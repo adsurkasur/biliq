@@ -13,6 +13,9 @@ Implemented:
 - 1-photo, 2-photo, 3-photo, and 4-photo capture flows.
 - Canvas composition, final preview, retake, download, and local save.
 - IndexedDB-backed local gallery with thumbnails, delete, download, detail, QR preview, and browser print route.
+- Event deletion with associated local photo cleanup.
+- Basic numeric layout and overlay designer foundation.
+- Firebase Auth and Google Drive preparation through placeholder interfaces and docs.
 
 Not implemented:
 
@@ -48,6 +51,7 @@ npm.cmd run check
 
 - `/` - Local event console.
 - `/setup` - Create or edit a local event.
+- `/designer/[eventSlug]` - Edit a local event overlay and custom numeric photo layout.
 - `/booth/[eventSlug]` - Fullscreen booth capture flow.
 - `/gallery/[eventSlug]` - Local event gallery.
 - `/photo/[photoId]` - Local photo detail/share page.
@@ -60,3 +64,5 @@ QR links are local-only because saved photos live in the same browser's IndexedD
 Printing uses the browser print dialog only. Silent kiosk printing requires separate device/browser setup, such as Chrome or Edge kiosk printing mode.
 
 Camera support depends on browser permissions, device hardware, and secure-context rules. Localhost works for development; deployed camera usage should be tested over HTTPS.
+
+Firebase Auth and Google Drive are prepared only through placeholder types, environment variable names, and documentation. No real login or cloud upload runs in this MVP.

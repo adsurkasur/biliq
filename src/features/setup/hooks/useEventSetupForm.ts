@@ -14,6 +14,7 @@ import {
 import type { EventConfig } from "@/domain/events/types";
 import {
   clampCaptureCount,
+  CUSTOM_LAYOUT_ID,
   getLayoutById,
   getRecommendedLayoutIdForCaptureCount
 } from "@/domain/layouts/defaultLayouts";
@@ -56,7 +57,8 @@ export function useEventSetupForm() {
     const captureCount = clampCaptureCount(captureCountValue);
     updateConfig({
       captureCount,
-      layoutId: getRecommendedLayoutIdForCaptureCount(captureCount)
+      layoutId: getRecommendedLayoutIdForCaptureCount(captureCount),
+      customLayout: undefined
     });
   }
 
@@ -64,7 +66,8 @@ export function useEventSetupForm() {
     const layout = getLayoutById(layoutId);
     updateConfig({
       layoutId: layout.id,
-      captureCount: layout.slots.length
+      captureCount: layout.slots.length,
+      customLayout: undefined
     });
   }
 
@@ -105,7 +108,10 @@ export function useEventSetupForm() {
       return;
     }
 
-    const captureCount = clampCaptureCount(eventConfig.captureCount);
+    const hasCustomLayout = Boolean(eventConfig.customLayout);
+    const captureCount = hasCustomLayout
+      ? clampCaptureCount(eventConfig.customLayout?.slots.length ?? eventConfig.captureCount)
+      : clampCaptureCount(eventConfig.captureCount);
     const slug = ensureUniqueSlug(eventConfig.slug || eventConfig.name, eventConfig.id);
     const saved = upsertEventConfig({
       ...eventConfig,
@@ -113,7 +119,9 @@ export function useEventSetupForm() {
       slug,
       countdownSeconds: Math.max(0, Math.round(eventConfig.countdownSeconds)),
       captureCount,
-      layoutId: getRecommendedLayoutIdForCaptureCount(captureCount)
+      layoutId: hasCustomLayout
+        ? CUSTOM_LAYOUT_ID
+        : getRecommendedLayoutIdForCaptureCount(captureCount)
     });
 
     setStatus("Event saved");

@@ -48,6 +48,14 @@ export async function deletePhoto(id: string): Promise<void> {
   db.close();
 }
 
+export async function deletePhotosByEventId(eventId: string): Promise<number> {
+  return deletePhotosByIndexValue("eventId", eventId);
+}
+
+export async function deletePhotosByEventSlug(eventSlug: string): Promise<number> {
+  return deletePhotosByIndexValue("eventSlug", eventSlug);
+}
+
 function openPhotoDb(): Promise<IDBDatabase> {
   if (!isBrowser() || !("indexedDB" in window)) {
     return Promise.reject(
@@ -89,4 +97,40 @@ function withStore<T>(
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
   });
+}
+
+async function deletePhotosByIndexValue(
+  indexName: "eventId" | "eventSlug",
+  value: string
+): Promise<number> {
+  const db = await openPhotoDb();
+
+  try {
+    return await new Promise<number>((resolve, reject) => {
+      let deletedCount = 0;
+      const transaction = db.transaction(storageKeys.photoStoreName, "readwrite");
+      const store = transaction.objectStore(storageKeys.photoStoreName);
+      const index = store.index(indexName);
+      const request = index.openCursor(IDBKeyRange.only(value));
+
+      request.onsuccess = () => {
+        const cursor = request.result;
+
+        if (!cursor) {
+          return;
+        }
+
+        deletedCount += 1;
+        cursor.delete();
+        cursor.continue();
+      };
+
+      request.onerror = () => reject(request.error);
+      transaction.oncomplete = () => resolve(deletedCount);
+      transaction.onerror = () => reject(transaction.error);
+      transaction.onabort = () => reject(transaction.error);
+    });
+  } finally {
+    db.close();
+  }
 }

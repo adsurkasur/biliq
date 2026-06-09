@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Settings } from "lucide-react";
+import { ArrowLeft, Palette, Settings } from "lucide-react";
 import { GalleryGrid } from "@/features/gallery/components/GalleryGrid";
 import { routes } from "@/shared/config/routes";
 
@@ -38,6 +38,13 @@ export default async function GalleryPage({ params }: GalleryPageProps) {
             >
               <Settings className="h-4 w-4" aria-hidden="true" />
               Setup
+            </Link>
+            <Link
+              href={routes.designer(eventSlug)}
+              className="booth-focus-ring inline-flex min-h-11 items-center gap-2 rounded-md border border-stone-300 bg-white px-4 py-2 font-semibold text-stone-800 hover:bg-stone-100"
+            >
+              <Palette className="h-4 w-4" aria-hidden="true" />
+              Designer
             </Link>
           </div>
         </header>
