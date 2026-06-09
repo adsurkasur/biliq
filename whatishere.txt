@@ -1,0 +1,130 @@
+Directory: F:\My Files\Projects\client-gita
+Ignored: .git, .idea, .next, .npm-cache, .venv, .vscode, __pycache__, node_modules, whatishere.py, whatishere.txt
+============================================================
+
+[client-gita/]
+    .gitignore  (310 bytes)
+    README.md  (2,348 bytes)
+    next-env.d.ts  (262 bytes)
+    next.config.mjs  (92 bytes)
+    package-lock.json  (82,533 bytes)
+    package.json  (685 bytes)
+    postcss.config.mjs  (103 bytes)
+    tailwind.config.ts  (421 bytes)
+    tsconfig.json  (603 bytes)
+    [docs/]
+        architecture-notes.md  (1,836 bytes)
+        project-structure.md  (2,462 bytes)
+    [Product Definition & Architecture v0.1_files/]
+        colorschememapping.xml  (314 bytes)
+        filelist.xml  (252 bytes)
+        themedata.thmx  (3,340 bytes)
+    [reference/]
+        Master Plan Web Photo Booth.md  (9,470 bytes)
+        Product Definition & Architecture v0.1.docx  (15,758 bytes)
+        Product Definition & Architecture v0.1.htm  (97,354 bytes)
+        screenshot-lumabooth.docx  (1,917,726 bytes)
+        screenshot-lumabooth.pdf  (2,231,875 bytes)
+    [reports/]
+        agent-002.md  (6,562 bytes)
+        agent-003.md  (10,873 bytes)
+    [src/]
+        [app/]
+            globals.css  (1,013 bytes)
+            layout.tsx  (402 bytes)
+            page.tsx  (141 bytes)
+            [booth/]
+                [[eventSlug]/]
+                    page.tsx  (309 bytes)
+            [gallery/]
+                [[eventSlug]/]
+                    page.tsx  (1,796 bytes)
+            [photo/]
+                [[photoId]/]
+                    page.tsx  (319 bytes)
+            [print/]
+                [[photoId]/]
+                    page.tsx  (301 bytes)
+            [setup/]
+                page.tsx  (1,194 bytes)
+        [domain/]
+            [events/]
+                defaults.ts  (1,050 bytes)
+                storage.ts  (2,216 bytes)
+                types.ts  (362 bytes)
+            [layouts/]
+                defaultLayouts.ts  (4,347 bytes)
+                types.ts  (345 bytes)
+            [media/]
+                camera.ts  (2,634 bytes)
+                captureFrame.ts  (806 bytes)
+                composePhoto.ts  (4,762 bytes)
+                types.ts  (189 bytes)
+            [photos/]
+                storage.ts  (2,913 bytes)
+                types.ts  (255 bytes)
+        [features/]
+            [booth/]
+                [components/]
+                    BoothCaptureSurface.tsx  (4,285 bytes)
+                    BoothClient.tsx  (2,121 bytes)
+                    BoothReviewPanel.tsx  (6,648 bytes)
+                    CameraPreview.tsx  (2,043 bytes)
+                    CaptureProgress.tsx  (1,257 bytes)
+                    CountdownOverlay.tsx  (803 bytes)
+                    FinalOutputPreview.tsx  (1,356 bytes)
+                [hooks/]
+                    useBoothSession.ts  (5,411 bytes)
+                    useCameraStream.ts  (2,458 bytes)
+                [lib/]
+                    boothState.ts  (1,238 bytes)
+            [events/]
+                [components/]
+                    EventConsole.tsx  (4,886 bytes)
+            [gallery/]
+                [components/]
+                    GalleryGrid.tsx  (4,191 bytes)
+                [lib/]
+                    galleryActions.ts  (442 bytes)
+            [photo/]
+                [components/]
+                    PhotoDetailClient.tsx  (4,472 bytes)
+            [print/]
+                [components/]
+                    PrintButton.tsx  (944 bytes)
+                    PrintClient.tsx  (2,845 bytes)
+            [setup/]
+                [components/]
+                    EventSetupForm.tsx  (7,659 bytes)
+                    OutputPresetInfo.tsx  (1,255 bytes)
+                    OverlayAssetInfo.tsx  (3,842 bytes)
+                [hooks/]
+                    useEventSetupForm.ts  (3,680 bytes)
+                    useOverlayDimensions.ts  (818 bytes)
+                [lib/]
+                    eventFormDefaults.ts  (134 bytes)
+        [shared/]
+            [components/]
+                QrPreview.tsx  (1,009 bytes)
+            [config/]
+                appConfig.ts  (122 bytes)
+                routes.ts  (443 bytes)
+                storageKeys.ts  (138 bytes)
+            [lib/]
+                browser.ts  (81 bytes)
+                createQrValue.ts  (464 bytes)
+                download.ts  (410 bytes)
+                id.ts  (236 bytes)
+                image.ts  (765 bytes)
+                slug.ts  (203 bytes)
+                validation.ts  (533 bytes)
+            [types/]
+                index.ts  (301 bytes)
+        [_legacy_components/]
+        [_legacy_lib/]
+            [camera/]
+            [capture/]
+            [composition/]
+            [layouts/]
+            [qr/]
+            [storage/]
