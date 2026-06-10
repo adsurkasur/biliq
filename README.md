@@ -1,6 +1,6 @@
-# Local Web Photo Booth
+# Biliq Photo Booth
 
-A local-first web photo booth MVP built with Next.js, React, TypeScript, and Tailwind CSS. The app is designed around a tablet portrait booth flow and keeps camera capture, canvas composition, gallery storage, QR preview, and browser printing in the client browser.
+Biliq, a browser-based event photo booth system. This is a local-first web photo booth MVP built with Next.js, React, TypeScript, and Tailwind CSS. The app is designed around a tablet portrait booth flow and keeps camera capture, canvas composition, gallery storage, QR preview, and browser printing in the client browser.
 
 ## Current MVP Status
 

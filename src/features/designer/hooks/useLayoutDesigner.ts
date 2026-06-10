@@ -13,10 +13,12 @@ import type { LayoutDefinition, LayoutSlot, SlotFit } from "@/domain/layouts/typ
 import { getEventBySlug, upsertEventConfig } from "@/domain/events/storage";
 import type { EventConfig } from "@/domain/events/types";
 import { getImageDimensions, type ImageDimensions } from "@/shared/lib/image";
+import { useToast } from "@/shared/components/ui/toast/useToast";
 
 type SlotNumberField = "x" | "y" | "width" | "height" | "borderRadius";
 
 export function useLayoutDesigner(eventSlug: string) {
+  const { toast } = useToast();
   const [isLoaded, setIsLoaded] = useState(false);
   const [eventConfig, setEventConfig] = useState<EventConfig | null>(null);
   const [layout, setLayout] = useState<LayoutDefinition | null>(null);
@@ -25,7 +27,6 @@ export function useLayoutDesigner(eventSlug: string) {
     null
   );
   const [selectedSlotIndex, setSelectedSlotIndex] = useState(0);
-  const [status, setStatus] = useState("");
 
   useEffect(() => {
     const event = getEventBySlug(eventSlug) ?? null;
@@ -67,7 +68,6 @@ export function useLayoutDesigner(eventSlug: string) {
       return;
     }
 
-    setStatus("");
     setOverlayFileName(file.name);
 
     const reader = new FileReader();
@@ -82,7 +82,6 @@ export function useLayoutDesigner(eventSlug: string) {
   }
 
   function removeOverlay() {
-    setStatus("");
     setOverlayFileName("");
     setEventConfig((current) =>
       current ? { ...current, overlayDataUrl: undefined } : current
@@ -114,7 +113,7 @@ export function useLayoutDesigner(eventSlug: string) {
       });
     });
     setSelectedSlotIndex(Math.min(nextSelectedIndex, MAX_CAPTURE_COUNT - 1));
-    setStatus("Added a photo slot. Save to apply it to the booth.");
+    toast("Added a photo slot. Save to apply it to the booth.", "info");
   }
 
   function removeSlot(index: number) {
@@ -133,7 +132,7 @@ export function useLayoutDesigner(eventSlug: string) {
       );
       return nextLayout;
     });
-    setStatus("Removed a photo slot. Save to apply it to the booth.");
+    toast("Removed a photo slot. Save to apply it to the booth.", "info");
   }
 
   function updateSlotNumber(index: number, field: SlotNumberField, value?: number) {
@@ -181,7 +180,7 @@ export function useLayoutDesigner(eventSlug: string) {
       eventConfig.outputHeight
     );
 
-    setStatus(`Reset to the default ${captureCount}-photo layout. Save to apply it.`);
+    toast(`Reset to the default ${captureCount}-photo layout. Save to apply it.`, "info");
     setLayout(
       normalizeDraftLayout({
         ...preset,
@@ -220,15 +219,12 @@ export function useLayoutDesigner(eventSlug: string) {
 
     setEventConfig(saved);
     setLayout(getScaledLayoutForEvent(saved));
-    setStatus(
-      `Saved custom ${customLayout.slots.length}-photo layout for ${saved.name}.`
-    );
+    toast("Custom layout saved", "success");
   }
 
   function updateLayout(
     updater: (current: LayoutDefinition | null) => LayoutDefinition | null
   ) {
-    setStatus("");
     setLayout(updater);
   }
 
@@ -248,7 +244,6 @@ export function useLayoutDesigner(eventSlug: string) {
     overlayDimensions,
     overlayFileName,
     selectedSlotIndex,
-    status,
     addSlot,
     handleOverlayUpload,
     removeOverlay,

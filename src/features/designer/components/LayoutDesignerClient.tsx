@@ -10,7 +10,7 @@ import { Button, buttonClassName } from "@/shared/components/ui/Button";
 import { Card } from "@/shared/components/ui/Card";
 import { EmptyState } from "@/shared/components/ui/EmptyState";
 import { Spinner } from "@/shared/components/ui/Spinner";
-import { Toast } from "@/shared/components/ui/Toast";
+import { useToast } from "@/shared/components/ui/toast/useToast";
 import { routes } from "@/shared/config/routes";
 
 interface LayoutDesignerClientProps {
@@ -25,7 +25,6 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
     overlayDimensions,
     overlayFileName,
     selectedSlotIndex,
-    status,
     addSlot,
     handleOverlayUpload,
     removeOverlay,
@@ -154,13 +153,9 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
                 <Save className="h-5 w-5" aria-hidden="true" />
                 Save custom layout
               </Button>
-              {status ? (
-                <Toast tone="success">{status}</Toast>
-              ) : (
-                <span className="text-sm font-medium text-[var(--booth-on-surface-variant)]">
-                  Saving syncs capture count to the number of slots.
-                </span>
-              )}
+              <span className="text-sm font-medium text-[var(--booth-on-surface-variant)]">
+                Saving syncs capture count to the number of slots.
+              </span>
             </Card>
           </div>
         </div>

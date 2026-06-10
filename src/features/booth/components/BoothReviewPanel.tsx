@@ -21,7 +21,7 @@ import { QrPreview } from "@/shared/components/QrPreview";
 import { Badge } from "@/shared/components/ui/Badge";
 import { Button, buttonClassName } from "@/shared/components/ui/Button";
 import { Card } from "@/shared/components/ui/Card";
-import { Toast } from "@/shared/components/ui/Toast";
+import { useToast } from "@/shared/components/ui/toast/useToast";
 import { routes } from "@/shared/config/routes";
 import { createQrValue } from "@/shared/lib/createQrValue";
 import { downloadDataUrl, photoFilename } from "@/shared/lib/download";
@@ -45,7 +45,7 @@ export function BoothReviewPanel({
   onRetake,
   onSave
 }: BoothReviewPanelProps) {
-  const [downloaded, setDownloaded] = useState(false);
+  const { toast } = useToast();
   const canPreviewActions =
     captureState === "preview" ||
     captureState === "saved" ||
@@ -106,7 +106,10 @@ export function BoothReviewPanel({
                 </Button>
                 <Button
                   type="button"
-                  onClick={onSave}
+                  onClick={() => {
+                    onSave();
+                    toast("Saved to the local gallery.", "success");
+                  }}
                   disabled={Boolean(savedPhoto)}
                   variant="primary"
                   size="lg"
@@ -123,8 +126,7 @@ export function BoothReviewPanel({
                         ? photoFilename(eventConfig.slug, savedPhoto.id)
                         : `${eventConfig.slug}-preview.jpg`
                     );
-                    setDownloaded(true);
-                    window.setTimeout(() => setDownloaded(false), 1800);
+                    toast("Download started.", "success");
                   }}
                   variant="tonal"
                   size="lg"
@@ -162,11 +164,8 @@ export function BoothReviewPanel({
               ) : null}
             </Card>
 
-            {downloaded ? <Toast tone="success">Download started.</Toast> : null}
-
             {savedPhoto ? (
               <div className="grid gap-4 motion-enter">
-                <Toast tone="success">Saved to the local gallery.</Toast>
                 <QrPreview value={createQrValue(savedPhoto.id)} />
                 <Card className="p-5">
                   <p className="text-sm font-semibold uppercase tracking-wide text-[var(--booth-primary)]">

@@ -39,7 +39,7 @@ export function buttonClassName({
     variant === "tonal" &&
       "bg-[var(--booth-primary-container)] text-[var(--booth-on-primary-container)] hover:shadow-[var(--booth-elevation-1)]",
     variant === "secondary" &&
-      "border border-[var(--booth-outline-variant)] bg-[var(--booth-surface-container-lowest)] text-[var(--booth-on-surface)] hover:bg-[var(--booth-surface-container)] hover:shadow-[var(--booth-elevation-1)]",
+      "bg-[var(--booth-surface-container-lowest)] text-[var(--booth-on-surface)] shadow-[var(--booth-elevation-1)] hover:bg-[var(--booth-surface-container)] hover:shadow-[var(--booth-elevation-2)]",
     variant === "dark" &&
       "bg-[var(--booth-on-surface)] text-[var(--booth-surface)] shadow-[var(--booth-elevation-1)] hover:shadow-[var(--booth-elevation-2)]",
     variant === "danger" &&

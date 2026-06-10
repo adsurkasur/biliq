@@ -20,14 +20,13 @@ import { Button, buttonClassName } from "@/shared/components/ui/Button";
 import { Card } from "@/shared/components/ui/Card";
 import { EmptyState } from "@/shared/components/ui/EmptyState";
 import { Modal } from "@/shared/components/ui/Modal";
-import { Toast } from "@/shared/components/ui/Toast";
+import { useToast } from "@/shared/components/ui/toast/useToast";
 import { routes } from "@/shared/config/routes";
 
 export function EventConsole() {
   const [events, setEvents] = useState<EventConfig[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<EventConfig | null>(null);
-  const [status, setStatus] = useState("");
-  const [statusTone, setStatusTone] = useState<"success" | "error">("success");
+  const { toast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
@@ -40,25 +39,24 @@ export function EventConsole() {
     }
 
     setIsDeleting(true);
-    setStatus("");
 
     try {
       const deletedPhotos = await deletePhotosByEventId(deleteTarget.id);
       deleteEventConfig(deleteTarget.id);
       setEvents(getEvents());
-      setStatusTone("success");
-      setStatus(
+      toast(
         `Deleted "${deleteTarget.name}" and ${deletedPhotos} saved photo${
           deletedPhotos === 1 ? "" : "s"
-        }.`
+        }.`,
+        "success"
       );
       setDeleteTarget(null);
     } catch (error) {
-      setStatusTone("error");
-      setStatus(
+      toast(
         error instanceof Error
           ? error.message
-          : "The event could not be deleted. Nothing was removed."
+          : "The event could not be deleted. Nothing was removed.",
+        "error"
       );
     } finally {
       setIsDeleting(false);
@@ -85,8 +83,6 @@ export function EventConsole() {
             New event
           </Link>
         </header>
-
-        {status ? <Toast tone={statusTone}>{status}</Toast> : null}
 
         {events.length ? (
           <section className="grid gap-4">

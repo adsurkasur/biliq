@@ -20,10 +20,12 @@ import {
 } from "@/domain/layouts/defaultLayouts";
 import { routes } from "@/shared/config/routes";
 
+import { useToast } from "@/shared/components/ui/toast/useToast";
+
 export function useEventSetupForm() {
   const router = useRouter();
+  const { toast } = useToast();
   const [eventConfig, setEventConfig] = useState<EventConfig | null>(null);
-  const [status, setStatus] = useState("");
   const [overlayFileName, setOverlayFileName] = useState("");
 
   useEffect(() => {
@@ -124,7 +126,7 @@ export function useEventSetupForm() {
         : getRecommendedLayoutIdForCaptureCount(captureCount)
     });
 
-    setStatus("Event saved");
+    toast("Event saved", "success");
     router.push(routes.booth(saved.slug));
   }
 
@@ -132,7 +134,6 @@ export function useEventSetupForm() {
     eventConfig,
     overlayFileName,
     selectedPresetId,
-    status,
     handleCaptureCountChange,
     handleLayoutChange,
     handleOutputPresetChange,

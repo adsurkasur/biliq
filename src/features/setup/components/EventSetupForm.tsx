@@ -22,7 +22,7 @@ import { Toast } from "@/shared/components/ui/Toast";
 import { routes } from "@/shared/config/routes";
 
 const inputClass =
-  "booth-focus-ring min-h-12 rounded-[var(--booth-radius-md)] border border-[var(--booth-outline-variant)] bg-[var(--booth-surface-container-lowest)] px-4 py-3 text-[var(--booth-on-surface)] transition-colors focus:border-[var(--booth-primary)]";
+  "booth-focus-ring min-h-12 rounded-[var(--booth-radius-md)] bg-[var(--booth-surface-container-lowest)] px-4 py-3 text-[var(--booth-on-surface)] transition-colors focus:bg-[var(--booth-surface-container-low)] shadow-[var(--booth-elevation-1)]";
 
 const labelClass = "text-sm font-semibold text-[var(--booth-on-surface-variant)]";
 
@@ -31,7 +31,6 @@ export function EventSetupForm() {
     eventConfig,
     overlayFileName,
     selectedPresetId,
-    status,
     handleCaptureCountChange,
     handleLayoutChange,
     handleOutputPresetChange,
@@ -237,9 +236,6 @@ export function EventSetupForm() {
               <Palette className="h-5 w-5" aria-hidden="true" />
               Open designer
             </Link>
-          ) : null}
-          {status ? (
-            <Toast tone="success">{status}</Toast>
           ) : null}
         </div>
       </Card>

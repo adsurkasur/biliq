@@ -11,7 +11,7 @@ import { Button, buttonClassName } from "@/shared/components/ui/Button";
 import { Card } from "@/shared/components/ui/Card";
 import { EmptyState } from "@/shared/components/ui/EmptyState";
 import { Spinner } from "@/shared/components/ui/Spinner";
-import { Toast } from "@/shared/components/ui/Toast";
+import { useToast } from "@/shared/components/ui/toast/useToast";
 import { routes } from "@/shared/config/routes";
 import { createQrValue } from "@/shared/lib/createQrValue";
 import { downloadDataUrl, photoFilename } from "@/shared/lib/download";
@@ -21,9 +21,9 @@ interface PhotoDetailClientProps {
 }
 
 export function PhotoDetailClient({ photoId }: PhotoDetailClientProps) {
+  const { toast } = useToast();
   const [photo, setPhoto] = useState<PhotoRecord | null>(null);
   const [status, setStatus] = useState("Loading photo...");
-  const [downloaded, setDownloaded] = useState(false);
 
   useEffect(() => {
     getPhotoById(photoId)
@@ -117,8 +117,7 @@ export function PhotoDetailClient({ photoId }: PhotoDetailClientProps) {
                       photo.imageDataUrl,
                       photoFilename(photo.eventSlug, photo.id)
                     );
-                    setDownloaded(true);
-                    window.setTimeout(() => setDownloaded(false), 1800);
+                    toast("Download started.", "success");
                   }}
                   variant="primary"
                   size="lg"
@@ -130,7 +129,6 @@ export function PhotoDetailClient({ photoId }: PhotoDetailClientProps) {
               </div>
             </Card>
 
-            {downloaded ? <Toast tone="success">Download started.</Toast> : null}
             <QrPreview value={createQrValue(photo.id)} />
           </aside>
         </div>

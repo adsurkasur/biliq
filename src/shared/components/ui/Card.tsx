@@ -21,7 +21,7 @@ export function Card({
   return (
     <Component
       className={cn(
-        "rounded-[var(--booth-radius-xl)] bg-[var(--booth-surface-container-lowest)] border border-[var(--booth-outline-variant)]/20",
+        "rounded-[var(--booth-radius-xl)] bg-[var(--booth-surface-container-lowest)]",
         elevation === 0 && "shadow-none",
         elevation === 1 && "shadow-[var(--booth-elevation-1)]",
         elevation === 2 && "shadow-[var(--booth-elevation-2)]",

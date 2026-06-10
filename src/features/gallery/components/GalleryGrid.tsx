@@ -13,7 +13,7 @@ import { buttonClassName } from "@/shared/components/ui/Button";
 import { Card } from "@/shared/components/ui/Card";
 import { EmptyState } from "@/shared/components/ui/EmptyState";
 import { Spinner } from "@/shared/components/ui/Spinner";
-import { Toast } from "@/shared/components/ui/Toast";
+import { useToast } from "@/shared/components/ui/toast/useToast";
 import { routes } from "@/shared/config/routes";
 
 interface GalleryGridProps {
@@ -21,9 +21,9 @@ interface GalleryGridProps {
 }
 
 export function GalleryGrid({ eventSlug }: GalleryGridProps) {
+  const { toast } = useToast();
   const [photos, setPhotos] = useState<PhotoRecord[]>([]);
   const [status, setStatus] = useState("Loading gallery...");
-  const [feedback, setFeedback] = useState("");
 
   const loadPhotos = useCallback(async () => {
     try {
@@ -46,7 +46,7 @@ export function GalleryGrid({ eventSlug }: GalleryGridProps) {
     }
 
     await deleteGalleryPhoto(photoId);
-    setFeedback("Deleted local photo.");
+    toast("Deleted local photo.", "success");
     await loadPhotos();
   }
 
@@ -68,7 +68,6 @@ export function GalleryGrid({ eventSlug }: GalleryGridProps) {
 
   return (
     <div className="grid gap-4">
-      {feedback ? <Toast tone="success">{feedback}</Toast> : null}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {photos.map((photo) => (
           <Card
@@ -103,7 +102,7 @@ export function GalleryGrid({ eventSlug }: GalleryGridProps) {
                   type="button"
                   onClick={() => {
                     downloadGalleryPhoto(photo);
-                    setFeedback("Download started.");
+                    toast("Download started.", "success");
                   }}
                   className={buttonClassName({ variant: "secondary", size: "sm" })}
                   aria-label="Download photo"

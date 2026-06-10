@@ -7,37 +7,37 @@
 :root {
   color-scheme: light;
 
-  /* Primary – warm teal */
-  --booth-primary: #00796b;
+  /* Primary – soft teal */
+  --booth-primary: #4A7C73;
   --booth-on-primary: #ffffff;
-  --booth-primary-container: #b2dfdb;
-  --booth-on-primary-container: #00352e;
+  --booth-primary-container: #CDE8E1;
+  --booth-on-primary-container: #05201A;
 
-  /* Secondary – muted rose */
-  --booth-secondary: #7c5262;
-  --booth-secondary-container: #ffd9e5;
-  --booth-on-secondary-container: #311120;
+  /* Secondary – warm neutral */
+  --booth-secondary: #6A605C;
+  --booth-secondary-container: #F1DFDA;
+  --booth-on-secondary-container: #251D1B;
 
-  /* Tertiary – warm amber */
-  --booth-tertiary: #7d5700;
-  --booth-tertiary-container: #ffdea6;
-  --booth-on-tertiary-container: #271900;
+  /* Tertiary – soft amber/clay */
+  --booth-tertiary: #785A46;
+  --booth-tertiary-container: #FFDCC6;
+  --booth-on-tertiary-container: #2B1706;
 
   /* Surface hierarchy */
-  --booth-surface: #fef7ff;
-  --booth-surface-dim: #e0d8df;
-  --booth-surface-bright: #fef7ff;
-  --booth-surface-container-lowest: #ffffff;
-  --booth-surface-container-low: #faf1f8;
-  --booth-surface-container: #f3ecf4;
-  --booth-surface-container-high: #ede6ed;
-  --booth-surface-container-high-alt: #e7e0e8;
-  --booth-on-surface: #1d1a20;
-  --booth-on-surface-variant: #4a454e;
+  --booth-surface: #FDFBF8;
+  --booth-surface-dim: #DCD9D5;
+  --booth-surface-bright: #FDFBF8;
+  --booth-surface-container-lowest: #FFFFFF;
+  --booth-surface-container-low: #F6F3EF;
+  --booth-surface-container: #F0EDE8;
+  --booth-surface-container-high: #EBE7E2;
+  --booth-surface-container-high-alt: #E5E1DB;
+  --booth-on-surface: #1C1B1A;
+  --booth-on-surface-variant: #484643;
 
   /* Outline */
-  --booth-outline: #7c757f;
-  --booth-outline-variant: #cdc4ce;
+  --booth-outline: #797672;
+  --booth-outline-variant: #C9C6C1;
 
   /* Error */
   --booth-error: #ba1a1a;
@@ -61,10 +61,10 @@
   --booth-elevation-4: 0 8px 24px 4px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.06);
 
   /* State layers */
-  --booth-state-hover: rgba(29, 26, 32, 0.08);
-  --booth-state-focus: rgba(29, 26, 32, 0.12);
-  --booth-state-pressed: rgba(29, 26, 32, 0.12);
-  --booth-state-hover-primary: rgba(0, 121, 107, 0.08);
+  --booth-state-hover: rgba(28, 27, 26, 0.08);
+  --booth-state-focus: rgba(28, 27, 26, 0.12);
+  --booth-state-pressed: rgba(28, 27, 26, 0.12);
+  --booth-state-hover-primary: rgba(74, 124, 115, 0.08);
 
   /* Transition */
   --booth-ease-standard: cubic-bezier(0.2, 0, 0, 1);
@@ -88,8 +88,8 @@ body {
 body {
   margin: 0;
   background:
-    radial-gradient(ellipse at top left, rgba(0, 121, 107, 0.06), transparent 38rem),
-    radial-gradient(ellipse at bottom right, rgba(124, 82, 98, 0.04), transparent 40rem),
+    radial-gradient(ellipse at top left, rgba(74, 124, 115, 0.06), transparent 38rem),
+    radial-gradient(ellipse at bottom right, rgba(106, 96, 92, 0.04), transparent 40rem),
     var(--booth-surface-container-low);
   color: var(--booth-on-surface);
   -webkit-font-smoothing: antialiased;
@@ -155,8 +155,16 @@ select {
   animation: modal-backdrop-enter 250ms ease-out both;
 }
 
+.modal-backdrop-exit {
+  animation: modal-backdrop-exit 250ms ease-in both;
+}
+
 .modal-panel-enter {
   animation: modal-panel-enter 350ms var(--booth-ease-emphasized) both;
+}
+
+.modal-panel-exit {
+  animation: modal-panel-exit 250ms ease-in both;
 }
 
 /* ─── Keyframes ─── */
@@ -210,6 +218,11 @@ select {
   to   { opacity: 1; }
 }
 
+@keyframes modal-backdrop-exit {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
 @keyframes modal-panel-enter {
   from {
     opacity: 0;
@@ -218,6 +231,17 @@ select {
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes modal-panel-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
   }
 }
 
@@ -235,14 +259,15 @@ select {
 }
 
 @keyframes booth-start-ready {
-  0%,
-  100% {
-    box-shadow: 0 16px 48px rgba(0, 121, 107, 0.28);
-    transform: translateY(0) scale(1);
+  0% {
+    box-shadow: 0 4px 12px rgba(74, 124, 115, 0.15);
+    transform: translateY(8px) scale(0.98);
+    opacity: 0;
   }
-  50% {
-    box-shadow: 0 20px 64px rgba(0, 121, 107, 0.40);
-    transform: translateY(-1px) scale(1.015);
+  100% {
+    box-shadow: 0 16px 48px rgba(74, 124, 115, 0.28);
+    transform: translateY(0) scale(1);
+    opacity: 1;
   }
 }
 
