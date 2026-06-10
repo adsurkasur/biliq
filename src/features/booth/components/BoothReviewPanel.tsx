@@ -3,10 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import {
-  ArrowLeft,
   Download,
-  GalleryHorizontal,
-  Palette,
   RotateCcw,
   Save
 } from "lucide-react";
@@ -23,6 +20,7 @@ import { Button, buttonClassName } from "@/shared/components/ui/Button";
 import { Card } from "@/shared/components/ui/Card";
 import { useToast } from "@/shared/components/ui/toast/useToast";
 import { routes } from "@/shared/config/routes";
+import { EventNavigation } from "@/shared/components/navigation/EventNavigation";
 import { createQrValue } from "@/shared/lib/createQrValue";
 import { downloadDataUrl, photoFilename } from "@/shared/lib/download";
 
@@ -62,29 +60,7 @@ export function BoothReviewPanel({
             <h1 className="mt-1 text-3xl font-bold text-[var(--booth-on-surface)]">Review</h1>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <Link
-              href={routes.home}
-              className={buttonClassName({ variant: "secondary" })}
-            >
-              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-              Events
-            </Link>
-            <Link
-              href={routes.gallery(eventConfig.slug)}
-              className={buttonClassName({ variant: "secondary" })}
-            >
-              <GalleryHorizontal className="h-4 w-4" aria-hidden="true" />
-              Gallery
-            </Link>
-            <Link
-              href={routes.designer(eventConfig.slug)}
-              className={buttonClassName({ variant: "secondary" })}
-            >
-              <Palette className="h-4 w-4" aria-hidden="true" />
-              Designer
-            </Link>
-          </div>
+          <EventNavigation eventSlug={eventConfig.slug} activeRoute="booth" />
         </header>
 
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_420px]">

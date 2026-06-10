@@ -113,3 +113,30 @@ export function ensureUniqueSlug(slug: string, eventId?: string): string {
 
   return nextSlug;
 }
+
+export function getEffectiveOverlayLayers(eventConfig: EventConfig): import("@/domain/events/types").OverlayLayer[] {
+  if (eventConfig.overlayLayers && eventConfig.overlayLayers.length > 0) {
+    return eventConfig.overlayLayers;
+  }
+  
+  if (eventConfig.overlayDataUrl) {
+    return [{
+      id: "legacy-overlay",
+      name: "Overlay",
+      imageDataUrl: eventConfig.overlayDataUrl,
+      x: 0,
+      y: 0,
+      width: eventConfig.outputWidth,
+      height: eventConfig.outputHeight,
+      rotation: 0,
+      opacity: 1,
+      zIndex: 0,
+      visible: true,
+      locked: false,
+      createdAt: eventConfig.createdAt || new Date().toISOString(),
+      updatedAt: eventConfig.updatedAt || new Date().toISOString()
+    }];
+  }
+
+  return [];
+}

@@ -39,9 +39,33 @@ export async function composePhoto({
     drawImageInSlot(context, image, slot);
   });
 
-  if (eventConfig.overlayDataUrl) {
-    const overlayImage = await loadImage(eventConfig.overlayDataUrl);
-    context.drawImage(overlayImage, 0, 0, canvas.width, canvas.height);
+  const { getEffectiveOverlayLayers } = await import("@/domain/events/storage");
+  const overlayLayers = getEffectiveOverlayLayers(eventConfig);
+  const visibleLayers = overlayLayers.filter(layer => layer.visible).sort((a, b) => a.zIndex - b.zIndex);
+
+  for (const layer of visibleLayers) {
+    const overlayImage = await loadImage(layer.imageDataUrl);
+    
+    context.save();
+    context.globalAlpha = layer.opacity;
+    
+    // Translate to center of the layer to rotate around center
+    const centerX = layer.x + layer.width / 2;
+    const centerY = layer.y + layer.height / 2;
+    
+    context.translate(centerX, centerY);
+    context.rotate((layer.rotation * Math.PI) / 180);
+    
+    // Draw the image centered around the new origin
+    context.drawImage(
+      overlayImage,
+      -layer.width / 2,
+      -layer.height / 2,
+      layer.width,
+      layer.height
+    );
+    
+    context.restore();
   }
 
   return {

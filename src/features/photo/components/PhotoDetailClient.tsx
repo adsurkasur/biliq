@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Download } from "lucide-react";
+import { Download } from "lucide-react";
 import { getPhotoById } from "@/domain/photos/storage";
 import type { PhotoRecord } from "@/domain/photos/types";
 import { PrintButton } from "@/features/print/components/PrintButton";
@@ -16,6 +16,7 @@ import { routes } from "@/shared/config/routes";
 import { createQrValue } from "@/shared/lib/createQrValue";
 import { downloadDataUrl, photoFilename } from "@/shared/lib/download";
 import { BiliqLogo } from "@/shared/components/brand/BiliqLogo";
+import { ContextualBackButton } from "@/shared/components/navigation/ContextualBackButton";
 
 interface PhotoDetailClientProps {
   photoId: string;
@@ -87,13 +88,7 @@ export function PhotoDetailClient({ photoId }: PhotoDetailClientProps) {
               Photo
             </h1>
           </div>
-          <Link
-            href={routes.gallery(photo.eventSlug)}
-            className={buttonClassName({ variant: "secondary" })}
-          >
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            Gallery
-          </Link>
+          <ContextualBackButton fallbackRoute={routes.gallery(photo.eventSlug)} fallbackLabel="Gallery" />
         </header>
 
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">

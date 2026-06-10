@@ -4,13 +4,15 @@ import { type CSSProperties, type ReactNode, type RefObject } from "react";
 import { Camera, VideoOff } from "lucide-react";
 import { useCameraStream } from "@/features/booth/hooks/useCameraStream";
 import { Spinner } from "@/shared/components/ui/Spinner";
+import type { EventConfig } from "@/domain/events/types";
+import { getEffectiveOverlayLayers } from "@/domain/events/storage";
 
 interface CameraPreviewProps {
   videoRef: RefObject<HTMLVideoElement | null>;
   preferredFacingMode?: "environment" | "user";
   outputWidth?: number;
   outputHeight?: number;
-  overlayDataUrl?: string;
+  eventConfig?: EventConfig;
   className?: string;
   style?: CSSProperties;
   children?: ReactNode;
@@ -23,7 +25,7 @@ export function CameraPreview({
   preferredFacingMode = "environment",
   outputWidth = 1200,
   outputHeight = 1600,
-  overlayDataUrl,
+  eventConfig,
   className = "",
   style,
   children,
@@ -36,6 +38,9 @@ export function CameraPreview({
     onReady,
     onError
   });
+
+  const overlayLayers = eventConfig ? getEffectiveOverlayLayers(eventConfig) : [];
+  const visibleLayers = overlayLayers.filter((layer) => layer.visible).sort((a, b) => a.zIndex - b.zIndex);
 
   return (
     <div
@@ -50,14 +55,31 @@ export function CameraPreview({
         autoPlay
       />
 
-      {overlayDataUrl ? (
-        <img
-          src={overlayDataUrl}
-          alt=""
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 z-10 h-full w-full object-fill"
-        />
-      ) : null}
+      {visibleLayers.map((layer) => {
+        const leftPercent = (layer.x / outputWidth) * 100;
+        const topPercent = (layer.y / outputHeight) * 100;
+        const widthPercent = (layer.width / outputWidth) * 100;
+        const heightPercent = (layer.height / outputHeight) * 100;
+
+        return (
+          <img
+            key={layer.id}
+            src={layer.imageDataUrl}
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none absolute z-10 object-fill"
+            style={{
+              left: `${leftPercent}%`,
+              top: `${topPercent}%`,
+              width: `${widthPercent}%`,
+              height: `${heightPercent}%`,
+              transform: `rotate(${layer.rotation}deg)`,
+              opacity: layer.opacity,
+              zIndex: 10 + layer.zIndex
+            }}
+          />
+        );
+      })}
 
       {state !== "ready" ? (
         <div className="motion-enter absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-stone-950/86 p-8 text-center text-white backdrop-blur-sm">

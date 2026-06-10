@@ -10,82 +10,121 @@ import {
   scaleLayoutDefinition
 } from "@/domain/layouts/defaultLayouts";
 import type { LayoutDefinition, LayoutSlot, SlotFit } from "@/domain/layouts/types";
-import { getEventBySlug, upsertEventConfig } from "@/domain/events/storage";
-import type { EventConfig } from "@/domain/events/types";
-import { getImageDimensions, type ImageDimensions } from "@/shared/lib/image";
+import { getEventBySlug, upsertEventConfig, getEffectiveOverlayLayers } from "@/domain/events/storage";
+import type { EventConfig, OverlayLayer } from "@/domain/events/types";
+import { getImageDimensions } from "@/shared/lib/image";
 import { useToast } from "@/shared/components/ui/toast/useToast";
+import { createEntityId } from "@/shared/lib/id";
 
 type SlotNumberField = "x" | "y" | "width" | "height" | "borderRadius";
+type LayerNumberField = "x" | "y" | "width" | "height" | "rotation" | "opacity" | "zIndex";
 
 export function useLayoutDesigner(eventSlug: string) {
   const { toast } = useToast();
   const [isLoaded, setIsLoaded] = useState(false);
   const [eventConfig, setEventConfig] = useState<EventConfig | null>(null);
   const [layout, setLayout] = useState<LayoutDefinition | null>(null);
-  const [overlayFileName, setOverlayFileName] = useState("");
-  const [overlayDimensions, setOverlayDimensions] = useState<ImageDimensions | null>(
-    null
-  );
-  const [selectedSlotIndex, setSelectedSlotIndex] = useState(0);
+  
+  const [overlayLayers, setOverlayLayers] = useState<OverlayLayer[]>([]);
+  
+  const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(0);
+  const [selectedLayerId, setSelectedLayerId] = useState<string | null>(null);
 
   useEffect(() => {
     const event = getEventBySlug(eventSlug) ?? null;
     setEventConfig(event);
     setLayout(event ? getScaledLayoutForEvent(event) : null);
-    setOverlayFileName(event?.overlayDataUrl ? "Stored overlay" : "");
+    
+    if (event) {
+      setOverlayLayers(getEffectiveOverlayLayers(event));
+    }
+
     setIsLoaded(true);
   }, [eventSlug]);
 
-  useEffect(() => {
-    let isActive = true;
+  function selectSlot(index: number) {
+    setSelectedSlotIndex(index);
+    setSelectedLayerId(null);
+  }
 
-    if (!eventConfig?.overlayDataUrl) {
-      setOverlayDimensions(null);
-      return () => {
-        isActive = false;
-      };
-    }
+  function selectLayer(id: string) {
+    setSelectedLayerId(id);
+    setSelectedSlotIndex(null);
+  }
 
-    getImageDimensions(eventConfig.overlayDataUrl)
-      .then((dimensions) => {
-        if (isActive) {
-          setOverlayDimensions(dimensions);
-        }
-      })
-      .catch(() => {
-        if (isActive) {
-          setOverlayDimensions(null);
-        }
-      });
-
-    return () => {
-      isActive = false;
-    };
-  }, [eventConfig?.overlayDataUrl]);
-
-  function handleOverlayUpload(file?: File) {
-    if (!file) {
-      return;
-    }
-
-    setOverlayFileName(file.name);
+  async function addOverlayLayer(file?: File) {
+    if (!file || !eventConfig) return;
 
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = async () => {
       if (typeof reader.result === "string") {
-        setEventConfig((current) =>
-          current ? { ...current, overlayDataUrl: reader.result as string } : current
-        );
+        const imageDataUrl = reader.result;
+        let dimensions = { width: eventConfig.outputWidth, height: eventConfig.outputHeight };
+        
+        try {
+          dimensions = await getImageDimensions(imageDataUrl);
+        } catch {
+          // fallback to output size
+        }
+
+        const newLayer: OverlayLayer = {
+          id: createEntityId("layer"),
+          name: file.name,
+          imageDataUrl,
+          x: (eventConfig.outputWidth - dimensions.width) / 2,
+          y: (eventConfig.outputHeight - dimensions.height) / 2,
+          width: dimensions.width,
+          height: dimensions.height,
+          rotation: 0,
+          opacity: 1,
+          zIndex: overlayLayers.length,
+          visible: true,
+          locked: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        
+        setOverlayLayers((current) => [...current, newLayer]);
+        selectLayer(newLayer.id);
+        toast("Overlay layer added", "success");
       }
     };
     reader.readAsDataURL(file);
   }
 
-  function removeOverlay() {
-    setOverlayFileName("");
-    setEventConfig((current) =>
-      current ? { ...current, overlayDataUrl: undefined } : current
+  function removeOverlayLayer(id: string) {
+    setOverlayLayers((current) => current.filter((layer) => layer.id !== id));
+    if (selectedLayerId === id) {
+      setSelectedLayerId(null);
+    }
+    toast("Overlay layer removed", "info");
+  }
+
+  function updateOverlayLayer(id: string, updates: Partial<OverlayLayer>) {
+    setOverlayLayers((current) =>
+      current.map((layer) =>
+        layer.id === id ? { ...layer, ...updates, updatedAt: new Date().toISOString() } : layer
+      )
     );
+  }
+
+  function updateLayerNumber(id: string, field: LayerNumberField, value?: number) {
+    if (value === undefined || Number.isNaN(value)) return;
+    updateOverlayLayer(id, { [field]: value });
+  }
+
+  function toggleLayerVisibility(id: string) {
+    const layer = overlayLayers.find((l) => l.id === id);
+    if (layer) {
+      updateOverlayLayer(id, { visible: !layer.visible });
+    }
+  }
+
+  function toggleLayerLock(id: string) {
+    const layer = overlayLayers.find((l) => l.id === id);
+    if (layer) {
+      updateOverlayLayer(id, { locked: !layer.locked });
+    }
   }
 
   function addSlot() {
@@ -112,7 +151,7 @@ export function useLayoutDesigner(eventSlug: string) {
         slots: [...current.slots, nextSlot]
       });
     });
-    setSelectedSlotIndex(Math.min(nextSelectedIndex, MAX_CAPTURE_COUNT - 1));
+    selectSlot(Math.min(nextSelectedIndex, MAX_CAPTURE_COUNT - 1));
     toast("Added a photo slot. Save to apply it to the booth.", "info");
   }
 
@@ -127,9 +166,7 @@ export function useLayoutDesigner(eventSlug: string) {
         name: `Custom ${current.slots.length - 1}-photo layout`,
         slots: current.slots.filter((_, slotIndex) => slotIndex !== index)
       });
-      setSelectedSlotIndex((currentIndex) =>
-        Math.min(currentIndex, nextLayout.slots.length - 1)
-      );
+      selectSlot(Math.min(selectedSlotIndex ?? 0, nextLayout.slots.length - 1));
       return nextLayout;
     });
     toast("Removed a photo slot. Save to apply it to the booth.", "info");
@@ -188,7 +225,7 @@ export function useLayoutDesigner(eventSlug: string) {
         name: `Custom ${preset.slots.length}-photo layout`
       })
     );
-    setSelectedSlotIndex(0);
+    selectSlot(0);
   }
 
   function saveLayout() {
@@ -214,12 +251,13 @@ export function useLayoutDesigner(eventSlug: string) {
       ...eventConfig,
       layoutId: CUSTOM_LAYOUT_ID,
       captureCount: customLayout.slots.length,
-      customLayout
+      customLayout,
+      overlayLayers
     });
 
     setEventConfig(saved);
     setLayout(getScaledLayoutForEvent(saved));
-    toast("Custom layout saved", "success");
+    toast("Custom layout and overlays saved", "success");
   }
 
   function updateLayout(
@@ -241,16 +279,21 @@ export function useLayoutDesigner(eventSlug: string) {
     eventConfig,
     isLoaded,
     layout,
-    overlayDimensions,
-    overlayFileName,
+    overlayLayers,
     selectedSlotIndex,
+    selectedLayerId,
+    addOverlayLayer,
+    removeOverlayLayer,
+    updateOverlayLayer,
+    updateLayerNumber,
+    toggleLayerVisibility,
+    toggleLayerLock,
     addSlot,
-    handleOverlayUpload,
-    removeOverlay,
     removeSlot,
     resetToDefaultLayout,
     saveLayout,
-    setSelectedSlotIndex,
+    selectSlot,
+    selectLayer,
     updateSlotFit,
     updateSlotNumber
   };

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Printer } from "lucide-react";
+import { Printer } from "lucide-react";
 import { getPhotoById } from "@/domain/photos/storage";
 import type { PhotoRecord } from "@/domain/photos/types";
 import { Button, buttonClassName } from "@/shared/components/ui/Button";
@@ -11,6 +11,7 @@ import { EmptyState } from "@/shared/components/ui/EmptyState";
 import { Spinner } from "@/shared/components/ui/Spinner";
 import { routes } from "@/shared/config/routes";
 import { BiliqLogo } from "@/shared/components/brand/BiliqLogo";
+import { ContextualBackButton } from "@/shared/components/navigation/ContextualBackButton";
 
 interface PrintClientProps {
   photoId: string;
@@ -77,13 +78,7 @@ export function PrintClient({ photoId }: PrintClientProps) {
       <div className="no-print motion-enter mx-auto mb-5 flex max-w-5xl flex-wrap items-center justify-between gap-3 rounded-[var(--booth-radius-xl)] border border-[var(--booth-outline-variant)]/20 bg-[var(--booth-surface-container-lowest)] p-4 shadow-[var(--booth-elevation-1)]">
         <div className="flex items-center gap-4">
           <BiliqLogo variant="mark" size="sm" />
-          <Link
-            href={routes.photo(photo.id)}
-            className={buttonClassName({ variant: "secondary" })}
-          >
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            Photo
-          </Link>
+          <ContextualBackButton fallbackRoute={routes.photo(photo.id)} fallbackLabel="Photo" />
         </div>
         <Button
           type="button"

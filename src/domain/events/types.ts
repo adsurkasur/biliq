@@ -2,6 +2,23 @@ import type { LayoutDefinition } from "@/domain/layouts/types";
 
 export type PrinterMode = "browser-print";
 
+export interface OverlayLayer {
+  id: string;
+  name: string;
+  imageDataUrl: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation: number;
+  opacity: number;
+  zIndex: number;
+  visible: boolean;
+  locked: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface EventConfig {
   id: string;
   name: string;
@@ -12,7 +29,8 @@ export interface EventConfig {
   outputHeight: number;
   layoutId: string;
   customLayout?: LayoutDefinition;
-  overlayDataUrl?: string;
+  overlayDataUrl?: string; // Legacy fallback
+  overlayLayers?: OverlayLayer[];
   overlayUrl?: string;
   printerMode: PrinterMode;
   createdAt: string;

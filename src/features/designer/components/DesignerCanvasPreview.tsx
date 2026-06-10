@@ -1,20 +1,28 @@
-import type { EventConfig } from "@/domain/events/types";
+import type { EventConfig, OverlayLayer } from "@/domain/events/types";
 import type { LayoutDefinition } from "@/domain/layouts/types";
 import { cn } from "@/shared/lib/classNames";
 
 interface DesignerCanvasPreviewProps {
   eventConfig: EventConfig;
   layout: LayoutDefinition;
-  selectedSlotIndex: number;
+  overlayLayers: OverlayLayer[];
+  selectedSlotIndex: number | null;
+  selectedLayerId: string | null;
   onSelectSlot: (index: number) => void;
+  onSelectLayer: (id: string) => void;
 }
 
 export function DesignerCanvasPreview({
   eventConfig,
   layout,
+  overlayLayers,
   selectedSlotIndex,
-  onSelectSlot
+  selectedLayerId,
+  onSelectSlot,
+  onSelectLayer
 }: DesignerCanvasPreviewProps) {
+  const visibleLayers = overlayLayers.filter((layer) => layer.visible).sort((a, b) => a.zIndex - b.zIndex);
+
   return (
     <section className="motion-card rounded-[var(--booth-radius-xl)] border border-[var(--booth-outline-variant)]/20 bg-[var(--booth-surface-container-lowest)] p-5 shadow-[var(--booth-elevation-1)]">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
@@ -27,7 +35,7 @@ export function DesignerCanvasPreview({
           </h2>
         </div>
         <p className="text-sm font-semibold text-[var(--booth-on-surface-variant)]">
-          {layout.slots.length} slot{layout.slots.length === 1 ? "" : "s"}
+          {layout.slots.length} slot{layout.slots.length === 1 ? "" : "s"}, {overlayLayers.length} layer{overlayLayers.length === 1 ? "" : "s"}
         </p>
       </div>
 
@@ -68,14 +76,41 @@ export function DesignerCanvasPreview({
           </button>
         ))}
 
-        {eventConfig.overlayDataUrl ? (
-          <img
-            src={eventConfig.overlayDataUrl}
-            alt=""
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 h-full w-full object-fill"
-          />
-        ) : null}
+        {visibleLayers.map((layer) => {
+          const leftPercent = (layer.x / eventConfig.outputWidth) * 100;
+          const topPercent = (layer.y / eventConfig.outputHeight) * 100;
+          const widthPercent = (layer.width / eventConfig.outputWidth) * 100;
+          const heightPercent = (layer.height / eventConfig.outputHeight) * 100;
+
+          const isSelected = selectedLayerId === layer.id;
+
+          return (
+            <button
+              key={layer.id}
+              type="button"
+              onClick={() => onSelectLayer(layer.id)}
+              className={cn(
+                "absolute cursor-pointer",
+                isSelected ? "ring-2 ring-[var(--booth-primary)] ring-offset-1" : "hover:ring-2 hover:ring-[var(--booth-primary)]/50"
+              )}
+              style={{
+                left: `${leftPercent}%`,
+                top: `${topPercent}%`,
+                width: `${widthPercent}%`,
+                height: `${heightPercent}%`,
+                transform: `rotate(${layer.rotation}deg)`,
+                opacity: layer.opacity,
+                zIndex: 30 + layer.zIndex
+              }}
+            >
+              <img
+                src={layer.imageDataUrl}
+                alt=""
+                className="pointer-events-none h-full w-full object-fill"
+              />
+            </button>
+          );
+        })}
       </div>
     </section>
   );

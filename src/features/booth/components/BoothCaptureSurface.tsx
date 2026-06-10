@@ -2,6 +2,7 @@
 
 import type { RefObject } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Camera, Home, Palette, Settings } from "lucide-react";
 import type { EventConfig } from "@/domain/events/types";
 import { getCaptureCountForEvent } from "@/domain/layouts/defaultLayouts";
@@ -40,6 +41,8 @@ export function BoothCaptureSurface({
   const canStart = captureState === "ready";
   const frameRatio = eventConfig.outputWidth / eventConfig.outputHeight;
   const frameHeightRatio = eventConfig.outputHeight / eventConfig.outputWidth;
+  const pathname = usePathname();
+  const returnToQuery = `?returnTo=${encodeURIComponent(pathname)}`;
 
   return (
     <main className="h-dvh overflow-hidden bg-stone-950 text-white">
@@ -61,7 +64,7 @@ export function BoothCaptureSurface({
               <Home className="h-4 w-4" aria-hidden="true" />
             </Link>
             <Link
-              href={routes.setup(eventConfig.slug)}
+              href={`${routes.setup(eventConfig.slug)}${returnToQuery}`}
               className="booth-focus-ring inline-flex h-10 w-10 items-center justify-center rounded-[var(--booth-radius-full)] border border-white/10 bg-stone-950/60 text-white backdrop-blur-md transition-all hover:bg-white/15 active:scale-95"
               aria-label="Setup"
               title="Setup"
@@ -69,7 +72,7 @@ export function BoothCaptureSurface({
               <Settings className="h-4 w-4" aria-hidden="true" />
             </Link>
             <Link
-              href={routes.designer(eventConfig.slug)}
+              href={`${routes.designer(eventConfig.slug)}${returnToQuery}`}
               className="booth-focus-ring inline-flex h-10 w-10 items-center justify-center rounded-[var(--booth-radius-full)] border border-white/10 bg-stone-950/60 text-white backdrop-blur-md transition-all hover:bg-white/15 active:scale-95"
               aria-label="Designer"
               title="Designer"
@@ -84,7 +87,7 @@ export function BoothCaptureSurface({
           preferredFacingMode="environment"
           outputWidth={eventConfig.outputWidth}
           outputHeight={eventConfig.outputHeight}
-          overlayDataUrl={eventConfig.overlayDataUrl}
+          eventConfig={eventConfig}
           onReady={onCameraReady}
           onError={onCameraError}
           className="booth-viewfinder-enter rounded-none ring-1 ring-white/10 sm:rounded-[var(--booth-radius-xl)]"

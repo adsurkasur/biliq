@@ -10,6 +10,7 @@ import {
   Pencil,
   Plus,
   Sparkles,
+  Settings,
   Trash2,
 } from "lucide-react";
 import { deleteEventConfig, getEvents } from "@/domain/events/storage";
@@ -141,8 +142,8 @@ export function EventConsole() {
                       href={routes.setup(event.slug)}
                       className={buttonClassName({ variant: "secondary", size: "sm" })}
                     >
-                      <Pencil className="h-4 w-4" aria-hidden="true" />
-                      Edit
+                      <Settings className="h-4 w-4" aria-hidden="true" />
+                      Setup
                     </Link>
                     <Button
                       type="button"

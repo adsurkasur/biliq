@@ -7,6 +7,7 @@ import type { LayoutDefinition, SlotFit } from "@/domain/layouts/types";
 import { Button } from "@/shared/components/ui/Button";
 import { Card } from "@/shared/components/ui/Card";
 import { cn } from "@/shared/lib/classNames";
+import { ScrubbableNumberField } from "@/features/designer/components/ScrubbableNumberField";
 
 interface SlotEditorProps {
   layout: LayoutDefinition;
@@ -76,7 +77,7 @@ export function SlotEditor({
       <div className="mt-5 grid gap-4">
         {layout.slots.map((slot, index) => (
           <article
-            key={`${index}-${slot.x}-${slot.y}`}
+            key={index}
             className={cn(
               "rounded-[var(--booth-radius-lg)] border p-4 transition-all duration-200",
               selectedSlotIndex === index
@@ -101,38 +102,45 @@ export function SlotEditor({
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3">
-              <NumberField
+              <ScrubbableNumberField
                 label="X"
                 value={slot.x}
+                min={-layout.canvasWidth}
+                max={layout.canvasWidth}
                 onChange={(value) => onUpdateSlotNumber(index, "x", value)}
               />
-              <NumberField
+              <ScrubbableNumberField
                 label="Y"
                 value={slot.y}
+                min={-layout.canvasHeight}
+                max={layout.canvasHeight}
                 onChange={(value) => onUpdateSlotNumber(index, "y", value)}
               />
-              <NumberField
+              <ScrubbableNumberField
                 label="Width"
                 value={slot.width}
                 min={1}
+                max={layout.canvasWidth * 2}
                 onChange={(value) => onUpdateSlotNumber(index, "width", value)}
               />
-              <NumberField
+              <ScrubbableNumberField
                 label="Height"
                 value={slot.height}
                 min={1}
+                max={layout.canvasHeight * 2}
                 onChange={(value) => onUpdateSlotNumber(index, "height", value)}
               />
-              <NumberField
+              <ScrubbableNumberField
                 label="Radius"
                 value={slot.borderRadius ?? 0}
                 min={0}
+                max={layout.canvasWidth / 2}
                 onChange={(value) =>
                   onUpdateSlotNumber(index, "borderRadius", value)
                 }
               />
               <label className="grid gap-1 text-sm font-semibold text-[var(--booth-on-surface-variant)]">
-                Fit
+                <span className="flex-none">Fit</span>
                 <select
                   value={slot.fit}
                   onChange={(event) =>
@@ -152,27 +160,3 @@ export function SlotEditor({
   );
 }
 
-interface NumberFieldProps {
-  label: string;
-  value: number;
-  min?: number;
-  onChange: (value?: number) => void;
-}
-
-function NumberField({ label, value, min = 0, onChange }: NumberFieldProps) {
-  return (
-    <label className="grid gap-1 text-sm font-semibold text-[var(--booth-on-surface-variant)]">
-      {label}
-      <input
-        type="number"
-        min={min}
-        value={value}
-        onChange={(event) => {
-          const nextValue = event.target.valueAsNumber;
-          onChange(Number.isNaN(nextValue) ? undefined : nextValue);
-        }}
-        className={fieldInputClass}
-      />
-    </label>
-  );
-}

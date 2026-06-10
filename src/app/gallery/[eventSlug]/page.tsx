@@ -1,9 +1,6 @@
-import Link from "next/link";
-import { ArrowLeft, Palette, Settings } from "lucide-react";
-import { GalleryGrid } from "@/features/gallery/components/GalleryGrid";
-import { buttonClassName } from "@/shared/components/ui/Button";
 import { PageShell } from "@/shared/components/ui/PageShell";
-import { routes } from "@/shared/config/routes";
+import { EventNavigation } from "@/shared/components/navigation/EventNavigation";
+import { GalleryGrid } from "@/features/gallery/components/GalleryGrid";
 import { BiliqLogo } from "@/shared/components/brand/BiliqLogo";
 
 interface GalleryPageProps {
@@ -29,29 +26,7 @@ export default async function GalleryPage({ params }: GalleryPageProps) {
               Gallery
             </h1>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Link
-              href={routes.booth(eventSlug)}
-              className={buttonClassName({ variant: "dark" })}
-            >
-              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-              Booth
-            </Link>
-            <Link
-              href={routes.setup(eventSlug)}
-              className={buttonClassName({ variant: "secondary" })}
-            >
-              <Settings className="h-4 w-4" aria-hidden="true" />
-              Setup
-            </Link>
-            <Link
-              href={routes.designer(eventSlug)}
-              className={buttonClassName({ variant: "secondary" })}
-            >
-              <Palette className="h-4 w-4" aria-hidden="true" />
-              Designer
-            </Link>
-          </div>
+          <EventNavigation eventSlug={eventSlug} activeRoute="gallery" />
         </header>
 
         <GalleryGrid eventSlug={eventSlug} />

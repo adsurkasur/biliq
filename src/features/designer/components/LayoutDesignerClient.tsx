@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Camera, GalleryHorizontal, Save, Settings } from "lucide-react";
+import { Camera, Save } from "lucide-react";
 import { DesignerCanvasPreview } from "@/features/designer/components/DesignerCanvasPreview";
-import { DesignerOverlayPanel } from "@/features/designer/components/DesignerOverlayPanel";
+import { DesignerLayerList } from "@/features/designer/components/DesignerLayerList";
+import { OverlayLayerEditor } from "@/features/designer/components/OverlayLayerEditor";
 import { SlotEditor } from "@/features/designer/components/SlotEditor";
 import { useLayoutDesigner } from "@/features/designer/hooks/useLayoutDesigner";
 import { Button, buttonClassName } from "@/shared/components/ui/Button";
@@ -11,8 +12,9 @@ import { Card } from "@/shared/components/ui/Card";
 import { EmptyState } from "@/shared/components/ui/EmptyState";
 import { Spinner } from "@/shared/components/ui/Spinner";
 import { useToast } from "@/shared/components/ui/toast/useToast";
-import { routes } from "@/shared/config/routes";
 import { BiliqLogo } from "@/shared/components/brand/BiliqLogo";
+import { EventNavigation } from "@/shared/components/navigation/EventNavigation";
+import { routes } from "@/shared/config/routes";
 
 interface LayoutDesignerClientProps {
   eventSlug: string;
@@ -23,16 +25,21 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
     eventConfig,
     isLoaded,
     layout,
-    overlayDimensions,
-    overlayFileName,
+    overlayLayers,
     selectedSlotIndex,
+    selectedLayerId,
+    addOverlayLayer,
+    removeOverlayLayer,
+    updateOverlayLayer,
+    updateLayerNumber,
+    toggleLayerVisibility,
+    toggleLayerLock,
     addSlot,
-    handleOverlayUpload,
-    removeOverlay,
     removeSlot,
     resetToDefaultLayout,
     saveLayout,
-    setSelectedSlotIndex,
+    selectSlot,
+    selectLayer,
     updateSlotFit,
     updateSlotNumber
   } = useLayoutDesigner(eventSlug);
@@ -68,6 +75,10 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
     );
   }
 
+  const selectedLayer = selectedLayerId 
+    ? overlayLayers.find(layer => layer.id === selectedLayerId) 
+    : null;
+
   return (
     <main className="min-h-screen px-5 py-8 sm:px-8 lg:px-10">
       <div className="mx-auto grid max-w-7xl gap-6 motion-enter">
@@ -84,36 +95,7 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
             </h1>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <Link
-              href={routes.home}
-              className={buttonClassName({ variant: "secondary" })}
-            >
-              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-              Events
-            </Link>
-            <Link
-              href={routes.setup(eventConfig.slug)}
-              className={buttonClassName({ variant: "secondary" })}
-            >
-              <Settings className="h-4 w-4" aria-hidden="true" />
-              Setup
-            </Link>
-            <Link
-              href={routes.booth(eventConfig.slug)}
-              className={buttonClassName({ variant: "dark" })}
-            >
-              <Camera className="h-4 w-4" aria-hidden="true" />
-              Booth
-            </Link>
-            <Link
-              href={routes.gallery(eventConfig.slug)}
-              className={buttonClassName({ variant: "secondary" })}
-            >
-              <GalleryHorizontal className="h-4 w-4" aria-hidden="true" />
-              Gallery
-            </Link>
-          </div>
+          <EventNavigation eventSlug={eventConfig.slug} activeRoute="designer" />
         </header>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(360px,520px)_minmax(0,1fr)]">
@@ -121,31 +103,47 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
             <DesignerCanvasPreview
               eventConfig={eventConfig}
               layout={layout}
+              overlayLayers={overlayLayers}
               selectedSlotIndex={selectedSlotIndex}
-              onSelectSlot={setSelectedSlotIndex}
+              selectedLayerId={selectedLayerId}
+              onSelectSlot={selectSlot}
+              onSelectLayer={selectLayer}
             />
-            <DesignerOverlayPanel
-              outputWidth={eventConfig.outputWidth}
-              outputHeight={eventConfig.outputHeight}
-              overlayDataUrl={eventConfig.overlayDataUrl}
-              overlayDimensions={overlayDimensions}
-              overlayFileName={overlayFileName}
-              onUpload={handleOverlayUpload}
-              onRemove={removeOverlay}
+            <DesignerLayerList
+              layout={layout}
+              overlayLayers={overlayLayers}
+              selectedSlotIndex={selectedSlotIndex}
+              selectedLayerId={selectedLayerId}
+              onSelectSlot={selectSlot}
+              onSelectLayer={selectLayer}
+              onToggleLayerVisibility={toggleLayerVisibility}
+              onToggleLayerLock={toggleLayerLock}
+              onUploadLayer={addOverlayLayer}
             />
           </div>
 
           <div className="grid content-start gap-6">
-            <SlotEditor
-              layout={layout}
-              selectedSlotIndex={selectedSlotIndex}
-              onAddSlot={addSlot}
-              onRemoveSlot={removeSlot}
-              onResetToDefault={resetToDefaultLayout}
-              onSelectSlot={setSelectedSlotIndex}
-              onUpdateSlotFit={updateSlotFit}
-              onUpdateSlotNumber={updateSlotNumber}
-            />
+            {selectedSlotIndex !== null ? (
+              <SlotEditor
+                layout={layout}
+                selectedSlotIndex={selectedSlotIndex}
+                onAddSlot={addSlot}
+                onRemoveSlot={removeSlot}
+                onResetToDefault={resetToDefaultLayout}
+                onSelectSlot={selectSlot}
+                onUpdateSlotFit={updateSlotFit}
+                onUpdateSlotNumber={updateSlotNumber}
+              />
+            ) : null}
+
+            {selectedLayer ? (
+              <OverlayLayerEditor
+                layer={selectedLayer}
+                layout={layout}
+                onRemoveLayer={removeOverlayLayer}
+                onUpdateLayerNumber={updateLayerNumber}
+              />
+            ) : null}
 
             <Card className="motion-card flex flex-wrap items-center gap-3 p-5">
               <Button
@@ -155,10 +153,10 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
                 size="lg"
               >
                 <Save className="h-5 w-5" aria-hidden="true" />
-                Save custom layout
+                Save designer state
               </Button>
               <span className="text-sm font-medium text-[var(--booth-on-surface-variant)]">
-                Saving syncs capture count to the number of slots.
+                Saving applies layout and overlay layers to the booth.
               </span>
             </Card>
           </div>
