@@ -133,7 +133,7 @@ export function BoothCaptureSurface({
               type="button"
               disabled={!canStart}
               onClick={onStart}
-              className="booth-focus-ring booth-start-button pointer-events-auto inline-flex min-h-16 items-center gap-3 rounded-[var(--booth-radius-full)] bg-[var(--booth-primary)] px-8 py-4 text-xl font-black text-white shadow-[var(--booth-elevation-3)] transition-all hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:animate-none disabled:opacity-40"
+              className="booth-focus-ring booth-start-enter pointer-events-auto inline-flex min-h-16 items-center gap-3 rounded-[var(--booth-radius-full)] bg-[var(--booth-primary)] px-8 py-4 text-xl font-black text-white shadow-[var(--booth-elevation-3)] transition-all hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:animate-none disabled:opacity-40"
             >
               <Camera className="h-7 w-7" aria-hidden="true" />
               {totalShots > 1 ? `Start ${totalShots} Photos` : "Start"}

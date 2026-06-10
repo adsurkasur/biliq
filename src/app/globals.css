@@ -130,8 +130,8 @@ select {
   animation: booth-viewfinder-enter 520ms var(--booth-ease-emphasized) both;
 }
 
-.booth-start-button {
-  animation: booth-start-ready 1800ms ease-in-out infinite;
+.booth-start-enter {
+  animation: booth-start-enter 600ms var(--booth-ease-emphasized) both;
 }
 
 .countdown-pop {
@@ -258,10 +258,10 @@ select {
   }
 }
 
-@keyframes booth-start-ready {
+@keyframes booth-start-enter {
   0% {
     box-shadow: 0 4px 12px rgba(74, 124, 115, 0.15);
-    transform: translateY(8px) scale(0.98);
+    transform: translateY(16px) scale(0.95);
     opacity: 0;
   }
   100% {

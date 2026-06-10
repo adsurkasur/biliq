@@ -22,7 +22,7 @@ import { Toast } from "@/shared/components/ui/Toast";
 import { routes } from "@/shared/config/routes";
 
 const inputClass =
-  "booth-focus-ring min-h-12 rounded-[var(--booth-radius-md)] bg-[var(--booth-surface-container-lowest)] px-4 py-3 text-[var(--booth-on-surface)] transition-colors focus:bg-[var(--booth-surface-container-low)] shadow-[var(--booth-elevation-1)]";
+  "booth-focus-ring min-h-12 rounded-[var(--booth-radius-md)] bg-[var(--booth-surface-container-high)] px-4 py-3 text-[var(--booth-on-surface)] transition-colors hover:bg-[var(--booth-surface-container-high-alt)] focus:bg-[var(--booth-surface-container-lowest)]";
 
 const labelClass = "text-sm font-semibold text-[var(--booth-on-surface-variant)]";
 

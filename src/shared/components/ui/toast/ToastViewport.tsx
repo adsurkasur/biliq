@@ -13,7 +13,11 @@ export function ToastViewport() {
   return (
     <div
       aria-label="Notifications"
-      className="pointer-events-none fixed bottom-0 z-[100] flex max-h-screen w-full flex-col-reverse items-center justify-end gap-3 p-4 sm:right-0 sm:top-0 sm:bottom-auto sm:flex-col sm:items-end sm:p-6"
+      className="pointer-events-none fixed z-[100] flex max-h-screen w-full flex-col-reverse items-center justify-end gap-3 p-4 sm:w-auto sm:items-end sm:p-0"
+      style={{
+        bottom: "max(1rem, env(safe-area-inset-bottom))",
+        right: "max(1rem, env(safe-area-inset-right))"
+      }}
     >
       {toasts.map((toast) => (
         <ToastItem key={toast.id} toast={toast} />

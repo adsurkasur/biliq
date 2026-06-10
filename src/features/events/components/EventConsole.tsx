@@ -69,11 +69,14 @@ export function EventConsole() {
         <header className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--booth-outline-variant)]/30 pb-6">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-[var(--booth-primary)]">
-              Local Web Photo Booth
+              Biliq
             </p>
             <h1 className="mt-2 text-3xl font-bold text-[var(--booth-on-surface)] sm:text-4xl">
               Event console
             </h1>
+            <p className="mt-1 text-sm font-medium text-[var(--booth-on-surface-variant)]">
+              Browser-based event photo booth system.
+            </p>
           </div>
           <Link
             href={routes.setup()}
