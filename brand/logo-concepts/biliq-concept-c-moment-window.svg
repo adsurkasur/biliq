@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Outer Window shape (arch or rounded rect) -->
+  <path d="M8 32C8 18.7452 18.7452 8 32 8C45.2548 8 56 18.7452 56 32V44C56 50.6274 50.6274 56 44 56H20C13.3726 56 8 50.6274 8 44V32Z" fill="#CDE8E1"/>
+  <!-- Inner moment framing -->
+  <path d="M16 32C16 23.1634 23.1634 16 32 16C40.8366 16 48 23.1634 48 32V40C48 44.4183 44.4183 48 40 48H24C19.5817 48 16 44.4183 16 40V32Z" fill="#4A7C73"/>
+  <!-- Sparkle / Star (the moment) -->
+  <path d="M32 22C33 26.5 36.5 30 41 31C36.5 32 33 35.5 32 40C31 35.5 27.5 32 23 31C27.5 30 31 26.5 32 22Z" fill="#FDFBF8"/>
+</svg>

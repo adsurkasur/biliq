@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 64" fill="none">
+  <g transform="scale(0.8) translate(4, 8)">
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M30 8C17.8497 8 8 17.8497 8 30C8 42.1503 17.8497 52 30 52C42.1503 52 52 42.1503 52 30C52 17.8497 42.1503 8 30 8ZM30 18C23.3726 18 18 23.3726 18 30C18 36.6274 23.3726 42 30 42C36.6274 42 42 36.6274 42 30C42 23.3726 36.6274 18 30 18Z" fill="#4A7C73"/>
+    <rect x="42" y="30" width="10" height="26" rx="5" fill="#4A7C73"/>
+    <circle cx="30" cy="30" r="7" fill="#CDE8E1"/>
+    <circle cx="32" cy="28" r="2" fill="#FDFBF8"/>
+  </g>
+  <text x="60" y="42" font-family="system-ui, -apple-system, sans-serif" font-weight="bold" font-size="28" fill="#1C1B1A" letter-spacing="-0.5">Biliq</text>
+</svg>

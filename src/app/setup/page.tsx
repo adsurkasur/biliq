@@ -4,15 +4,19 @@ import { EventSetupForm } from "@/features/setup/components/EventSetupForm";
 import { buttonClassName } from "@/shared/components/ui/Button";
 import { PageShell } from "@/shared/components/ui/PageShell";
 import { routes } from "@/shared/config/routes";
+import { BiliqLogo } from "@/shared/components/brand/BiliqLogo";
 
 export default function SetupPage() {
   return (
     <PageShell maxWidth="6xl">
         <header className="flex flex-wrap items-center justify-between gap-4 border-b border-stone-200 pb-6">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-teal-800">
-              Event setup
-            </p>
+            <div className="flex items-center gap-3 mb-2">
+              <BiliqLogo variant="mark" size="sm" />
+              <p className="text-sm font-semibold uppercase tracking-wide text-teal-800 m-0">
+                Event setup
+              </p>
+            </div>
             <h1 className="mt-2 text-3xl font-bold text-stone-950 sm:text-4xl">
               Configure booth event
             </h1>

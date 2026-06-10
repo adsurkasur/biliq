@@ -10,6 +10,7 @@ import { Card } from "@/shared/components/ui/Card";
 import { EmptyState } from "@/shared/components/ui/EmptyState";
 import { Spinner } from "@/shared/components/ui/Spinner";
 import { routes } from "@/shared/config/routes";
+import { BiliqLogo } from "@/shared/components/brand/BiliqLogo";
 
 interface PrintClientProps {
   photoId: string;
@@ -74,13 +75,16 @@ export function PrintClient({ photoId }: PrintClientProps) {
   return (
     <main className="print-shell min-h-screen bg-white px-5 py-8 sm:px-8 lg:px-10">
       <div className="no-print motion-enter mx-auto mb-5 flex max-w-5xl flex-wrap items-center justify-between gap-3 rounded-[var(--booth-radius-xl)] border border-[var(--booth-outline-variant)]/20 bg-[var(--booth-surface-container-lowest)] p-4 shadow-[var(--booth-elevation-1)]">
-        <Link
-          href={routes.photo(photo.id)}
-          className={buttonClassName({ variant: "secondary" })}
-        >
-          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          Photo
-        </Link>
+        <div className="flex items-center gap-4">
+          <BiliqLogo variant="mark" size="sm" />
+          <Link
+            href={routes.photo(photo.id)}
+            className={buttonClassName({ variant: "secondary" })}
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            Photo
+          </Link>
+        </div>
         <Button
           type="button"
           onClick={printPhoto}
