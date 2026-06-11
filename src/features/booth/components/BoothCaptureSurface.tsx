@@ -3,7 +3,7 @@
 import type { RefObject } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Camera, Home, Palette, Settings } from "lucide-react";
+import { Camera } from "lucide-react";
 import type { EventConfig } from "@/domain/events/types";
 import { getCaptureCountForEvent } from "@/domain/layouts/defaultLayouts";
 import { CameraPreview } from "@/features/booth/components/CameraPreview";
@@ -11,6 +11,7 @@ import { CaptureProgress } from "@/features/booth/components/CaptureProgress";
 import { CountdownOverlay } from "@/features/booth/components/CountdownOverlay";
 import type { CaptureState, ShotProgress } from "@/features/booth/lib/boothState";
 import { routes } from "@/shared/config/routes";
+import { EventNavigation } from "@/shared/components/navigation/EventNavigation";
 
 interface BoothCaptureSurfaceProps {
   eventConfig: EventConfig;
@@ -54,32 +55,7 @@ export function BoothCaptureSurface({
             </p>
           </div>
 
-          <div className="flex gap-2">
-            <Link
-              href={routes.home}
-              className="booth-focus-ring inline-flex h-10 w-10 items-center justify-center rounded-[var(--booth-radius-full)] border border-white/10 bg-stone-950/60 text-white backdrop-blur-md transition-all hover:bg-white/15 active:scale-95"
-              aria-label="Events"
-              title="Events"
-            >
-              <Home className="h-4 w-4" aria-hidden="true" />
-            </Link>
-            <Link
-              href={`${routes.setup(eventConfig.slug)}${returnToQuery}`}
-              className="booth-focus-ring inline-flex h-10 w-10 items-center justify-center rounded-[var(--booth-radius-full)] border border-white/10 bg-stone-950/60 text-white backdrop-blur-md transition-all hover:bg-white/15 active:scale-95"
-              aria-label="Setup"
-              title="Setup"
-            >
-              <Settings className="h-4 w-4" aria-hidden="true" />
-            </Link>
-            <Link
-              href={`${routes.designer(eventConfig.slug)}${returnToQuery}`}
-              className="booth-focus-ring inline-flex h-10 w-10 items-center justify-center rounded-[var(--booth-radius-full)] border border-white/10 bg-stone-950/60 text-white backdrop-blur-md transition-all hover:bg-white/15 active:scale-95"
-              aria-label="Designer"
-              title="Designer"
-            >
-              <Palette className="h-4 w-4" aria-hidden="true" />
-            </Link>
-          </div>
+          <EventNavigation eventSlug={eventConfig.slug} activeRoute="booth" theme="booth" />
         </header>
 
         <CameraPreview

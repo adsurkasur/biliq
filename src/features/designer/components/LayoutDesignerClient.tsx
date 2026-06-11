@@ -108,6 +108,8 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
               selectedLayerId={selectedLayerId}
               onSelectSlot={selectSlot}
               onSelectLayer={selectLayer}
+              onUpdateSlotNumber={updateSlotNumber}
+              onUpdateLayerNumber={updateLayerNumber}
             />
             <DesignerLayerList
               layout={layout}

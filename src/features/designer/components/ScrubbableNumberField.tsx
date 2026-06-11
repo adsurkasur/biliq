@@ -56,6 +56,7 @@ export function ScrubbableNumberField({
 
       if (nextValue !== value) {
         onChange(nextValue);
+        setInputValue(nextValue.toString());
       }
     };
 

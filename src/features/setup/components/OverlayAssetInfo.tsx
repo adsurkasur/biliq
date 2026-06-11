@@ -100,7 +100,7 @@ export function OverlayAssetInfo({
       ) : null}
 
       <div className="mt-6 rounded-[var(--booth-radius-md)] bg-[var(--booth-primary-container)]/30 p-4">
-        <h3 className="font-semibold text-[var(--booth-primary)]">Open Layout Designer</h3>
+        <h3 className="font-semibold text-[var(--booth-primary)]">Open Designer</h3>
         <p className="mt-1 text-sm leading-relaxed text-[var(--booth-on-surface-variant)]">
           Use the designer to arrange photo slots, add multiple overlays, and fine-tune position, size, rotation, and opacity.
         </p>
