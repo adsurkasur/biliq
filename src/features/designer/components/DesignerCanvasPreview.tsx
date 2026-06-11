@@ -394,7 +394,7 @@ export function DesignerCanvasPreview({
       <div
         ref={canvasRef}
         className="relative mx-auto w-full max-w-[720px] overflow-hidden rounded-[var(--booth-radius-lg)] border border-[var(--booth-outline-variant)]/30 bg-[var(--booth-surface-container)]"
-        data-guide-target="canvas-viewport"
+        data-guide-target="live-layout-preview canvas-viewport"
         style={{ aspectRatio: `${eventConfig.outputWidth} / ${eventConfig.outputHeight}` }}
       >
         <div

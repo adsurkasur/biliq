@@ -163,7 +163,7 @@ const GUIDE_STEPS: GuideStep[] = [
   {
     title: "Snapping",
     icon: Magnet,
-    target: ["canvas-viewport", "designer-canvas"],
+    target: ["live-layout-preview", "canvas-viewport", "designer-canvas"],
     hintType: "snap",
     checkpoint: "snap",
     body: (
@@ -354,7 +354,7 @@ function computePanelPlacement(targetRect: GuideTargetRect | null): {
 // Spotlight overlay with target cutout
 // ---------------------------------------------------------------------------
 
-function GuideSpotlight({ rect }: { rect: GuideTargetRect | null }) {
+function GuideSpotlight({ rect, isExiting }: { rect: GuideTargetRect | null; isExiting?: boolean }) {
   if (!rect) return null;
 
   const pad = 8;
@@ -362,8 +362,10 @@ function GuideSpotlight({ rect }: { rect: GuideTargetRect | null }) {
 
   return (
     <div
-      className="fixed inset-0 z-[60] pointer-events-none"
-      style={{ transition: "opacity 200ms ease" }}
+      className={cn(
+        "fixed inset-0 z-[60] pointer-events-none transition-opacity duration-300",
+        isExiting ? "opacity-0" : "opacity-100"
+      )}
     >
       {/* Dimmed overlay with cutout */}
       <svg
@@ -430,12 +432,15 @@ interface DesignerGuideProps {
 function GuidePrompt({
   onStart,
   onSkip,
+  isExiting,
 }: {
   onStart: () => void;
   onSkip: () => void;
+  isExiting?: boolean;
 }) {
   return (
-    <Modal title="New to the Designer?" onClose={onSkip}>
+    <div className={cn("transition-all duration-300", isExiting ? "opacity-0 scale-95 pointer-events-none" : "opacity-100 scale-100")}>
+      <Modal title="New to the Designer?" onClose={onSkip}>
       <p className="mt-3 text-[var(--booth-on-surface-variant)]">
         This is your first time opening the Designer. Would you like a quick walkthrough of the tools and interactions?
       </p>
@@ -452,6 +457,7 @@ function GuidePrompt({
         </Button>
       </div>
     </Modal>
+    </div>
   );
 }
 
@@ -523,10 +529,10 @@ function GuidePanel({
   return (
     <>
       {/* Spotlight overlay — allows clicks through except on dimmed areas */}
-      <GuideSpotlight rect={targetRect} />
+      <GuideSpotlight rect={targetRect} isExiting={guideState.isExiting} />
 
       {/* Visual hints based on step */}
-      <GuideVisualHint type={currentStep.hintType ?? null} targetRect={targetRect} />
+      <GuideVisualHint type={currentStep.hintType ?? null} targetRect={targetRect} isExiting={guideState.isExiting} />
 
       {/* Clickable backdrop to dismiss — sits behind the panel but above spotlight */}
       <div
@@ -536,7 +542,6 @@ function GuidePanel({
         style={{ cursor: "default" }}
       />
 
-      {/* Panel */}
       <div
         role="dialog"
         aria-modal="true"
@@ -544,7 +549,7 @@ function GuidePanel({
         className={cn(
           "z-[62] rounded-[var(--booth-radius-2xl)]",
           "bg-[var(--booth-surface-container-lowest)] shadow-[var(--booth-elevation-4)]",
-          "motion-enter"
+          guideState.isExiting ? "opacity-0 scale-95 pointer-events-none" : "motion-enter opacity-100 scale-100"
         )}
         style={{ 
           ...panelStyle, 
@@ -686,7 +691,7 @@ export function DesignerGuide({
   if (guideState.phase === "idle") return null;
 
   if (guideState.phase === "prompt") {
-    return <GuidePrompt onStart={onStart} onSkip={onSkip} />;
+    return <GuidePrompt onStart={onStart} onSkip={onSkip} isExiting={guideState.isExiting} />;
   }
 
   // phase === "active"

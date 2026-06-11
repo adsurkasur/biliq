@@ -14,8 +14,8 @@ export type DesignerGuideInteraction =
 
 export type GuideState =
   | { phase: "idle" }
-  | { phase: "prompt" }
-  | { phase: "active"; step: number; completedCheckpoints: DesignerGuideInteraction[] };
+  | { phase: "prompt"; isExiting?: boolean }
+  | { phase: "active"; step: number; completedCheckpoints: DesignerGuideInteraction[]; isExiting?: boolean };
 
 export const GUIDE_STEP_COUNT = 8;
 
@@ -63,17 +63,26 @@ export function useDesignerGuide(): UseDesignerGuideReturn {
 
   const closeGuide = useCallback(() => {
     markSeen();
-    setGuideState({ phase: "idle" });
+    setGuideState((prev) => prev.phase === "idle" ? prev : { ...prev, isExiting: true });
+    setTimeout(() => {
+      setGuideState({ phase: "idle" });
+    }, 300);
   }, [markSeen]);
 
   const startGuide = useCallback(() => {
     markSeen();
-    setGuideState({ phase: "active", step: 0, completedCheckpoints: [] });
+    setGuideState((prev) => prev.phase === "idle" ? prev : { ...prev, isExiting: true });
+    setTimeout(() => {
+      setGuideState({ phase: "active", step: 0, completedCheckpoints: [] });
+    }, 300);
   }, [markSeen]);
 
   const skipGuide = useCallback(() => {
     markSeen();
-    setGuideState({ phase: "idle" });
+    setGuideState((prev) => prev.phase === "idle" ? prev : { ...prev, isExiting: true });
+    setTimeout(() => {
+      setGuideState({ phase: "idle" });
+    }, 300);
   }, [markSeen]);
 
   const goNextStep = useCallback(() => {
@@ -81,7 +90,10 @@ export function useDesignerGuide(): UseDesignerGuideReturn {
       if (prev.phase !== "active") return prev;
       if (prev.step >= GUIDE_STEP_COUNT - 1) {
         markSeen();
-        return { phase: "idle" };
+        setTimeout(() => {
+          setGuideState({ phase: "idle" });
+        }, 300);
+        return { ...prev, isExiting: true };
       }
       return { phase: "active", step: prev.step + 1, completedCheckpoints: prev.completedCheckpoints };
     });
