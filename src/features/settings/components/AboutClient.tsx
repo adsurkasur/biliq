@@ -101,12 +101,6 @@ export function AboutClient() {
         </p>
       </Card>
 
-      <div>
-        <Link href={routes.settings} className={buttonClassName({ variant: "ghost-surface", size: "sm" })}>
-          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          Back to Settings
-        </Link>
-      </div>
     </div>
   );
 }

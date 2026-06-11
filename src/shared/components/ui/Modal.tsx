@@ -1,6 +1,7 @@
 "use client";
 
 import { type MouseEvent, type ReactNode, useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import { cn } from "@/shared/lib/classNames";
@@ -14,6 +15,11 @@ interface ModalProps {
 
 export function Modal({ children, title, onClose, className }: ModalProps) {
   const [isClosing, setIsClosing] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const triggerClose = useCallback(() => {
     setIsClosing(true);
@@ -48,7 +54,9 @@ export function Modal({ children, title, onClose, className }: ModalProps) {
     }
   }
 
-  return (
+  if (!mounted) return null;
+
+  const modalContent = (
     <div
       className={cn(
         "fixed inset-0 z-50 grid place-items-center bg-black/50 px-4 py-6 backdrop-blur-sm",
@@ -87,4 +95,6 @@ export function Modal({ children, title, onClose, className }: ModalProps) {
       </section>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }

@@ -66,11 +66,16 @@ export function EventConsole() {
   }
 
   return (
-    <PageShell maxWidth="6xl">
+    <PageShell>
         <header className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--booth-outline-variant)]/30 pb-6">
           <div>
-            <BiliqLogo variant="lockup" size="lg" className="mb-4" />
-            <h1 className="text-3xl font-bold text-[var(--booth-on-surface)] sm:text-4xl">
+            <div className="flex items-center gap-3 mb-2">
+              <BiliqLogo variant="mark" size="sm" />
+              <p className="text-sm font-semibold uppercase tracking-wide text-[var(--booth-primary)] m-0">
+                Biliq
+              </p>
+            </div>
+            <h1 className="mt-2 text-3xl font-bold text-[var(--booth-on-surface)] sm:text-4xl">
               Event console
             </h1>
             <p className="mt-1 text-sm font-medium text-[var(--booth-on-surface-variant)]">

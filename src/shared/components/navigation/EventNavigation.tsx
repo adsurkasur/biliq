@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Camera, GalleryHorizontal, LayoutGrid, Palette, Settings } from "lucide-react";
+import { Camera, GalleryHorizontal, LayoutGrid, Palette, Pencil, Settings } from "lucide-react";
 import { buttonClassName } from "@/shared/components/ui/Button";
 import { routes } from "@/shared/config/routes";
 import { cn } from "@/shared/lib/classNames";
@@ -11,10 +11,11 @@ interface EventNavigationProps {
   eventSlug?: string;
   activeRoute?: "setup" | "designer" | "booth" | "gallery" | "photo" | "print";
   theme?: "default" | "booth";
+  prefixActions?: React.ReactNode;
   children?: React.ReactNode;
 }
 
-export function EventNavigation({ eventSlug, activeRoute, theme = "default", children }: EventNavigationProps) {
+export function EventNavigation({ eventSlug, activeRoute, theme = "default", prefixActions, children }: EventNavigationProps) {
   const pathname = usePathname();
 
   const getHrefWithReturnTo = (baseHref: string) => {
@@ -37,6 +38,7 @@ export function EventNavigation({ eventSlug, activeRoute, theme = "default", chi
 
     return (
       <nav className="flex gap-1.5" aria-label="Event navigation">
+        {prefixActions}
         <Link href={routes.home} className={boothBtnClass} title="Events">
           <LayoutGrid className="h-4 w-4 flex-none" aria-hidden="true" />
           <span className="sr-only">Events</span>
@@ -48,7 +50,7 @@ export function EventNavigation({ eventSlug, activeRoute, theme = "default", chi
               <span className="sr-only">Booth</span>
             </Link>
             <Link href={getHrefWithReturnTo(routes.setup(eventSlug))} className={activeRoute === "setup" ? boothBtnActive : boothBtnClass} title="Setup" aria-current={activeRoute === "setup" ? "page" : undefined}>
-              <Settings className="h-4 w-4 flex-none" aria-hidden="true" />
+              <Pencil className="h-4 w-4 flex-none" aria-hidden="true" />
               <span className="sr-only">Setup</span>
             </Link>
             <Link href={getHrefWithReturnTo(routes.designer(eventSlug))} className={activeRoute === "designer" ? boothBtnActive : boothBtnClass} title="Designer" aria-current={activeRoute === "designer" ? "page" : undefined}>
@@ -83,6 +85,8 @@ export function EventNavigation({ eventSlug, activeRoute, theme = "default", chi
 
   return (
     <nav className="flex flex-wrap gap-2" aria-label="Event navigation">
+      {prefixActions}
+
       {/* Events — tonal, visually distinct from peers */}
       <Link href={routes.home} className={getClasses("events")}>
         <LayoutGrid className="h-4 w-4 flex-none" aria-hidden="true" />
@@ -107,7 +111,7 @@ export function EventNavigation({ eventSlug, activeRoute, theme = "default", chi
             className={getClasses("setup")}
             aria-current={activeRoute === "setup" ? "page" : undefined}
           >
-            <Settings className="h-4 w-4 flex-none" aria-hidden="true" />
+            <Pencil className="h-4 w-4 flex-none" aria-hidden="true" />
             <span className={labelClass}>Setup</span>
           </Link>
 

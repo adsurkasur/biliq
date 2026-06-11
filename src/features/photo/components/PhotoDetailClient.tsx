@@ -74,7 +74,7 @@ export function PhotoDetailClient({ photoId }: PhotoDetailClientProps) {
   }
 
   return (
-    <PageShell maxWidth="6xl">
+    <PageShell>
         <header className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--booth-outline-variant)]/30 pb-6">
           <div>
             <div className="flex items-center gap-3 mb-2">
