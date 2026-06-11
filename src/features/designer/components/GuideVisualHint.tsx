@@ -27,13 +27,14 @@ export function GuideVisualHint({ type, targetRect }: GuideVisualHintProps) {
             top: targetRect.top + targetRect.height / 2,
             left: targetRect.left + targetRect.width / 2,
             transform: "translate(-50%, -50%)",
+            transition: "top 350ms cubic-bezier(0.2, 0, 0, 1), left 350ms cubic-bezier(0.2, 0, 0, 1), transform 350ms cubic-bezier(0.2, 0, 0, 1)",
           }}
         >
-          <div className="flex items-center gap-2 text-[var(--booth-on-surface)] drop-shadow-md">
-            <MousePointer2 className="h-5 w-5 fill-[var(--booth-on-surface)]/20" />
+          <div className="flex items-center gap-2 text-[var(--booth-primary)] drop-shadow-md">
+            <MousePointer2 className="h-5 w-5 fill-[var(--booth-surface)]/80" />
             <Move className="h-5 w-5" />
           </div>
-          <span className="rounded-full bg-[var(--booth-surface-container-highest)]/90 px-2 py-0.5 text-xs font-semibold text-[var(--booth-on-surface)] shadow-sm backdrop-blur-sm">
+          <span className="rounded-full bg-[var(--booth-on-surface)]/90 px-2 py-0.5 text-xs font-semibold text-[var(--booth-surface)] shadow-sm backdrop-blur-sm">
             Drag to move
           </span>
         </div>
@@ -48,15 +49,16 @@ export function GuideVisualHint({ type, targetRect }: GuideVisualHintProps) {
             left: targetRect.left - 8,
             width: targetRect.width + 16,
             height: targetRect.height + 16,
+            transition: "top 350ms cubic-bezier(0.2, 0, 0, 1), left 350ms cubic-bezier(0.2, 0, 0, 1), width 350ms cubic-bezier(0.2, 0, 0, 1), height 350ms cubic-bezier(0.2, 0, 0, 1)",
           }}
         >
           <div className="absolute -left-3 -top-3 flex items-center gap-1">
-            <span className="rounded-full bg-[var(--booth-surface-container-highest)]/90 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--booth-on-surface)] shadow-sm backdrop-blur-sm">
+            <span className="rounded-full bg-[var(--booth-on-surface)]/90 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--booth-surface)] shadow-sm backdrop-blur-sm">
               Resize
             </span>
           </div>
           <div className="absolute -bottom-3 -right-3 flex items-center gap-1">
-            <span className="rounded-full bg-[var(--booth-surface-container-highest)]/90 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--booth-on-surface)] shadow-sm backdrop-blur-sm">
+            <span className="rounded-full bg-[var(--booth-on-surface)]/90 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--booth-surface)] shadow-sm backdrop-blur-sm">
               Resize
             </span>
           </div>
@@ -71,9 +73,10 @@ export function GuideVisualHint({ type, targetRect }: GuideVisualHintProps) {
             top: targetRect.top - 48,
             left: targetRect.left + targetRect.width / 2,
             transform: "translateX(-50%)",
+            transition: "top 350ms cubic-bezier(0.2, 0, 0, 1), left 350ms cubic-bezier(0.2, 0, 0, 1), transform 350ms cubic-bezier(0.2, 0, 0, 1)",
           }}
         >
-          <span className="mb-1 rounded-full bg-[var(--booth-surface-container-highest)]/90 px-2 py-0.5 text-xs font-semibold text-[var(--booth-on-surface)] shadow-sm backdrop-blur-sm">
+          <span className="mb-1 rounded-full bg-[var(--booth-on-surface)]/90 px-2 py-0.5 text-xs font-semibold text-[var(--booth-surface)] shadow-sm backdrop-blur-sm">
             Rotate
           </span>
           <RotateCw className="h-5 w-5 text-white drop-shadow-md" />

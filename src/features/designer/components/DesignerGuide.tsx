@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -13,6 +13,7 @@ import {
   SlidersHorizontal,
   Save,
   Camera,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import { Modal } from "@/shared/components/ui/Modal";
@@ -397,11 +398,12 @@ function GuideSpotlight({ rect }: { rect: GuideTargetRect | null }) {
       <div
         className="absolute rounded-[var(--booth-radius-lg)] ring-2 ring-[var(--booth-primary)]/60 ring-offset-2 ring-offset-transparent"
         style={{
-          top: rect.top - pad,
-          left: rect.left - pad,
+          top: 0,
+          left: 0,
           width: rect.width + pad * 2,
           height: rect.height + pad * 2,
-          transition: "top 300ms ease, left 300ms ease, width 300ms ease, height 300ms ease",
+          transform: `translate3d(${rect.left - pad}px, ${rect.top - pad}px, 0)`,
+          transition: "transform 350ms cubic-bezier(0.2, 0, 0, 1), width 350ms cubic-bezier(0.2, 0, 0, 1), height 350ms cubic-bezier(0.2, 0, 0, 1)",
         }}
       />
     </div>
@@ -544,7 +546,11 @@ function GuidePanel({
           "bg-[var(--booth-surface-container-lowest)] shadow-[var(--booth-elevation-4)]",
           "motion-enter"
         )}
-        style={{ ...panelStyle, outline: "none" }}
+        style={{ 
+          ...panelStyle, 
+          outline: "none",
+          transition: "top 350ms cubic-bezier(0.2, 0, 0, 1), left 350ms cubic-bezier(0.2, 0, 0, 1), bottom 350ms cubic-bezier(0.2, 0, 0, 1), transform 350ms cubic-bezier(0.2, 0, 0, 1)"
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close button */}
@@ -581,16 +587,31 @@ function GuidePanel({
         </div>
 
         {/* Body */}
-        <div className="px-5 py-4 text-sm leading-relaxed">
-          {currentStep.body}
-          {isCompleted && (
-            <div className="mt-4 flex items-center gap-2 rounded bg-green-500/10 px-3 py-2 text-green-700 dark:text-green-400 font-medium motion-enter">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-green-500/20">
-                ✓
-              </span>
-              Nice, you completed this!
+        <div className="relative px-5 py-4 text-sm leading-relaxed">
+          {/* Preparing state if target is not found immediately */}
+          <div 
+            className={cn(
+              "absolute inset-0 z-10 flex flex-col items-center justify-center bg-[var(--booth-surface-container-lowest)] transition-opacity duration-300",
+              !targetRect ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+            )}
+          >
+            <div className="flex items-center gap-2 text-[var(--booth-on-surface-variant)]">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span className="font-medium">Preparing guide…</span>
             </div>
-          )}
+          </div>
+
+          <div className={cn("transition-opacity duration-300", !targetRect ? "opacity-0" : "opacity-100")}>
+            {currentStep.body}
+            {isCompleted && (
+              <div className="mt-4 flex items-center gap-2 rounded bg-green-500/10 px-3 py-2 text-green-700 dark:text-green-400 font-medium motion-enter">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-green-500/20">
+                  ✓
+                </span>
+                Nice, you completed this!
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Footer */}
