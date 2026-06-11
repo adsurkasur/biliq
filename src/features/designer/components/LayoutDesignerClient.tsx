@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Camera, Save } from "lucide-react";
+import { Camera, HelpCircle, Save } from "lucide-react";
 import { DesignerCanvasPreview } from "@/features/designer/components/DesignerCanvasPreview";
+import { DesignerGuide } from "@/features/designer/components/DesignerGuide";
 import { DesignerLayerList } from "@/features/designer/components/DesignerLayerList";
 import { OverlayLayerEditor } from "@/features/designer/components/OverlayLayerEditor";
 import { SlotEditor } from "@/features/designer/components/SlotEditor";
@@ -15,6 +16,7 @@ import { useToast } from "@/shared/components/ui/toast/useToast";
 import { BiliqLogo } from "@/shared/components/brand/BiliqLogo";
 import { EventNavigation } from "@/shared/components/navigation/EventNavigation";
 import { routes } from "@/shared/config/routes";
+import { useDesignerGuide } from "@/features/designer/hooks/useDesignerGuide";
 
 interface LayoutDesignerClientProps {
   eventSlug: string;
@@ -45,6 +47,16 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
     updateSlotBoolean,
     updateLayerBoolean
   } = useLayoutDesigner(eventSlug);
+
+  const {
+    guideState,
+    openGuide,
+    closeGuide,
+    startGuide,
+    skipGuide,
+    goNextStep,
+    goPrevStep,
+  } = useDesignerGuide();
 
   if (!isLoaded) {
     return (
@@ -98,6 +110,18 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
           </div>
 
           <EventNavigation eventSlug={eventConfig.slug} activeRoute="designer" />
+
+          <Button
+            type="button"
+            variant="ghost-surface"
+            size="sm"
+            onClick={openGuide}
+            aria-label="Open Designer Guide"
+            title="Designer Guide"
+          >
+            <HelpCircle className="h-4 w-4" aria-hidden="true" />
+            Guide
+          </Button>
         </header>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(360px,520px)_minmax(0,1fr)]">
@@ -168,6 +192,15 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
           </div>
         </div>
       </div>
+
+      <DesignerGuide
+        guideState={guideState}
+        onClose={closeGuide}
+        onStart={startGuide}
+        onSkip={skipGuide}
+        onNext={goNextStep}
+        onBack={goPrevStep}
+      />
     </main>
   );
 }
