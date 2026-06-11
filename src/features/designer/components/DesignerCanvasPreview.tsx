@@ -382,6 +382,7 @@ export function DesignerCanvasPreview({
       <div
         ref={canvasRef}
         className="relative mx-auto w-full max-w-[720px] overflow-hidden rounded-[var(--booth-radius-lg)] border border-[var(--booth-outline-variant)]/30 bg-[var(--booth-surface-container)]"
+        data-guide-target="canvas-viewport"
         style={{ aspectRatio: `${eventConfig.outputWidth} / ${eventConfig.outputHeight}` }}
       >
         <div
@@ -414,6 +415,7 @@ export function DesignerCanvasPreview({
               <button
                 type="button"
                 onClick={() => onSelectSlot(index)}
+                data-guide-target={index === 0 ? "photo-slot" : undefined}
                 onPointerDown={(e) => {
                   onSelectSlot(index);
                   e.preventDefault();
@@ -462,6 +464,7 @@ export function DesignerCanvasPreview({
                   canvasHeight={layout.canvasHeight}
                   canResize={true}
                   canRotate={true}
+                  guideTarget="transform-handles"
                   onPointerDown={(e, action) => {
                     let initialPointerAngle = 0;
                     if (action === "rotate" && canvasRef.current) {
@@ -563,6 +566,7 @@ export function DesignerCanvasPreview({
                   canvasHeight={eventConfig.outputHeight}
                   canResize={true}
                   canRotate={true}
+                  guideTarget="transform-handles"
                   onPointerDown={(e, action) => {
                     let initialPointerAngle = 0;
                     if (action === "rotate" && canvasRef.current) {

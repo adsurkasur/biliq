@@ -25,6 +25,7 @@ import {
   useGuideTargetRect,
   type GuideTargetRect,
 } from "@/features/designer/hooks/useGuideTargetRect";
+import { GuideVisualHint, type GuideHintType } from "@/features/designer/components/GuideVisualHint";
 
 // ---------------------------------------------------------------------------
 // Guide step definitions
@@ -33,7 +34,8 @@ import {
 interface GuideStep {
   title: string;
   icon: React.ElementType;
-  target: string; // data-guide-target value
+  target: string | string[]; // data-guide-target value(s)
+  hintType?: GuideHintType;
   body: React.ReactNode;
 }
 
@@ -56,7 +58,7 @@ const GUIDE_STEPS: GuideStep[] = [
   {
     title: "Photo Slots",
     icon: Camera,
-    target: "designer-canvas",
+    target: ["photo-slot", "designer-canvas"],
     body: (
       <div>
         <p className="text-[var(--booth-on-surface-variant)]">
@@ -82,7 +84,8 @@ const GUIDE_STEPS: GuideStep[] = [
   {
     title: "Move Elements",
     icon: Move,
-    target: "designer-canvas",
+    target: ["photo-slot", "designer-canvas"],
+    hintType: "move",
     body: (
       <div>
         <p className="text-[var(--booth-on-surface-variant)]">
@@ -104,7 +107,8 @@ const GUIDE_STEPS: GuideStep[] = [
   {
     title: "Resize Elements",
     icon: CornerRightDown,
-    target: "designer-canvas",
+    target: ["resize-handles", "photo-slot", "designer-canvas"],
+    hintType: "resize",
     body: (
       <div>
         <p className="text-[var(--booth-on-surface-variant)]">
@@ -130,7 +134,8 @@ const GUIDE_STEPS: GuideStep[] = [
   {
     title: "Rotate Elements",
     icon: RotateCw,
-    target: "designer-canvas",
+    target: ["rotation-handle", "resize-handles", "photo-slot", "designer-canvas"],
+    hintType: "rotate",
     body: (
       <div>
         <p className="text-[var(--booth-on-surface-variant)]">
@@ -152,7 +157,8 @@ const GUIDE_STEPS: GuideStep[] = [
   {
     title: "Snapping",
     icon: Magnet,
-    target: "designer-canvas",
+    target: ["canvas-viewport", "designer-canvas"],
+    hintType: "snap",
     body: (
       <div>
         <p className="text-[var(--booth-on-surface-variant)]">
@@ -484,7 +490,13 @@ function GuidePanel({
 
   // Scroll target into view if it is off-screen
   useEffect(() => {
-    const el = document.querySelector(`[data-guide-target="${currentStep.target}"]`);
+    const targets = Array.isArray(currentStep.target) ? currentStep.target : [currentStep.target];
+    let el: Element | null = null;
+    for (const t of targets) {
+      el = document.querySelector(`[data-guide-target="${t}"]`);
+      if (el) break;
+    }
+    
     if (el) {
       const rect = el.getBoundingClientRect();
       const inView = rect.top >= 0 && rect.bottom <= window.innerHeight;
@@ -498,6 +510,9 @@ function GuidePanel({
     <>
       {/* Spotlight overlay — allows clicks through except on dimmed areas */}
       <GuideSpotlight rect={targetRect} />
+
+      {/* Visual hints based on step */}
+      <GuideVisualHint type={currentStep.hintType ?? null} targetRect={targetRect} />
 
       {/* Clickable backdrop to dismiss — sits behind the panel but above spotlight */}
       <div

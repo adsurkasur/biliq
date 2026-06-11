@@ -19,6 +19,7 @@ interface DesignerTransformHandlesProps {
   canvasHeight: number;
   canResize?: boolean;
   canRotate?: boolean;
+  guideTarget?: string;
   onPointerDown: (e: React.PointerEvent, action: TransformAction) => void;
 }
 
@@ -32,6 +33,7 @@ export function DesignerTransformHandles({
   canvasHeight,
   canResize = true,
   canRotate = false,
+  guideTarget,
   onPointerDown
 }: DesignerTransformHandlesProps) {
   const leftPercent = (x / canvasWidth) * 100;
@@ -45,6 +47,7 @@ export function DesignerTransformHandles({
   return (
     <div
       className="absolute pointer-events-none z-50"
+      data-guide-target={guideTarget === "transform-handles" ? "resize-handles" : guideTarget}
       style={{
         left: `${leftPercent}%`,
         top: `${topPercent}%`,
@@ -63,6 +66,7 @@ export function DesignerTransformHandles({
           <button
             type="button"
             className={cn(handleClass, "left-1/2 top-[-32px] cursor-grab active:cursor-grabbing")}
+            data-guide-target="rotation-handle"
             onPointerDown={(e) => {
               e.preventDefault();
               e.stopPropagation();

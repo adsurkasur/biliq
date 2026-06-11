@@ -19,20 +19,28 @@ export interface GuideTargetRect {
  *
  * Returns null if the element is not found (graceful fallback).
  */
-export function useGuideTargetRect(targetId: string | null): GuideTargetRect | null {
+export function useGuideTargetRect(targetIds: string | string[] | null): GuideTargetRect | null {
   const [rect, setRect] = useState<GuideTargetRect | null>(null);
   const rafRef = useRef<number>(0);
 
   const measure = useCallback(() => {
-    if (!targetId) {
+    if (!targetIds || (Array.isArray(targetIds) && targetIds.length === 0)) {
       setRect(null);
       return;
     }
 
-    const el = document.querySelector(`[data-guide-target="${targetId}"]`);
+    const ids = Array.isArray(targetIds) ? targetIds : [targetIds];
+    
+    // Try to find the first matching target
+    let el: Element | null = null;
+    for (const id of ids) {
+      el = document.querySelector(`[data-guide-target="${id}"]`);
+      if (el) break;
+    }
+
     if (!el) {
       // Fallback: try designer-canvas as a universal fallback
-      if (targetId !== "designer-canvas") {
+      if (!ids.includes("designer-canvas")) {
         const fallback = document.querySelector(`[data-guide-target="designer-canvas"]`);
         if (fallback) {
           const r = fallback.getBoundingClientRect();
@@ -46,7 +54,7 @@ export function useGuideTargetRect(targetId: string | null): GuideTargetRect | n
 
     const r = el.getBoundingClientRect();
     setRect({ top: r.top, left: r.left, width: r.width, height: r.height, bottom: r.bottom, right: r.right });
-  }, [targetId]);
+  }, [targetIds]);
 
   // Measure on targetId change
   useEffect(() => {

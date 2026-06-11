@@ -33,7 +33,7 @@ export function DesignerLayerList({
   const reversedLayers = [...overlayLayers].sort((a, b) => b.zIndex - a.zIndex);
 
   return (
-    <Card className="motion-card flex flex-col overflow-hidden">
+    <Card className="motion-card flex flex-col overflow-hidden" data-guide-target="layer-list">
       <div className="flex flex-col border-b border-[var(--booth-outline-variant)]/30 p-4">
         <p className="text-sm font-semibold uppercase tracking-wide text-[var(--booth-primary)]">
           Layers
