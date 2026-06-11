@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useMemo } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -21,6 +21,10 @@ import {
   type GuideState,
   GUIDE_STEP_COUNT,
 } from "@/features/designer/hooks/useDesignerGuide";
+import {
+  useGuideTargetRect,
+  type GuideTargetRect,
+} from "@/features/designer/hooks/useGuideTargetRect";
 
 // ---------------------------------------------------------------------------
 // Guide step definitions
@@ -29,6 +33,7 @@ import {
 interface GuideStep {
   title: string;
   icon: React.ElementType;
+  target: string; // data-guide-target value
   body: React.ReactNode;
 }
 
@@ -36,6 +41,7 @@ const GUIDE_STEPS: GuideStep[] = [
   {
     title: "Welcome to the Designer",
     icon: HelpCircle,
+    target: "designer-canvas",
     body: (
       <div>
         <p className="text-[var(--booth-on-surface-variant)]">
@@ -50,6 +56,7 @@ const GUIDE_STEPS: GuideStep[] = [
   {
     title: "Photo Slots",
     icon: Camera,
+    target: "designer-canvas",
     body: (
       <div>
         <p className="text-[var(--booth-on-surface-variant)]">
@@ -75,6 +82,7 @@ const GUIDE_STEPS: GuideStep[] = [
   {
     title: "Move Elements",
     icon: Move,
+    target: "designer-canvas",
     body: (
       <div>
         <p className="text-[var(--booth-on-surface-variant)]">
@@ -96,6 +104,7 @@ const GUIDE_STEPS: GuideStep[] = [
   {
     title: "Resize Elements",
     icon: CornerRightDown,
+    target: "designer-canvas",
     body: (
       <div>
         <p className="text-[var(--booth-on-surface-variant)]">
@@ -121,6 +130,7 @@ const GUIDE_STEPS: GuideStep[] = [
   {
     title: "Rotate Elements",
     icon: RotateCw,
+    target: "designer-canvas",
     body: (
       <div>
         <p className="text-[var(--booth-on-surface-variant)]">
@@ -142,6 +152,7 @@ const GUIDE_STEPS: GuideStep[] = [
   {
     title: "Snapping",
     icon: Magnet,
+    target: "designer-canvas",
     body: (
       <div>
         <p className="text-[var(--booth-on-surface-variant)]">
@@ -167,6 +178,7 @@ const GUIDE_STEPS: GuideStep[] = [
   {
     title: "Property Panel",
     icon: SlidersHorizontal,
+    target: "property-panel",
     body: (
       <div>
         <p className="text-[var(--booth-on-surface-variant)]">
@@ -192,6 +204,7 @@ const GUIDE_STEPS: GuideStep[] = [
   {
     title: "Save and Use in Booth",
     icon: Save,
+    target: "save-layout",
     body: (
       <div>
         <p className="text-[var(--booth-on-surface-variant)]">
@@ -220,6 +233,169 @@ const GUIDE_STEPS: GuideStep[] = [
 ];
 
 // ---------------------------------------------------------------------------
+// Panel position logic
+// ---------------------------------------------------------------------------
+
+type PanelPlacement = "right" | "left" | "bottom" | "top";
+
+const PANEL_WIDTH = 384; // max-w-sm ≈ 384px
+const PANEL_GAP = 16;
+
+function computePanelPlacement(targetRect: GuideTargetRect | null): {
+  placement: PanelPlacement;
+  style: React.CSSProperties;
+} {
+  if (!targetRect) {
+    // No target — center at bottom
+    return {
+      placement: "bottom",
+      style: {
+        position: "fixed",
+        bottom: 24,
+        left: "50%",
+        transform: "translateX(-50%)",
+        maxWidth: PANEL_WIDTH,
+        width: "calc(100% - 32px)",
+      },
+    };
+  }
+
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
+  // Space available on each side
+  const spaceRight = vw - targetRect.right;
+  const spaceLeft = targetRect.left;
+  const spaceBottom = vh - targetRect.bottom;
+  const spaceTop = targetRect.top;
+
+  // Prefer right, then left, then bottom, then top
+  if (spaceRight >= PANEL_WIDTH + PANEL_GAP * 2) {
+    return {
+      placement: "right",
+      style: {
+        position: "fixed",
+        top: Math.max(16, Math.min(targetRect.top, vh - 420)),
+        left: targetRect.right + PANEL_GAP,
+        maxWidth: PANEL_WIDTH,
+        width: Math.min(PANEL_WIDTH, spaceRight - PANEL_GAP * 2),
+      },
+    };
+  }
+
+  if (spaceLeft >= PANEL_WIDTH + PANEL_GAP * 2) {
+    return {
+      placement: "left",
+      style: {
+        position: "fixed",
+        top: Math.max(16, Math.min(targetRect.top, vh - 420)),
+        right: vw - targetRect.left + PANEL_GAP,
+        maxWidth: PANEL_WIDTH,
+        width: Math.min(PANEL_WIDTH, spaceLeft - PANEL_GAP * 2),
+      },
+    };
+  }
+
+  if (spaceBottom >= 200) {
+    return {
+      placement: "bottom",
+      style: {
+        position: "fixed",
+        top: targetRect.bottom + PANEL_GAP,
+        left: Math.max(16, Math.min(targetRect.left, vw - PANEL_WIDTH - 16)),
+        maxWidth: PANEL_WIDTH,
+        width: "calc(100% - 32px)",
+      },
+    };
+  }
+
+  if (spaceTop >= 200) {
+    return {
+      placement: "top",
+      style: {
+        position: "fixed",
+        bottom: vh - targetRect.top + PANEL_GAP,
+        left: Math.max(16, Math.min(targetRect.left, vw - PANEL_WIDTH - 16)),
+        maxWidth: PANEL_WIDTH,
+        width: "calc(100% - 32px)",
+      },
+    };
+  }
+
+  // Final fallback — bottom-center, above viewport bottom
+  return {
+    placement: "bottom",
+    style: {
+      position: "fixed",
+      bottom: 24,
+      left: "50%",
+      transform: "translateX(-50%)",
+      maxWidth: PANEL_WIDTH,
+      width: "calc(100% - 32px)",
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Spotlight overlay with target cutout
+// ---------------------------------------------------------------------------
+
+function GuideSpotlight({ rect }: { rect: GuideTargetRect | null }) {
+  if (!rect) return null;
+
+  const pad = 8;
+  const r = 12;
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] pointer-events-none"
+      style={{ transition: "opacity 200ms ease" }}
+    >
+      {/* Dimmed overlay with cutout */}
+      <svg
+        className="absolute inset-0 h-full w-full"
+        preserveAspectRatio="none"
+      >
+        <defs>
+          <mask id="guide-spotlight-mask">
+            <rect x="0" y="0" width="100%" height="100%" fill="white" />
+            <rect
+              x={rect.left - pad}
+              y={rect.top - pad}
+              width={rect.width + pad * 2}
+              height={rect.height + pad * 2}
+              rx={r}
+              ry={r}
+              fill="black"
+            />
+          </mask>
+        </defs>
+        <rect
+          x="0"
+          y="0"
+          width="100%"
+          height="100%"
+          fill="rgba(0,0,0,0.45)"
+          mask="url(#guide-spotlight-mask)"
+        />
+      </svg>
+
+      {/* Highlight ring around target */}
+      <div
+        className="absolute rounded-[var(--booth-radius-lg)] ring-2 ring-[var(--booth-primary)]/60 ring-offset-2 ring-offset-transparent"
+        style={{
+          top: rect.top - pad,
+          left: rect.left - pad,
+          width: rect.width + pad * 2,
+          height: rect.height + pad * 2,
+          transition: "top 300ms ease, left 300ms ease, width 300ms ease, height 300ms ease",
+        }}
+      />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
 
@@ -233,7 +409,7 @@ interface DesignerGuideProps {
 }
 
 // ---------------------------------------------------------------------------
-// First-time prompt
+// First-time prompt (unchanged)
 // ---------------------------------------------------------------------------
 
 function GuidePrompt({
@@ -265,7 +441,7 @@ function GuidePrompt({
 }
 
 // ---------------------------------------------------------------------------
-// Step panel
+// Contextual step panel
 // ---------------------------------------------------------------------------
 
 function GuidePanel({
@@ -284,6 +460,15 @@ function GuidePanel({
   const isFirst = step === 0;
   const isLast = step === GUIDE_STEP_COUNT - 1;
 
+  // Track target rect for this step
+  const targetRect = useGuideTargetRect(currentStep.target);
+
+  // Compute panel placement
+  const { style: panelStyle } = useMemo(
+    () => computePanelPlacement(targetRect),
+    [targetRect]
+  );
+
   // Escape key to close
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -297,23 +482,43 @@ function GuidePanel({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
 
+  // Scroll target into view if it is off-screen
+  useEffect(() => {
+    const el = document.querySelector(`[data-guide-target="${currentStep.target}"]`);
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      const inView = rect.top >= 0 && rect.bottom <= window.innerHeight;
+      if (!inView) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+  }, [currentStep.target, step]);
+
   return (
-    // Backdrop
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center sm:items-center px-4 pb-6 sm:pb-0"
-      style={{ pointerEvents: "none" }}
-    >
-      {/* Panel — positioned at bottom on mobile, floating lower-center on desktop */}
+    <>
+      {/* Spotlight overlay — allows clicks through except on dimmed areas */}
+      <GuideSpotlight rect={targetRect} />
+
+      {/* Clickable backdrop to dismiss — sits behind the panel but above spotlight */}
+      <div
+        className="fixed inset-0 z-[61]"
+        onClick={onClose}
+        aria-hidden="true"
+        style={{ cursor: "default" }}
+      />
+
+      {/* Panel */}
       <div
         role="dialog"
         aria-modal="true"
         aria-label={`Designer Guide: ${currentStep.title}`}
         className={cn(
-          "pointer-events-auto relative w-full max-w-md rounded-[var(--booth-radius-2xl)]",
+          "z-[62] rounded-[var(--booth-radius-2xl)]",
           "bg-[var(--booth-surface-container-lowest)] shadow-[var(--booth-elevation-4)]",
           "motion-enter"
         )}
-        style={{ outline: "none" }}
+        style={{ ...panelStyle, outline: "none" }}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Close button */}
         <button
@@ -409,7 +614,7 @@ function GuidePanel({
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 }
 

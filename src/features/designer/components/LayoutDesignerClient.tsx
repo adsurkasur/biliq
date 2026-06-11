@@ -125,7 +125,7 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
         </header>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(360px,520px)_minmax(0,1fr)]">
-          <div className="grid content-start gap-6">
+          <div className="grid content-start gap-6" data-guide-target="designer-canvas">
             <DesignerCanvasPreview
               eventConfig={eventConfig}
               layout={layout}
@@ -150,7 +150,7 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
             />
           </div>
 
-          <div className="grid content-start gap-6">
+          <div className="grid content-start gap-6" data-guide-target="property-panel">
             {selectedSlotIndex !== null ? (
               <SlotEditor
                 layout={layout}
@@ -175,7 +175,7 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
               />
             ) : null}
 
-            <Card className="motion-card flex flex-wrap items-center gap-3 p-5">
+            <Card className="motion-card flex flex-wrap items-center gap-3 p-5" data-guide-target="save-layout">
               <Button
                 type="button"
                 onClick={saveLayout}
