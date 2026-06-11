@@ -12,7 +12,7 @@ import {
 import { buttonClassName } from "@/shared/components/ui/Button";
 import { Card } from "@/shared/components/ui/Card";
 import { EmptyState } from "@/shared/components/ui/EmptyState";
-import { Spinner } from "@/shared/components/ui/Spinner";
+import { LoadingIndicator } from "@/shared/components/ui/LoadingIndicator";
 import { useToast } from "@/shared/components/ui/toast/useToast";
 import { routes } from "@/shared/config/routes";
 
@@ -52,9 +52,11 @@ export function GalleryGrid({ eventSlug }: GalleryGridProps) {
 
   if (status === "Loading gallery...") {
     return (
-      <Card className="p-8 text-center">
-        <Spinner label={status} className="justify-center text-[var(--booth-on-surface-variant)]" />
-      </Card>
+      <LoadingIndicator 
+        variant="section" 
+        label="Loading gallery…" 
+        description="Fetching local photo records."
+      />
     );
   }
 

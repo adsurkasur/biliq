@@ -11,7 +11,7 @@ import { useLayoutDesigner } from "@/features/designer/hooks/useLayoutDesigner";
 import { Button, buttonClassName } from "@/shared/components/ui/Button";
 import { Card } from "@/shared/components/ui/Card";
 import { EmptyState } from "@/shared/components/ui/EmptyState";
-import { Spinner } from "@/shared/components/ui/Spinner";
+import { LoadingIndicator } from "@/shared/components/ui/LoadingIndicator";
 import { Tooltip } from "@/shared/components/ui/Tooltip";
 import { useToast } from "@/shared/components/ui/toast/useToast";
 import { BiliqLogo } from "@/shared/components/brand/BiliqLogo";
@@ -62,11 +62,11 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
 
   if (!isLoaded) {
     return (
-      <main className="grid min-h-screen place-items-center px-5 py-8">
-        <Card className="p-6">
-          <Spinner label="Loading designer" className="text-[var(--booth-on-surface-variant)]" />
-        </Card>
-      </main>
+      <LoadingIndicator 
+        variant="page" 
+        label="Loading designer…" 
+        description="Preparing this event's layout and layers." 
+      />
     );
   }
 

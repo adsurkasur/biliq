@@ -8,7 +8,7 @@ import type { PhotoRecord } from "@/domain/photos/types";
 import { Button, buttonClassName } from "@/shared/components/ui/Button";
 import { Card } from "@/shared/components/ui/Card";
 import { EmptyState } from "@/shared/components/ui/EmptyState";
-import { Spinner } from "@/shared/components/ui/Spinner";
+import { LoadingIndicator } from "@/shared/components/ui/LoadingIndicator";
 import { routes } from "@/shared/config/routes";
 import { BiliqLogo } from "@/shared/components/brand/BiliqLogo";
 import { ContextualBackButton } from "@/shared/components/navigation/ContextualBackButton";
@@ -35,11 +35,10 @@ export function PrintClient({ photoId }: PrintClientProps) {
   if (status) {
     if (status === "Loading print page...") {
       return (
-        <main className="grid min-h-screen place-items-center px-5 py-8">
-          <Card className="p-6">
-            <Spinner label={status} className="text-[var(--booth-on-surface-variant)]" />
-          </Card>
-        </main>
+        <LoadingIndicator 
+          variant="page" 
+          label="Preparing print view…" 
+        />
       );
     }
 

@@ -7,7 +7,7 @@ import { useBoothSession } from "@/features/booth/hooks/useBoothSession";
 import { buttonClassName } from "@/shared/components/ui/Button";
 import { Card } from "@/shared/components/ui/Card";
 import { EmptyState } from "@/shared/components/ui/EmptyState";
-import { Spinner } from "@/shared/components/ui/Spinner";
+import { LoadingIndicator } from "@/shared/components/ui/LoadingIndicator";
 import { routes } from "@/shared/config/routes";
 import { Camera } from "lucide-react";
 
@@ -36,11 +36,11 @@ export function BoothClient({ eventSlug }: BoothClientProps) {
 
   if (!isEventLoaded) {
     return (
-      <main className="grid min-h-screen place-items-center px-5 py-8">
-        <Card className="p-6">
-          <Spinner label="Loading booth" className="text-stone-600" />
-        </Card>
-      </main>
+      <LoadingIndicator 
+        variant="page" 
+        label="Loading booth…" 
+        description="Preparing the event session."
+      />
     );
   }
 

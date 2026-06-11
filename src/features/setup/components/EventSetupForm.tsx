@@ -17,7 +17,7 @@ import { OutputPresetInfo } from "@/features/setup/components/OutputPresetInfo";
 import { Button } from "@/shared/components/ui/Button";
 import { buttonClassName } from "@/shared/components/ui/Button";
 import { Card } from "@/shared/components/ui/Card";
-import { Spinner } from "@/shared/components/ui/Spinner";
+import { LoadingIndicator } from "@/shared/components/ui/LoadingIndicator";
 import { Toast } from "@/shared/components/ui/Toast";
 import { routes } from "@/shared/config/routes";
 
@@ -45,7 +45,11 @@ export function EventSetupForm() {
   if (!eventConfig) {
     return (
       <Card className="p-6">
-        <Spinner label="Loading setup" className="text-[var(--booth-on-surface-variant)]" />
+        <LoadingIndicator 
+          variant="inline" 
+          label="Loading event setup…" 
+          className="w-full justify-center"
+        />
       </Card>
     );
   }

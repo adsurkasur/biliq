@@ -13,10 +13,10 @@ import {
   SlidersHorizontal,
   Save,
   Camera,
-  Loader2,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import { Modal } from "@/shared/components/ui/Modal";
+import { LoadingIndicator } from "@/shared/components/ui/LoadingIndicator";
 import { cn } from "@/shared/lib/classNames";
 import {
   type GuideState,
@@ -591,14 +591,11 @@ function GuidePanel({
           {/* Preparing state if target is not found immediately */}
           <div 
             className={cn(
-              "absolute inset-0 z-10 flex flex-col items-center justify-center bg-[var(--booth-surface-container-lowest)] transition-opacity duration-300",
+              "absolute inset-0 z-10 flex flex-col items-center justify-center bg-[var(--booth-surface-container-lowest)] transition-opacity duration-300 rounded-[var(--booth-radius-2xl)]",
               !targetRect ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
             )}
           >
-            <div className="flex items-center gap-2 text-[var(--booth-on-surface-variant)]">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span className="font-medium">Preparing guide…</span>
-            </div>
+            <LoadingIndicator variant="inline" label="Preparing guide…" />
           </div>
 
           <div className={cn("transition-opacity duration-300", !targetRect ? "opacity-0" : "opacity-100")}>
