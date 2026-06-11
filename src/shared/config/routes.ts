@@ -6,5 +6,7 @@ export const routes = {
   booth: (eventSlug: string) => `/booth/${encodeURIComponent(eventSlug)}`,
   gallery: (eventSlug: string) => `/gallery/${encodeURIComponent(eventSlug)}`,
   photo: (photoId: string) => `/photo/${encodeURIComponent(photoId)}`,
-  print: (photoId: string) => `/print/${encodeURIComponent(photoId)}`
+  print: (photoId: string) => `/print/${encodeURIComponent(photoId)}`,
+  settings: "/settings",
+  about: "/about",
 };

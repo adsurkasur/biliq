@@ -7,7 +7,6 @@ import {
   Camera,
   GalleryHorizontal,
   Palette,
-  Pencil,
   Plus,
   Sparkles,
   Settings,
@@ -21,6 +20,7 @@ import { Button, buttonClassName } from "@/shared/components/ui/Button";
 import { Card } from "@/shared/components/ui/Card";
 import { EmptyState } from "@/shared/components/ui/EmptyState";
 import { Modal } from "@/shared/components/ui/Modal";
+import { PageShell } from "@/shared/components/ui/PageShell";
 import { useToast } from "@/shared/components/ui/toast/useToast";
 import { routes } from "@/shared/config/routes";
 import { BiliqLogo } from "@/shared/components/brand/BiliqLogo";
@@ -66,8 +66,7 @@ export function EventConsole() {
   }
 
   return (
-    <main className="min-h-screen px-5 py-8 sm:px-8 lg:px-10">
-      <div className="mx-auto grid max-w-6xl gap-8 motion-enter">
+    <PageShell maxWidth="6xl">
         <header className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--booth-outline-variant)]/30 pb-6">
           <div>
             <BiliqLogo variant="lockup" size="lg" className="mb-4" />
@@ -78,13 +77,23 @@ export function EventConsole() {
               Browser-based event photo booth system.
             </p>
           </div>
-          <Link
-            href={routes.setup()}
-            className={buttonClassName({ variant: "primary", size: "lg" })}
-          >
-            <Plus className="h-5 w-5" aria-hidden="true" />
-            New event
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href={routes.setup()}
+              className={buttonClassName({ variant: "primary", size: "lg" })}
+            >
+              <Plus className="h-5 w-5" aria-hidden="true" />
+              New event
+            </Link>
+            <Link
+              href={routes.settings}
+              className={buttonClassName({ variant: "ghost-surface", size: "icon" })}
+              title="Settings"
+              aria-label="Open app settings"
+            >
+              <Settings className="h-5 w-5" aria-hidden="true" />
+            </Link>
+          </div>
         </header>
 
         {events.length ? (
@@ -116,7 +125,7 @@ export function EventConsole() {
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 sm:flex">
+                  <div className="flex flex-wrap gap-2">
                     <Link
                       href={routes.booth(event.slug)}
                       className={buttonClassName({ variant: "dark", size: "sm" })}
@@ -176,7 +185,6 @@ export function EventConsole() {
             Set the event name, output size, countdown, overlay, and print mode.
           </EmptyState>
         )}
-      </div>
 
       {deleteTarget ? (
         <Modal title="Delete event?" onClose={() => setDeleteTarget(null)}>
@@ -212,6 +220,6 @@ export function EventConsole() {
           </div>
         </Modal>
       ) : null}
-    </main>
+    </PageShell>
   );
 }

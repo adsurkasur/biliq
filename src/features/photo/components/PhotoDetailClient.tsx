@@ -11,6 +11,7 @@ import { Button, buttonClassName } from "@/shared/components/ui/Button";
 import { Card } from "@/shared/components/ui/Card";
 import { EmptyState } from "@/shared/components/ui/EmptyState";
 import { LoadingIndicator } from "@/shared/components/ui/LoadingIndicator";
+import { PageShell } from "@/shared/components/ui/PageShell";
 import { useToast } from "@/shared/components/ui/toast/useToast";
 import { routes } from "@/shared/config/routes";
 import { createQrValue } from "@/shared/lib/createQrValue";
@@ -73,8 +74,7 @@ export function PhotoDetailClient({ photoId }: PhotoDetailClientProps) {
   }
 
   return (
-    <main className="min-h-screen px-5 py-8 sm:px-8 lg:px-10">
-      <div className="mx-auto grid max-w-6xl gap-6 motion-enter">
+    <PageShell maxWidth="6xl">
         <header className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--booth-outline-variant)]/30 pb-6">
           <div>
             <div className="flex items-center gap-3 mb-2">
@@ -129,8 +129,7 @@ export function PhotoDetailClient({ photoId }: PhotoDetailClientProps) {
 
             <QrPreview value={createQrValue(photo.id)} />
           </aside>
-        </div>
       </div>
-    </main>
+    </PageShell>
   );
 }

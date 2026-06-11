@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { APP_DESCRIPTION, APP_NAME } from "@/shared/config/appConfig";
 import { ToastProvider } from "@/shared/components/ui/toast/ToastProvider";
+import { AppPreferencesProvider } from "@/features/settings/components/AppPreferencesProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -19,6 +20,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        <AppPreferencesProvider />
         <ToastProvider>
           {children}
         </ToastProvider>
@@ -26,3 +28,4 @@ export default function RootLayout({
     </html>
   );
 }
+

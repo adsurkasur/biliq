@@ -111,20 +111,20 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
             </h1>
           </div>
 
-          <EventNavigation eventSlug={eventConfig.slug} activeRoute="designer" />
-
-          <Tooltip content="Open the Designer guide.">
-            <Button
-              type="button"
-              variant="ghost-surface"
-              size="sm"
-              onClick={openGuide}
-              aria-label="Open Designer Guide"
-            >
-              <HelpCircle className="h-4 w-4" aria-hidden="true" />
-              Guide
-            </Button>
-          </Tooltip>
+          <EventNavigation eventSlug={eventConfig.slug} activeRoute="designer">
+            <Tooltip content="Open the Designer guide.">
+              <Button
+                type="button"
+                variant="ghost-surface"
+                size="sm"
+                onClick={openGuide}
+                aria-label="Open Designer Guide"
+              >
+                <HelpCircle className="h-4 w-4" aria-hidden="true" />
+                Guide
+              </Button>
+            </Tooltip>
+          </EventNavigation>
         </header>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(360px,520px)_minmax(0,1fr)]">

@@ -25,6 +25,8 @@ Current routes:
 - `src/app/gallery/[eventSlug]/page.tsx`
 - `src/app/photo/[photoId]/page.tsx`
 - `src/app/print/[photoId]/page.tsx`
+- `src/app/settings/page.tsx`
+- `src/app/about/page.tsx`
 
 ## `src/domain`
 
@@ -50,6 +52,7 @@ Contains feature-specific UI, hooks, and small feature helpers.
 - `features/gallery` - Gallery grid and gallery actions.
 - `features/photo` - Photo detail client UI.
 - `features/print` - Browser print client and print button.
+- `features/settings` - App settings, theme/motion preference providers, and About page content.
 
 Feature components may use browser APIs only when they are client components or hooks.
 

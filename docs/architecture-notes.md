@@ -12,6 +12,7 @@ Browser-only APIs are isolated in client components, hooks, or domain modules ca
 - Video frame capture: `src/domain/media/captureFrame.ts`
 - Canvas composition: `src/domain/media/composePhoto.ts`
 - localStorage events: `src/domain/events/storage.ts`
+- localStorage settings: `biliq-theme-mode` and `biliq-motion-preference`
 - IndexedDB photos: `src/domain/photos/storage.ts`
 - Window print: `src/features/print/components/PrintClient.tsx`
 
@@ -40,3 +41,4 @@ Prepared but unused cloud contracts live in:
 ## Motion And UI
 
 UI motion is implemented with CSS transitions and keyframes in `src/app/globals.css`, not a runtime animation library. Shared UI primitives live in `src/shared/components/ui`. Motion should use opacity and transform so camera preview, overlay alignment, and canvas-related interactions stay performant.
+The app supports an app-level reduced-motion override (`biliq-motion-preference`) applied to the `<html>` element on client hydration.
