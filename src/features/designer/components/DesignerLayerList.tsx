@@ -1,8 +1,8 @@
 import { ImagePlus, Camera, Layers, Lock, Unlock, Eye, EyeOff, GripVertical } from "lucide-react";
 import type { LayoutDefinition } from "@/domain/layouts/types";
 import type { OverlayLayer } from "@/domain/events/types";
-import { Button } from "@/shared/components/ui/Button";
 import { Card } from "@/shared/components/ui/Card";
+import { Tooltip } from "@/shared/components/ui/Tooltip";
 import { cn } from "@/shared/lib/classNames";
 
 interface DesignerLayerListProps {
@@ -76,30 +76,32 @@ export function DesignerLayerList({
               </button>
 
               <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  className="booth-focus-ring rounded p-1.5 text-[var(--booth-on-surface-variant)] transition-colors hover:bg-[var(--booth-surface-container-highest)] hover:text-[var(--booth-on-surface)]"
-                  onClick={() => onToggleLayerLock(layer.id)}
-                  title={layer.locked ? "Unlock" : "Lock"}
-                >
-                  {layer.locked ? (
-                    <Lock className="h-4 w-4" />
-                  ) : (
-                    <Unlock className="h-4 w-4 opacity-50" />
-                  )}
-                </button>
-                <button
-                  type="button"
-                  className="booth-focus-ring rounded p-1.5 text-[var(--booth-on-surface-variant)] transition-colors hover:bg-[var(--booth-surface-container-highest)] hover:text-[var(--booth-on-surface)]"
-                  onClick={() => onToggleLayerVisibility(layer.id)}
-                  title={layer.visible ? "Hide" : "Show"}
-                >
-                  {layer.visible ? (
-                    <Eye className="h-4 w-4" />
-                  ) : (
-                    <EyeOff className="h-4 w-4 opacity-50" />
-                  )}
-                </button>
+                <Tooltip content="Prevent this layer from being moved, resized, or rotated.">
+                  <button
+                    type="button"
+                    className="booth-focus-ring rounded p-1.5 text-[var(--booth-on-surface-variant)] transition-colors hover:bg-[var(--booth-surface-container-highest)] hover:text-[var(--booth-on-surface)]"
+                    onClick={() => onToggleLayerLock(layer.id)}
+                  >
+                    {layer.locked ? (
+                      <Lock className="h-4 w-4" />
+                    ) : (
+                      <Unlock className="h-4 w-4 opacity-50" />
+                    )}
+                  </button>
+                </Tooltip>
+                <Tooltip content="Hide or show this layer in the layout.">
+                  <button
+                    type="button"
+                    className="booth-focus-ring rounded p-1.5 text-[var(--booth-on-surface-variant)] transition-colors hover:bg-[var(--booth-surface-container-highest)] hover:text-[var(--booth-on-surface)]"
+                    onClick={() => onToggleLayerVisibility(layer.id)}
+                  >
+                    {layer.visible ? (
+                      <Eye className="h-4 w-4" />
+                    ) : (
+                      <EyeOff className="h-4 w-4 opacity-50" />
+                    )}
+                  </button>
+                </Tooltip>
               </div>
             </div>
           ))}

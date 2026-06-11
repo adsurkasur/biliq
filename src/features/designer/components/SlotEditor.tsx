@@ -6,6 +6,7 @@ import {
 import type { LayoutDefinition, SlotFit } from "@/domain/layouts/types";
 import { Button } from "@/shared/components/ui/Button";
 import { Card } from "@/shared/components/ui/Card";
+import { Tooltip } from "@/shared/components/ui/Tooltip";
 import { cn } from "@/shared/lib/classNames";
 import { ScrubbableNumberField } from "@/features/designer/components/ScrubbableNumberField";
 
@@ -165,15 +166,17 @@ export function SlotEditor({
                   <option value="contain">Contain</option>
                 </select>
               </label>
-              <label className="col-span-full flex items-center gap-2 text-sm font-semibold text-[var(--booth-on-surface)] mt-2">
-                <input
-                  type="checkbox"
-                  checked={!!slot.aspectRatioLocked}
-                  onChange={(e) => onUpdateSlotBoolean(index, "aspectRatioLocked", e.target.checked)}
-                  className="h-4 w-4 rounded border-[var(--booth-outline-variant)] text-[var(--booth-primary)] focus:ring-[var(--booth-primary)]"
-                />
-                Lock aspect ratio during drag resize
-              </label>
+              <Tooltip content="Keep width and height proportional while resizing.">
+                <label className="col-span-full flex w-fit items-center gap-2 text-sm font-semibold text-[var(--booth-on-surface)] mt-2">
+                  <input
+                    type="checkbox"
+                    checked={!!slot.aspectRatioLocked}
+                    onChange={(e) => onUpdateSlotBoolean(index, "aspectRatioLocked", e.target.checked)}
+                    className="h-4 w-4 rounded border-[var(--booth-outline-variant)] text-[var(--booth-primary)] focus:ring-[var(--booth-primary)]"
+                  />
+                  Lock aspect ratio during drag resize
+                </label>
+              </Tooltip>
             </div>
           </article>
         ))}

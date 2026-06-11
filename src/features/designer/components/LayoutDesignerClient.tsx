@@ -12,6 +12,7 @@ import { Button, buttonClassName } from "@/shared/components/ui/Button";
 import { Card } from "@/shared/components/ui/Card";
 import { EmptyState } from "@/shared/components/ui/EmptyState";
 import { Spinner } from "@/shared/components/ui/Spinner";
+import { Tooltip } from "@/shared/components/ui/Tooltip";
 import { useToast } from "@/shared/components/ui/toast/useToast";
 import { BiliqLogo } from "@/shared/components/brand/BiliqLogo";
 import { EventNavigation } from "@/shared/components/navigation/EventNavigation";
@@ -56,6 +57,7 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
     skipGuide,
     goNextStep,
     goPrevStep,
+    completeCheckpoint,
   } = useDesignerGuide();
 
   if (!isLoaded) {
@@ -111,17 +113,18 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
 
           <EventNavigation eventSlug={eventConfig.slug} activeRoute="designer" />
 
-          <Button
-            type="button"
-            variant="ghost-surface"
-            size="sm"
-            onClick={openGuide}
-            aria-label="Open Designer Guide"
-            title="Designer Guide"
-          >
-            <HelpCircle className="h-4 w-4" aria-hidden="true" />
-            Guide
-          </Button>
+          <Tooltip content="Open the Designer guide.">
+            <Button
+              type="button"
+              variant="ghost-surface"
+              size="sm"
+              onClick={openGuide}
+              aria-label="Open Designer Guide"
+            >
+              <HelpCircle className="h-4 w-4" aria-hidden="true" />
+              Guide
+            </Button>
+          </Tooltip>
         </header>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(360px,520px)_minmax(0,1fr)]">
@@ -136,6 +139,7 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
               onSelectLayer={selectLayer}
               onUpdateSlotNumber={updateSlotNumber}
               onUpdateLayerNumber={updateLayerNumber}
+              onInteraction={completeCheckpoint}
             />
             <DesignerLayerList
               layout={layout}
@@ -178,7 +182,10 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
             <Card className="motion-card flex flex-wrap items-center gap-3 p-5" data-guide-target="save-layout">
               <Button
                 type="button"
-                onClick={saveLayout}
+                onClick={() => {
+                  saveLayout();
+                  completeCheckpoint("save");
+                }}
                 variant="primary"
                 size="lg"
               >

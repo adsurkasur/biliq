@@ -4,10 +4,18 @@ import { useCallback, useEffect, useState } from "react";
 
 const GUIDE_SEEN_KEY = "biliq-designer-guide-seen";
 
+export type DesignerGuideInteraction =
+  | "move"
+  | "resize"
+  | "rotate"
+  | "snap"
+  | "property-edit"
+  | "save";
+
 export type GuideState =
   | { phase: "idle" }
   | { phase: "prompt" }
-  | { phase: "active"; step: number };
+  | { phase: "active"; step: number; completedCheckpoints: DesignerGuideInteraction[] };
 
 export const GUIDE_STEP_COUNT = 8;
 
@@ -19,6 +27,7 @@ export interface UseDesignerGuideReturn {
   skipGuide: () => void;
   goNextStep: () => void;
   goPrevStep: () => void;
+  completeCheckpoint: (interaction: DesignerGuideInteraction) => void;
 }
 
 export function useDesignerGuide(): UseDesignerGuideReturn {
@@ -49,7 +58,7 @@ export function useDesignerGuide(): UseDesignerGuideReturn {
   }, []);
 
   const openGuide = useCallback(() => {
-    setGuideState({ phase: "active", step: 0 });
+    setGuideState({ phase: "active", step: 0, completedCheckpoints: [] });
   }, []);
 
   const closeGuide = useCallback(() => {
@@ -59,7 +68,7 @@ export function useDesignerGuide(): UseDesignerGuideReturn {
 
   const startGuide = useCallback(() => {
     markSeen();
-    setGuideState({ phase: "active", step: 0 });
+    setGuideState({ phase: "active", step: 0, completedCheckpoints: [] });
   }, [markSeen]);
 
   const skipGuide = useCallback(() => {
@@ -74,14 +83,25 @@ export function useDesignerGuide(): UseDesignerGuideReturn {
         markSeen();
         return { phase: "idle" };
       }
-      return { phase: "active", step: prev.step + 1 };
+      return { phase: "active", step: prev.step + 1, completedCheckpoints: prev.completedCheckpoints };
     });
   }, [markSeen]);
 
   const goPrevStep = useCallback(() => {
     setGuideState((prev) => {
       if (prev.phase !== "active" || prev.step === 0) return prev;
-      return { phase: "active", step: prev.step - 1 };
+      return { phase: "active", step: prev.step - 1, completedCheckpoints: prev.completedCheckpoints };
+    });
+  }, []);
+
+  const completeCheckpoint = useCallback((interaction: DesignerGuideInteraction) => {
+    setGuideState((prev) => {
+      if (prev.phase !== "active") return prev;
+      if (prev.completedCheckpoints.includes(interaction)) return prev;
+      return {
+        ...prev,
+        completedCheckpoints: [...prev.completedCheckpoints, interaction],
+      };
     });
   }, []);
 
@@ -93,5 +113,6 @@ export function useDesignerGuide(): UseDesignerGuideReturn {
     skipGuide,
     goNextStep,
     goPrevStep,
+    completeCheckpoint,
   };
 }

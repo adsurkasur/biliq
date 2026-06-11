@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type PointerEvent } from "react";
+import { Tooltip } from "@/shared/components/ui/Tooltip";
 import { cn } from "@/shared/lib/classNames";
 
 interface ScrubbableNumberFieldProps {
@@ -104,16 +105,17 @@ export function ScrubbableNumberField({
 
   return (
     <div className={cn("grid gap-1 text-sm font-semibold text-[var(--booth-on-surface-variant)]", disabled && "opacity-50")}>
-      <div 
-        className={cn(
-          "flex items-center gap-2", 
-          !disabled && "cursor-ew-resize select-none touch-none"
-        )}
-        onPointerDown={handlePointerDown}
-        title="Drag left/right to adjust"
-      >
-        <span className="flex-none">{label}</span>
-      </div>
+      <Tooltip content="Drag horizontally to adjust, or type an exact value.">
+        <div 
+          className={cn(
+            "flex w-fit items-center gap-2", 
+            !disabled && "cursor-ew-resize select-none touch-none"
+          )}
+          onPointerDown={handlePointerDown}
+        >
+          <span className="flex-none">{label}</span>
+        </div>
+      </Tooltip>
       <input
         type="number"
         value={inputValue}

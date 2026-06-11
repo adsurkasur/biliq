@@ -19,6 +19,7 @@ import { Modal } from "@/shared/components/ui/Modal";
 import { cn } from "@/shared/lib/classNames";
 import {
   type GuideState,
+  type DesignerGuideInteraction,
   GUIDE_STEP_COUNT,
 } from "@/features/designer/hooks/useDesignerGuide";
 import {
@@ -36,6 +37,7 @@ interface GuideStep {
   icon: React.ElementType;
   target: string | string[]; // data-guide-target value(s)
   hintType?: GuideHintType;
+  checkpoint?: DesignerGuideInteraction;
   body: React.ReactNode;
 }
 
@@ -86,6 +88,7 @@ const GUIDE_STEPS: GuideStep[] = [
     icon: Move,
     target: ["photo-slot", "designer-canvas"],
     hintType: "move",
+    checkpoint: "move",
     body: (
       <div>
         <p className="text-[var(--booth-on-surface-variant)]">
@@ -109,6 +112,7 @@ const GUIDE_STEPS: GuideStep[] = [
     icon: CornerRightDown,
     target: ["resize-handles", "photo-slot", "designer-canvas"],
     hintType: "resize",
+    checkpoint: "resize",
     body: (
       <div>
         <p className="text-[var(--booth-on-surface-variant)]">
@@ -136,6 +140,7 @@ const GUIDE_STEPS: GuideStep[] = [
     icon: RotateCw,
     target: ["rotation-handle", "resize-handles", "photo-slot", "designer-canvas"],
     hintType: "rotate",
+    checkpoint: "rotate",
     body: (
       <div>
         <p className="text-[var(--booth-on-surface-variant)]">
@@ -159,6 +164,7 @@ const GUIDE_STEPS: GuideStep[] = [
     icon: Magnet,
     target: ["canvas-viewport", "designer-canvas"],
     hintType: "snap",
+    checkpoint: "snap",
     body: (
       <div>
         <p className="text-[var(--booth-on-surface-variant)]">
@@ -211,6 +217,7 @@ const GUIDE_STEPS: GuideStep[] = [
     title: "Save and Use in Booth",
     icon: Save,
     target: "save-layout",
+    checkpoint: "save",
     body: (
       <div>
         <p className="text-[var(--booth-on-surface-variant)]">
@@ -451,16 +458,17 @@ function GuidePrompt({
 // ---------------------------------------------------------------------------
 
 function GuidePanel({
-  step,
+  guideState,
   onClose,
   onNext,
   onBack,
 }: {
-  step: number;
+  guideState: GuideState & { phase: "active" };
   onClose: () => void;
   onNext: () => void;
   onBack: () => void;
 }) {
+  const step = guideState.step;
   const currentStep = GUIDE_STEPS[step];
   const StepIcon = currentStep.icon;
   const isFirst = step === 0;
@@ -476,6 +484,10 @@ function GuidePanel({
   );
 
   // Escape key to close
+  const isCompleted = currentStep.checkpoint 
+    ? guideState.completedCheckpoints.includes(currentStep.checkpoint)
+    : false;
+
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -571,6 +583,14 @@ function GuidePanel({
         {/* Body */}
         <div className="px-5 py-4 text-sm leading-relaxed">
           {currentStep.body}
+          {isCompleted && (
+            <div className="mt-4 flex items-center gap-2 rounded bg-green-500/10 px-3 py-2 text-green-700 dark:text-green-400 font-medium motion-enter">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-green-500/20">
+                ✓
+              </span>
+              Nice, you completed this!
+            </div>
+          )}
         </div>
 
         {/* Footer */}
@@ -654,7 +674,7 @@ export function DesignerGuide({
   // phase === "active"
   return (
     <GuidePanel
-      step={guideState.step}
+      guideState={guideState}
       onClose={onClose}
       onNext={onNext}
       onBack={onBack}

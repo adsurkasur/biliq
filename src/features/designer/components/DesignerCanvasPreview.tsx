@@ -16,6 +16,7 @@ interface DesignerCanvasPreviewProps {
   onSelectLayer: (id: string) => void;
   onUpdateSlotNumber?: (index: number, property: any, value: number) => void;
   onUpdateLayerNumber?: (id: string, property: any, value: number) => void;
+  onInteraction?: (interaction: "move" | "resize" | "rotate" | "snap") => void;
 }
 
 export function DesignerCanvasPreview({
@@ -27,7 +28,8 @@ export function DesignerCanvasPreview({
   onSelectSlot,
   onSelectLayer,
   onUpdateSlotNumber,
-  onUpdateLayerNumber
+  onUpdateLayerNumber,
+  onInteraction
 }: DesignerCanvasPreviewProps) {
   const visibleLayers = overlayLayers.filter((layer) => layer.visible).sort((a, b) => a.zIndex - b.zIndex);
 
@@ -49,6 +51,7 @@ export function DesignerCanvasPreview({
   } | null>(null);
 
   const [snapGuides, setSnapGuides] = useState<{ type: "vertical" | "horizontal"; pos: number }[]>([]);
+  const [didSnap, setDidSnap] = useState(false);
 
   useEffect(() => {
     if (!dragState) return;
@@ -314,6 +317,7 @@ export function DesignerCanvasPreview({
       }
 
       setSnapGuides(guides);
+      if (guides.length > 0) setDidSnap(true);
 
       nextX = Math.round(nextX);
       nextY = Math.round(nextY);
@@ -348,8 +352,16 @@ export function DesignerCanvasPreview({
     };
 
     const handlePointerUp = () => {
+      if (dragState) {
+        if (dragState.action === "move") onInteraction?.("move");
+        else if (dragState.action.startsWith("resize")) onInteraction?.("resize");
+        else if (dragState.action === "rotate") onInteraction?.("rotate");
+        
+        if (didSnap) onInteraction?.("snap");
+      }
       setDragState(null);
       setSnapGuides([]);
+      setDidSnap(false);
     };
 
     window.addEventListener("pointermove", handlePointerMove);

@@ -1,6 +1,7 @@
 import { cn } from "@/shared/lib/classNames";
 import { RotateCw } from "lucide-react";
 import React from "react";
+import { Tooltip } from "@/shared/components/ui/Tooltip";
 
 export type TransformAction = 
   | "resize-tl" 
@@ -63,61 +64,65 @@ export function DesignerTransformHandles({
       {canRotate && (
         <>
           <div className="absolute left-1/2 top-0 h-8 w-px -translate-x-1/2 -translate-y-full bg-[var(--booth-primary)] opacity-80" />
-          <button
-            type="button"
-            className={cn(handleClass, "left-1/2 top-[-32px] cursor-grab active:cursor-grabbing")}
-            data-guide-target="rotation-handle"
-            onPointerDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onPointerDown(e, "rotate");
-            }}
-          >
-            <RotateCw className="h-3 w-3 text-white" />
-          </button>
+          <Tooltip content="Drag to rotate.">
+            <button
+              type="button"
+              className={cn(handleClass, "left-1/2 top-[-32px] cursor-grab active:cursor-grabbing")}
+              data-guide-target="rotation-handle"
+              onPointerDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onPointerDown(e, "rotate");
+              }}
+            >
+              <RotateCw className="h-3 w-3 text-white" />
+            </button>
+          </Tooltip>
         </>
       )}
 
       {/* Resize handles */}
       {canResize && (
-        <>
-          <button
-            type="button"
-            className={cn(handleClass, "left-0 top-0 cursor-nwse-resize")}
-            onPointerDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onPointerDown(e, "resize-tl");
-            }}
-          />
-          <button
-            type="button"
-            className={cn(handleClass, "right-0 top-0 translate-x-1/2 cursor-nesw-resize")}
-            onPointerDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onPointerDown(e, "resize-tr");
-            }}
-          />
-          <button
-            type="button"
-            className={cn(handleClass, "bottom-0 left-0 translate-y-1/2 cursor-nesw-resize")}
-            onPointerDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onPointerDown(e, "resize-bl");
-            }}
-          />
-          <button
-            type="button"
-            className={cn(handleClass, "bottom-0 right-0 translate-x-1/2 translate-y-1/2 cursor-nwse-resize")}
-            onPointerDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onPointerDown(e, "resize-br");
-            }}
-          />
-        </>
+        <Tooltip content="Drag to resize. Hold Shift to keep aspect ratio. Hold Alt/Option to resize from center.">
+          <>
+            <button
+              type="button"
+              className={cn(handleClass, "left-0 top-0 cursor-nwse-resize")}
+              onPointerDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onPointerDown(e, "resize-tl");
+              }}
+            />
+            <button
+              type="button"
+              className={cn(handleClass, "right-0 top-0 translate-x-1/2 cursor-nesw-resize")}
+              onPointerDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onPointerDown(e, "resize-tr");
+              }}
+            />
+            <button
+              type="button"
+              className={cn(handleClass, "bottom-0 left-0 translate-y-1/2 cursor-nesw-resize")}
+              onPointerDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onPointerDown(e, "resize-bl");
+              }}
+            />
+            <button
+              type="button"
+              className={cn(handleClass, "bottom-0 right-0 translate-x-1/2 translate-y-1/2 cursor-nwse-resize")}
+              onPointerDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onPointerDown(e, "resize-br");
+              }}
+            />
+          </>
+        </Tooltip>
       )}
     </div>
   );
