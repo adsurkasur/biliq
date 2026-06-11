@@ -63,57 +63,242 @@ export function DesignerCanvasPreview({
       const deltaX = (e.clientX - dragState.startX) * scaleX;
       const deltaY = (e.clientY - dragState.startY) * scaleY;
 
+      let rawDeltaX = deltaX;
+      let rawDeltaY = deltaY;
+
+      if (dragState.action === "move" && e.shiftKey) {
+        if (Math.abs(rawDeltaX) > Math.abs(rawDeltaY)) {
+          rawDeltaY = 0;
+        } else {
+          rawDeltaX = 0;
+        }
+      }
+
       let nextX = dragState.initialX;
       let nextY = dragState.initialY;
       let nextWidth = dragState.initialWidth;
       let nextHeight = dragState.initialHeight;
       let nextRotation = dragState.initialRotation;
 
-      if (dragState.action === "move") {
-        nextX += deltaX;
-        nextY += deltaY;
-      } else if (dragState.action.startsWith("resize-")) {
-        const isLeft = dragState.action.includes("l");
-        const isTop = dragState.action.includes("t");
+      const bypassSnapping = e.ctrlKey || e.metaKey;
+      const SNAP_THRESHOLD = 12;
+      const guides: { type: "vertical" | "horizontal"; pos: number }[] = [];
 
-        let dw = isLeft ? -deltaX : deltaX;
-        let dh = isTop ? -deltaY : deltaY;
+      if (dragState.action === "move" || dragState.action.startsWith("resize-")) {
+        const isResize = dragState.action.startsWith("resize-");
+        const isLeft = isResize && dragState.action.includes("l");
+        const isTop = isResize && dragState.action.includes("t");
 
-        if (e.altKey) {
-          dw *= 2;
-          dh *= 2;
-        }
+        if (isResize) {
+          let dw = isLeft ? -rawDeltaX : rawDeltaX;
+          let dh = isTop ? -rawDeltaY : rawDeltaY;
 
-        nextWidth = Math.max(MIN_SIZE, dragState.initialWidth + dw);
-        nextHeight = Math.max(MIN_SIZE, dragState.initialHeight + dh);
+          if (e.altKey) {
+            dw *= 2;
+            dh *= 2;
+          }
 
-        if (dragState.aspectRatioLocked || e.shiftKey) {
-          if (Math.abs(dw) > Math.abs(dh)) {
-            nextHeight = nextWidth / dragState.aspectRatio;
+          if (dragState.aspectRatioLocked || e.shiftKey) {
+            if (Math.abs(dw) > Math.abs(dh)) {
+              dh = dw / dragState.aspectRatio;
+            } else {
+              dw = dh * dragState.aspectRatio;
+            }
+          }
+
+          nextWidth = Math.max(MIN_SIZE, dragState.initialWidth + dw);
+          nextHeight = Math.max(MIN_SIZE, dragState.initialHeight + dh);
+
+          if (dragState.aspectRatioLocked || e.shiftKey) {
+            if (nextWidth === MIN_SIZE) {
+              nextHeight = nextWidth / dragState.aspectRatio;
+            } else if (nextHeight === MIN_SIZE) {
+              nextWidth = nextHeight * dragState.aspectRatio;
+            }
+          }
+
+          if (e.altKey) {
+            const cx = dragState.initialX + dragState.initialWidth / 2;
+            const cy = dragState.initialY + dragState.initialHeight / 2;
+            nextX = cx - nextWidth / 2;
+            nextY = cy - nextHeight / 2;
           } else {
-            nextWidth = nextHeight * dragState.aspectRatio;
+            nextX = isLeft ? dragState.initialX + dragState.initialWidth - nextWidth : dragState.initialX;
+            nextY = isTop ? dragState.initialY + dragState.initialHeight - nextHeight : dragState.initialY;
           }
-          if (nextWidth < MIN_SIZE) {
-            nextWidth = MIN_SIZE;
-            nextHeight = nextWidth / dragState.aspectRatio;
-          }
-          if (nextHeight < MIN_SIZE) {
-            nextHeight = MIN_SIZE;
-            nextWidth = nextHeight * dragState.aspectRatio;
-          }
+        } else {
+          nextX = dragState.initialX + rawDeltaX;
+          nextY = dragState.initialY + rawDeltaY;
         }
 
-        if (e.altKey) {
-          const cx = dragState.initialX + dragState.initialWidth / 2;
-          const cy = dragState.initialY + dragState.initialHeight / 2;
-          nextX = cx - nextWidth / 2;
-          nextY = cy - nextHeight / 2;
-        } else {
-          if (isLeft) {
-            nextX = dragState.initialX + dragState.initialWidth - nextWidth;
+        if (!bypassSnapping) {
+          const otherElements: { id: string, left: number, right: number, top: number, bottom: number, centerX: number, centerY: number }[] = [];
+          
+          layout.slots.forEach((slot, idx) => {
+            if (dragState.type === "slot" && dragState.id === idx) return;
+            otherElements.push({
+              id: `slot-${idx}`,
+              left: slot.x, right: slot.x + slot.width,
+              top: slot.y, bottom: slot.y + slot.height,
+              centerX: slot.x + slot.width / 2, centerY: slot.y + slot.height / 2
+            });
+          });
+
+          visibleLayers.forEach(layer => {
+            if (dragState.type === "layer" && dragState.id === layer.id) return;
+            otherElements.push({
+              id: `layer-${layer.id}`,
+              left: layer.x, right: layer.x + layer.width,
+              top: layer.y, bottom: layer.y + layer.height,
+              centerX: layer.x + layer.width / 2, centerY: layer.y + layer.height / 2
+            });
+          });
+
+          const hGaps = new Set<number>();
+          const vGaps = new Set<number>();
+
+          for (let i = 0; i < otherElements.length; i++) {
+            for (let j = i + 1; j < otherElements.length; j++) {
+              hGaps.add(Math.abs(otherElements[i].right - otherElements[j].left));
+              hGaps.add(Math.abs(otherElements[j].right - otherElements[i].left));
+              vGaps.add(Math.abs(otherElements[i].bottom - otherElements[j].top));
+              vGaps.add(Math.abs(otherElements[j].bottom - otherElements[i].top));
+            }
           }
-          if (isTop) {
-            nextY = dragState.initialY + dragState.initialHeight - nextHeight;
+
+          const vTargetsLeft = [0, eventConfig.outputWidth / 2, eventConfig.outputWidth];
+          const vTargetsRight = [0, eventConfig.outputWidth / 2, eventConfig.outputWidth];
+          const vTargetsCenter = [eventConfig.outputWidth / 2];
+
+          const hTargetsTop = [0, eventConfig.outputHeight / 2, eventConfig.outputHeight];
+          const hTargetsBottom = [0, eventConfig.outputHeight / 2, eventConfig.outputHeight];
+          const hTargetsCenter = [eventConfig.outputHeight / 2];
+
+          otherElements.forEach(el => {
+            vTargetsLeft.push(el.left, el.right, el.centerX);
+            vTargetsRight.push(el.left, el.right, el.centerX);
+            vTargetsCenter.push(el.centerX);
+
+            hTargetsTop.push(el.top, el.bottom, el.centerY);
+            hTargetsBottom.push(el.top, el.bottom, el.centerY);
+            hTargetsCenter.push(el.centerY);
+
+            hGaps.forEach(gap => {
+              if (gap > 0) {
+                vTargetsLeft.push(el.right + gap);
+                vTargetsRight.push(el.left - gap);
+              }
+            });
+
+            vGaps.forEach(gap => {
+              if (gap > 0) {
+                hTargetsTop.push(el.bottom + gap);
+                hTargetsBottom.push(el.top - gap);
+              }
+            });
+          });
+
+          type SnapPoint = { delta: number, pos: number, type: "vertical" | "horizontal" };
+          let bestSnapX: SnapPoint | null = null;
+          let bestSnapY: SnapPoint | null = null;
+
+          const evaluateSnap = (currentVal: number, targets: number[], type: "vertical" | "horizontal"): SnapPoint | null => {
+            let best: SnapPoint | null = null;
+            for (const target of targets) {
+              const delta = target - currentVal;
+              if (Math.abs(delta) <= SNAP_THRESHOLD) {
+                if (!best || Math.abs(delta) < Math.abs(best.delta)) {
+                  best = { delta, pos: target, type };
+                }
+              }
+            }
+            return best;
+          };
+
+          const snapsX: (SnapPoint | null)[] = [];
+          if (!isResize || isLeft) snapsX.push(evaluateSnap(nextX, vTargetsLeft, "vertical"));
+          if (!isResize || !isLeft) snapsX.push(evaluateSnap(nextX + nextWidth, vTargetsRight, "vertical"));
+          if (!isResize) snapsX.push(evaluateSnap(nextX + nextWidth / 2, vTargetsCenter, "vertical"));
+
+          for (const s of snapsX) {
+            if (s && (!bestSnapX || Math.abs(s.delta) < Math.abs(bestSnapX.delta))) bestSnapX = s;
+          }
+
+          const snapsY: (SnapPoint | null)[] = [];
+          if (!isResize || isTop) snapsY.push(evaluateSnap(nextY, hTargetsTop, "horizontal"));
+          if (!isResize || !isTop) snapsY.push(evaluateSnap(nextY + nextHeight, hTargetsBottom, "horizontal"));
+          if (!isResize) snapsY.push(evaluateSnap(nextY + nextHeight / 2, hTargetsCenter, "horizontal"));
+
+          for (const s of snapsY) {
+            if (s && (!bestSnapY || Math.abs(s.delta) < Math.abs(bestSnapY.delta))) bestSnapY = s;
+          }
+
+          if (isResize) {
+            if (dragState.aspectRatioLocked || e.shiftKey) {
+              let snap: SnapPoint | null = null;
+              if (bestSnapX && bestSnapY) {
+                snap = Math.abs(bestSnapX.delta) < Math.abs(bestSnapY.delta) ? bestSnapX : bestSnapY;
+              } else {
+                snap = bestSnapX || bestSnapY;
+              }
+              
+              if (snap) {
+                if (snap.type === "vertical") {
+                  let wDelta = isLeft ? -snap.delta : snap.delta;
+                  if (e.altKey) wDelta *= 2;
+                  nextWidth = Math.max(MIN_SIZE, nextWidth + wDelta);
+                  nextHeight = Math.max(MIN_SIZE, nextWidth / dragState.aspectRatio);
+                  nextWidth = nextHeight * dragState.aspectRatio;
+                } else {
+                  let hDelta = isTop ? -snap.delta : snap.delta;
+                  if (e.altKey) hDelta *= 2;
+                  nextHeight = Math.max(MIN_SIZE, nextHeight + hDelta);
+                  nextWidth = Math.max(MIN_SIZE, nextHeight * dragState.aspectRatio);
+                  nextHeight = nextWidth / dragState.aspectRatio;
+                }
+                
+                if (e.altKey) {
+                  nextX = dragState.initialX + dragState.initialWidth / 2 - nextWidth / 2;
+                  nextY = dragState.initialY + dragState.initialHeight / 2 - nextHeight / 2;
+                } else {
+                  nextX = isLeft ? dragState.initialX + dragState.initialWidth - nextWidth : dragState.initialX;
+                  nextY = isTop ? dragState.initialY + dragState.initialHeight - nextHeight : dragState.initialY;
+                }
+                guides.push({ type: snap.type, pos: snap.pos });
+              }
+            } else {
+              if (bestSnapX) {
+                let wDelta = isLeft ? -bestSnapX.delta : bestSnapX.delta;
+                if (e.altKey) wDelta *= 2;
+                nextWidth = Math.max(MIN_SIZE, nextWidth + wDelta);
+                if (e.altKey) {
+                  nextX = dragState.initialX + dragState.initialWidth / 2 - nextWidth / 2;
+                } else {
+                  nextX = isLeft ? dragState.initialX + dragState.initialWidth - nextWidth : dragState.initialX;
+                }
+                guides.push({ type: bestSnapX.type, pos: bestSnapX.pos });
+              }
+              if (bestSnapY) {
+                let hDelta = isTop ? -bestSnapY.delta : bestSnapY.delta;
+                if (e.altKey) hDelta *= 2;
+                nextHeight = Math.max(MIN_SIZE, nextHeight + hDelta);
+                if (e.altKey) {
+                  nextY = dragState.initialY + dragState.initialHeight / 2 - nextHeight / 2;
+                } else {
+                  nextY = isTop ? dragState.initialY + dragState.initialHeight - nextHeight : dragState.initialY;
+                }
+                guides.push({ type: bestSnapY.type, pos: bestSnapY.pos });
+              }
+            }
+          } else {
+            if (bestSnapX) {
+              nextX += bestSnapX.delta;
+              guides.push({ type: bestSnapX.type, pos: bestSnapX.pos });
+            }
+            if (bestSnapY) {
+              nextY += bestSnapY.delta;
+              guides.push({ type: bestSnapY.type, pos: bestSnapY.pos });
+            }
           }
         }
       } else if (dragState.action === "rotate") {
@@ -124,157 +309,8 @@ export function DesignerCanvasPreview({
         const currentAngle = Math.atan2(e.clientY - screenCenterY, e.clientX - screenCenterX);
         const deltaAngle = currentAngle - dragState.initialPointerAngle;
         nextRotation = dragState.initialRotation + deltaAngle * (180 / Math.PI);
-        // Normalize rotation to 0-360 for cleanliness, though negative is fine.
         nextRotation = Math.round(nextRotation) % 360;
         if (nextRotation < 0) nextRotation += 360;
-      }
-
-      // Snapping (only for move/resize, not rotate)
-      const guides: { type: "vertical" | "horizontal"; pos: number }[] = [];
-      const SNAP_THRESHOLD = 12;
-      const bypassSnapping = e.ctrlKey || e.metaKey;
-
-      const snapValue = (val: number, targets: number[]) => {
-        if (bypassSnapping) return val;
-        for (const target of targets) {
-          if (Math.abs(val - target) <= SNAP_THRESHOLD) return target;
-        }
-        return val;
-      };
-
-      if (!bypassSnapping && dragState.action !== "rotate") {
-        const otherElements: { id: string, left: number, right: number, top: number, bottom: number, centerX: number, centerY: number }[] = [];
-        
-        layout.slots.forEach((slot, idx) => {
-          if (dragState.type === "slot" && dragState.id === idx) return;
-          otherElements.push({
-            id: `slot-${idx}`,
-            left: slot.x,
-            right: slot.x + slot.width,
-            top: slot.y,
-            bottom: slot.y + slot.height,
-            centerX: slot.x + slot.width / 2,
-            centerY: slot.y + slot.height / 2
-          });
-        });
-
-        visibleLayers.forEach(layer => {
-          if (dragState.type === "layer" && dragState.id === layer.id) return;
-          otherElements.push({
-            id: `layer-${layer.id}`,
-            left: layer.x,
-            right: layer.x + layer.width,
-            top: layer.y,
-            bottom: layer.y + layer.height,
-            centerX: layer.x + layer.width / 2,
-            centerY: layer.y + layer.height / 2
-          });
-        });
-
-        const hGaps = new Set<number>();
-        const vGaps = new Set<number>();
-
-        for (let i = 0; i < otherElements.length; i++) {
-          for (let j = i + 1; j < otherElements.length; j++) {
-            hGaps.add(Math.abs(otherElements[i].right - otherElements[j].left));
-            hGaps.add(Math.abs(otherElements[j].right - otherElements[i].left));
-            vGaps.add(Math.abs(otherElements[i].bottom - otherElements[j].top));
-            vGaps.add(Math.abs(otherElements[j].bottom - otherElements[i].top));
-          }
-        }
-
-        const vTargetsLeft = [0, eventConfig.outputWidth / 2, eventConfig.outputWidth];
-        const vTargetsRight = [0, eventConfig.outputWidth / 2, eventConfig.outputWidth];
-        const vTargetsCenter = [eventConfig.outputWidth / 2];
-
-        const hTargetsTop = [0, eventConfig.outputHeight / 2, eventConfig.outputHeight];
-        const hTargetsBottom = [0, eventConfig.outputHeight / 2, eventConfig.outputHeight];
-        const hTargetsCenter = [eventConfig.outputHeight / 2];
-
-        otherElements.forEach(el => {
-          vTargetsLeft.push(el.left, el.right, el.centerX);
-          vTargetsRight.push(el.left, el.right, el.centerX);
-          vTargetsCenter.push(el.centerX);
-
-          hTargetsTop.push(el.top, el.bottom, el.centerY);
-          hTargetsBottom.push(el.top, el.bottom, el.centerY);
-          hTargetsCenter.push(el.centerY);
-
-          hGaps.forEach(gap => {
-            if (gap > 0) {
-              vTargetsLeft.push(el.right + gap);
-              vTargetsRight.push(el.left - gap);
-            }
-          });
-
-          vGaps.forEach(gap => {
-            if (gap > 0) {
-              hTargetsTop.push(el.bottom + gap);
-              hTargetsBottom.push(el.top - gap);
-            }
-          });
-        });
-
-        // Snapping X edges depending on action
-        if (dragState.action === "move" || dragState.action === "resize-tl" || dragState.action === "resize-bl") {
-          const snappedX = snapValue(nextX, vTargetsLeft);
-          if (snappedX !== nextX) {
-            if (dragState.action !== "move") nextWidth += (nextX - snappedX);
-            nextX = snappedX;
-            guides.push({ type: "vertical", pos: snappedX });
-          }
-        }
-        if (dragState.action === "move" || dragState.action === "resize-tr" || dragState.action === "resize-br") {
-          const rightEdge = nextX + nextWidth;
-          const snappedRight = snapValue(rightEdge, vTargetsRight);
-          if (snappedRight !== rightEdge) {
-            if (dragState.action === "move") {
-              nextX += (snappedRight - rightEdge);
-            } else {
-              nextWidth += (snappedRight - rightEdge);
-            }
-            guides.push({ type: "vertical", pos: snappedRight });
-          }
-        }
-
-        // Snapping Y edges
-        if (dragState.action === "move" || dragState.action === "resize-tl" || dragState.action === "resize-tr") {
-          const snappedY = snapValue(nextY, hTargetsTop);
-          if (snappedY !== nextY) {
-            if (dragState.action !== "move") nextHeight += (nextY - snappedY);
-            nextY = snappedY;
-            guides.push({ type: "horizontal", pos: snappedY });
-          }
-        }
-        if (dragState.action === "move" || dragState.action === "resize-bl" || dragState.action === "resize-br") {
-          const bottomEdge = nextY + nextHeight;
-          const snappedBottom = snapValue(bottomEdge, hTargetsBottom);
-          if (snappedBottom !== bottomEdge) {
-            if (dragState.action === "move") {
-              nextY += (snappedBottom - bottomEdge);
-            } else {
-              nextHeight += (snappedBottom - bottomEdge);
-            }
-            guides.push({ type: "horizontal", pos: snappedBottom });
-          }
-        }
-
-        // Snap centers during move
-        if (dragState.action === "move") {
-          const centerX = nextX + nextWidth / 2;
-          const snappedCenterX = snapValue(centerX, vTargetsCenter);
-          if (snappedCenterX !== centerX) {
-            nextX += (snappedCenterX - centerX);
-            guides.push({ type: "vertical", pos: snappedCenterX });
-          }
-
-          const centerY = nextY + nextHeight / 2;
-          const snappedCenterY = snapValue(centerY, hTargetsCenter);
-          if (snappedCenterY !== centerY) {
-            nextY += (snappedCenterY - centerY);
-            guides.push({ type: "horizontal", pos: snappedCenterY });
-          }
-        }
       }
 
       setSnapGuides(guides);
