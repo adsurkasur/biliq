@@ -44,6 +44,8 @@ export function DesignerCanvasPreview({
     initialHeight: number;
     initialRotation: number;
     initialPointerAngle: number;
+    aspectRatioLocked: boolean;
+    aspectRatio: number;
   } | null>(null);
 
   const [snapGuides, setSnapGuides] = useState<{ type: "vertical" | "horizontal"; pos: number }[]>([]);
@@ -70,22 +72,50 @@ export function DesignerCanvasPreview({
       if (dragState.action === "move") {
         nextX += deltaX;
         nextY += deltaY;
-      } else if (dragState.action === "resize-br") {
-        nextWidth = Math.max(MIN_SIZE, dragState.initialWidth + deltaX);
-        nextHeight = Math.max(MIN_SIZE, dragState.initialHeight + deltaY);
-      } else if (dragState.action === "resize-bl") {
-        nextWidth = Math.max(MIN_SIZE, dragState.initialWidth - deltaX);
-        nextHeight = Math.max(MIN_SIZE, dragState.initialHeight + deltaY);
-        nextX = dragState.initialX + (dragState.initialWidth - nextWidth);
-      } else if (dragState.action === "resize-tr") {
-        nextWidth = Math.max(MIN_SIZE, dragState.initialWidth + deltaX);
-        nextHeight = Math.max(MIN_SIZE, dragState.initialHeight - deltaY);
-        nextY = dragState.initialY + (dragState.initialHeight - nextHeight);
-      } else if (dragState.action === "resize-tl") {
-        nextWidth = Math.max(MIN_SIZE, dragState.initialWidth - deltaX);
-        nextHeight = Math.max(MIN_SIZE, dragState.initialHeight - deltaY);
-        nextX = dragState.initialX + (dragState.initialWidth - nextWidth);
-        nextY = dragState.initialY + (dragState.initialHeight - nextHeight);
+      } else if (dragState.action.startsWith("resize-")) {
+        const isLeft = dragState.action.includes("l");
+        const isTop = dragState.action.includes("t");
+
+        let dw = isLeft ? -deltaX : deltaX;
+        let dh = isTop ? -deltaY : deltaY;
+
+        if (e.altKey) {
+          dw *= 2;
+          dh *= 2;
+        }
+
+        nextWidth = Math.max(MIN_SIZE, dragState.initialWidth + dw);
+        nextHeight = Math.max(MIN_SIZE, dragState.initialHeight + dh);
+
+        if (dragState.aspectRatioLocked || e.shiftKey) {
+          if (Math.abs(dw) > Math.abs(dh)) {
+            nextHeight = nextWidth / dragState.aspectRatio;
+          } else {
+            nextWidth = nextHeight * dragState.aspectRatio;
+          }
+          if (nextWidth < MIN_SIZE) {
+            nextWidth = MIN_SIZE;
+            nextHeight = nextWidth / dragState.aspectRatio;
+          }
+          if (nextHeight < MIN_SIZE) {
+            nextHeight = MIN_SIZE;
+            nextWidth = nextHeight * dragState.aspectRatio;
+          }
+        }
+
+        if (e.altKey) {
+          const cx = dragState.initialX + dragState.initialWidth / 2;
+          const cy = dragState.initialY + dragState.initialHeight / 2;
+          nextX = cx - nextWidth / 2;
+          nextY = cy - nextHeight / 2;
+        } else {
+          if (isLeft) {
+            nextX = dragState.initialX + dragState.initialWidth - nextWidth;
+          }
+          if (isTop) {
+            nextY = dragState.initialY + dragState.initialHeight - nextHeight;
+          }
+        }
       } else if (dragState.action === "rotate") {
         const centerX = dragState.initialX + dragState.initialWidth / 2;
         const centerY = dragState.initialY + dragState.initialHeight / 2;
@@ -102,21 +132,92 @@ export function DesignerCanvasPreview({
       // Snapping (only for move/resize, not rotate)
       const guides: { type: "vertical" | "horizontal"; pos: number }[] = [];
       const SNAP_THRESHOLD = 12;
+      const bypassSnapping = e.ctrlKey || e.metaKey;
 
       const snapValue = (val: number, targets: number[]) => {
+        if (bypassSnapping) return val;
         for (const target of targets) {
           if (Math.abs(val - target) <= SNAP_THRESHOLD) return target;
         }
         return val;
       };
 
-      if (dragState.action !== "rotate") {
-        const vTargets = [0, eventConfig.outputWidth / 2, eventConfig.outputWidth];
-        const hTargets = [0, eventConfig.outputHeight / 2, eventConfig.outputHeight];
+      if (!bypassSnapping && dragState.action !== "rotate") {
+        const otherElements: { id: string, left: number, right: number, top: number, bottom: number, centerX: number, centerY: number }[] = [];
+        
+        layout.slots.forEach((slot, idx) => {
+          if (dragState.type === "slot" && dragState.id === idx) return;
+          otherElements.push({
+            id: `slot-${idx}`,
+            left: slot.x,
+            right: slot.x + slot.width,
+            top: slot.y,
+            bottom: slot.y + slot.height,
+            centerX: slot.x + slot.width / 2,
+            centerY: slot.y + slot.height / 2
+          });
+        });
+
+        visibleLayers.forEach(layer => {
+          if (dragState.type === "layer" && dragState.id === layer.id) return;
+          otherElements.push({
+            id: `layer-${layer.id}`,
+            left: layer.x,
+            right: layer.x + layer.width,
+            top: layer.y,
+            bottom: layer.y + layer.height,
+            centerX: layer.x + layer.width / 2,
+            centerY: layer.y + layer.height / 2
+          });
+        });
+
+        const hGaps = new Set<number>();
+        const vGaps = new Set<number>();
+
+        for (let i = 0; i < otherElements.length; i++) {
+          for (let j = i + 1; j < otherElements.length; j++) {
+            hGaps.add(Math.abs(otherElements[i].right - otherElements[j].left));
+            hGaps.add(Math.abs(otherElements[j].right - otherElements[i].left));
+            vGaps.add(Math.abs(otherElements[i].bottom - otherElements[j].top));
+            vGaps.add(Math.abs(otherElements[j].bottom - otherElements[i].top));
+          }
+        }
+
+        const vTargetsLeft = [0, eventConfig.outputWidth / 2, eventConfig.outputWidth];
+        const vTargetsRight = [0, eventConfig.outputWidth / 2, eventConfig.outputWidth];
+        const vTargetsCenter = [eventConfig.outputWidth / 2];
+
+        const hTargetsTop = [0, eventConfig.outputHeight / 2, eventConfig.outputHeight];
+        const hTargetsBottom = [0, eventConfig.outputHeight / 2, eventConfig.outputHeight];
+        const hTargetsCenter = [eventConfig.outputHeight / 2];
+
+        otherElements.forEach(el => {
+          vTargetsLeft.push(el.left, el.right, el.centerX);
+          vTargetsRight.push(el.left, el.right, el.centerX);
+          vTargetsCenter.push(el.centerX);
+
+          hTargetsTop.push(el.top, el.bottom, el.centerY);
+          hTargetsBottom.push(el.top, el.bottom, el.centerY);
+          hTargetsCenter.push(el.centerY);
+
+          hGaps.forEach(gap => {
+            if (gap > 0) {
+              vTargetsLeft.push(el.right + gap);
+              vTargetsRight.push(el.left - gap);
+            }
+          });
+
+          vGaps.forEach(gap => {
+            if (gap > 0) {
+              hTargetsTop.push(el.bottom + gap);
+              hTargetsBottom.push(el.top - gap);
+            }
+          });
+        });
 
         // Snapping X edges depending on action
         if (dragState.action === "move" || dragState.action === "resize-tl" || dragState.action === "resize-bl") {
-          const snappedX = snapValue(nextX, vTargets);
+          const snappedX = snapValue(nextX, vTargetsLeft);
           if (snappedX !== nextX) {
             if (dragState.action !== "move") nextWidth += (nextX - snappedX);
             nextX = snappedX;
@@ -125,7 +226,7 @@ export function DesignerCanvasPreview({
         }
         if (dragState.action === "move" || dragState.action === "resize-tr" || dragState.action === "resize-br") {
           const rightEdge = nextX + nextWidth;
-          const snappedRight = snapValue(rightEdge, vTargets);
+          const snappedRight = snapValue(rightEdge, vTargetsRight);
           if (snappedRight !== rightEdge) {
             if (dragState.action === "move") {
               nextX += (snappedRight - rightEdge);
@@ -138,7 +239,7 @@ export function DesignerCanvasPreview({
 
         // Snapping Y edges
         if (dragState.action === "move" || dragState.action === "resize-tl" || dragState.action === "resize-tr") {
-          const snappedY = snapValue(nextY, hTargets);
+          const snappedY = snapValue(nextY, hTargetsTop);
           if (snappedY !== nextY) {
             if (dragState.action !== "move") nextHeight += (nextY - snappedY);
             nextY = snappedY;
@@ -147,7 +248,7 @@ export function DesignerCanvasPreview({
         }
         if (dragState.action === "move" || dragState.action === "resize-bl" || dragState.action === "resize-br") {
           const bottomEdge = nextY + nextHeight;
-          const snappedBottom = snapValue(bottomEdge, hTargets);
+          const snappedBottom = snapValue(bottomEdge, hTargetsBottom);
           if (snappedBottom !== bottomEdge) {
             if (dragState.action === "move") {
               nextY += (snappedBottom - bottomEdge);
@@ -161,14 +262,14 @@ export function DesignerCanvasPreview({
         // Snap centers during move
         if (dragState.action === "move") {
           const centerX = nextX + nextWidth / 2;
-          const snappedCenterX = snapValue(centerX, [eventConfig.outputWidth / 2]);
+          const snappedCenterX = snapValue(centerX, vTargetsCenter);
           if (snappedCenterX !== centerX) {
             nextX += (snappedCenterX - centerX);
             guides.push({ type: "vertical", pos: snappedCenterX });
           }
 
           const centerY = nextY + nextHeight / 2;
-          const snappedCenterY = snapValue(centerY, [eventConfig.outputHeight / 2]);
+          const snappedCenterY = snapValue(centerY, hTargetsCenter);
           if (snappedCenterY !== centerY) {
             nextY += (snappedCenterY - centerY);
             guides.push({ type: "horizontal", pos: snappedCenterY });
@@ -184,7 +285,7 @@ export function DesignerCanvasPreview({
       nextHeight = Math.round(nextHeight);
 
       if (dragState.type === "slot" && onUpdateSlotNumber) {
-        if (dragState.action === "move" || dragState.action.startsWith("resize-l") || dragState.action.startsWith("resize-t")) {
+        if (dragState.action === "move" || dragState.action.startsWith("resize")) {
           onUpdateSlotNumber(dragState.id as number, "x", nextX);
           onUpdateSlotNumber(dragState.id as number, "y", nextY);
         }
@@ -192,8 +293,11 @@ export function DesignerCanvasPreview({
           onUpdateSlotNumber(dragState.id as number, "width", nextWidth);
           onUpdateSlotNumber(dragState.id as number, "height", nextHeight);
         }
+        if (dragState.action === "rotate") {
+          onUpdateSlotNumber(dragState.id as number, "rotation", nextRotation);
+        }
       } else if (dragState.type === "layer" && onUpdateLayerNumber) {
-        if (dragState.action === "move" || dragState.action.startsWith("resize-l") || dragState.action.startsWith("resize-t")) {
+        if (dragState.action === "move" || dragState.action.startsWith("resize")) {
           onUpdateLayerNumber(dragState.id as string, "x", nextX);
           onUpdateLayerNumber(dragState.id as string, "y", nextY);
         }
@@ -288,20 +392,23 @@ export function DesignerCanvasPreview({
                     initialWidth: slot.width,
                     initialHeight: slot.height,
                     initialRotation: 0,
-                    initialPointerAngle: 0
+                    initialPointerAngle: 0,
+                    aspectRatioLocked: !!slot.aspectRatioLocked,
+                    aspectRatio: slot.width / slot.height
                   });
                 }}
                 className={cn(
-                  "booth-focus-ring absolute grid place-items-center text-center text-xs font-black uppercase tracking-wide transition-all duration-200 touch-none",
+                  "booth-focus-ring absolute grid place-items-center text-center text-xs font-black uppercase tracking-wide transition-[background-color] duration-200 touch-none",
                   isSelected
-                    ? "z-20 bg-[var(--booth-primary-container)]/80 text-[var(--booth-on-primary-container)]"
-                    : "z-10 bg-[var(--booth-primary-container)]/50 text-[var(--booth-on-primary-container)] hover:bg-[var(--booth-primary-container)]/70 cursor-move border-2 border-[var(--booth-primary)]/60 shadow-[var(--booth-elevation-1)]"
+                    ? "z-20 bg-[var(--booth-primary-container)]/80 text-[var(--booth-on-primary-container)] border-2 border-solid border-[var(--booth-primary)]"
+                    : "z-10 bg-[var(--booth-primary-container)]/20 text-[var(--booth-on-primary-container)] hover:bg-[var(--booth-primary-container)]/40 cursor-move border-2 border-dashed border-[#4A7C7380]"
                 )}
                 style={{
                   left: `${(slot.x / layout.canvasWidth) * 100}%`,
                   top: `${(slot.y / layout.canvasHeight) * 100}%`,
                   width: `${(slot.width / layout.canvasWidth) * 100}%`,
                   height: `${(slot.height / layout.canvasHeight) * 100}%`,
+                  transform: `rotate(${slot.rotation ?? 0}deg)`,
                   borderRadius: `${(slot.borderRadius ?? 0) / 8}px`
                 }}
               >
@@ -314,11 +421,22 @@ export function DesignerCanvasPreview({
                   y={slot.y}
                   width={slot.width}
                   height={slot.height}
+                  rotation={slot.rotation ?? 0}
                   canvasWidth={layout.canvasWidth}
                   canvasHeight={layout.canvasHeight}
                   canResize={true}
-                  canRotate={false}
+                  canRotate={true}
                   onPointerDown={(e, action) => {
+                    let initialPointerAngle = 0;
+                    if (action === "rotate" && canvasRef.current) {
+                      const rect = canvasRef.current.getBoundingClientRect();
+                      const centerX = slot.x + slot.width / 2;
+                      const centerY = slot.y + slot.height / 2;
+                      const screenCenterX = rect.left + (centerX / layout.canvasWidth) * rect.width;
+                      const screenCenterY = rect.top + (centerY / layout.canvasHeight) * rect.height;
+                      initialPointerAngle = Math.atan2(e.clientY - screenCenterY, e.clientX - screenCenterX);
+                    }
+                    
                     setDragState({
                       type: "slot",
                       id: index,
@@ -329,8 +447,10 @@ export function DesignerCanvasPreview({
                       initialY: slot.y,
                       initialWidth: slot.width,
                       initialHeight: slot.height,
-                      initialRotation: 0,
-                      initialPointerAngle: 0
+                      initialRotation: slot.rotation ?? 0,
+                      initialPointerAngle,
+                      aspectRatioLocked: !!slot.aspectRatioLocked,
+                      aspectRatio: slot.width / slot.height
                     });
                   }}
                 />
@@ -368,7 +488,9 @@ export function DesignerCanvasPreview({
                     initialWidth: layer.width,
                     initialHeight: layer.height,
                     initialRotation: layer.rotation,
-                    initialPointerAngle: 0
+                    initialPointerAngle: 0,
+                    aspectRatioLocked: !!layer.aspectRatioLocked,
+                    aspectRatio: layer.width / layer.height
                   });
                 }}
                 className={cn(
@@ -427,7 +549,9 @@ export function DesignerCanvasPreview({
                       initialWidth: layer.width,
                       initialHeight: layer.height,
                       initialRotation: layer.rotation,
-                      initialPointerAngle
+                      initialPointerAngle,
+                      aspectRatioLocked: !!layer.aspectRatioLocked,
+                      aspectRatio: layer.width / layer.height
                     });
                   }}
                 />

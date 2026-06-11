@@ -2,7 +2,7 @@
 
 ## Summary
 
-This update completes the core interactive layer system for the Designer preview by introducing bounding box rendering, corner resize handles, rotation handles, and an intuitive snapping system. Users can now manipulate slots and overlay layers precisely using direct mouse/touch interaction rather than relying solely on the numeric input fields.
+This update completes the core interactive layer system for the Designer preview by introducing bounding box rendering, corner resize handles, rotation handles, and an intuitive snapping system. Users can now manipulate slots and overlay layers precisely using direct mouse/touch interaction rather than relying solely on the numeric input fields. Additionally, the Designer preview now includes preview-only visual outlines for Photo slots to improve visibility, and the snapping system was extended to support element-to-element and spacing alignments.
 
 ## Scope
 
@@ -11,13 +11,22 @@ This update completes the core interactive layer system for the Designer preview
   - Four-corner resize functionality for both Photo slots and overlay layers.
   - Center-anchored rotation functionality for overlay layers.
   - Automatic snapping to canvas boundaries and center lines during move/resize.
+  - Element-to-element edge and center snapping.
+  - Pairwise spacing snapping (detects existing gaps between other elements and snaps the dragged element to maintain those exact gaps).
   - Temporary rendering of visual snap guide lines.
+  - Preview-only Photo slot visual outlines.
   - Safety constraints for hidden and locked layers.
 - **Excluded (by design)**:
   - Multi-select, group transformations.
   - Rotation of Photo slots (model limit: `LayoutSlot` does not support rotation).
-  - Element-to-element snapping (deferred to avoid canvas clutter/jitter).
   - Onboarding and tooltips.
+
+## Photo Slot Outlines
+
+To help users see the exact boundaries of each photo area even when empty or when manipulating other layers, a subtle preview-only visual border was added to the Photo slots:
+- **Unselected State**: A dashed, low-opacity primary-colored border (`border-[#4A7C7380]`) with a highly translucent background ensures the slot boundaries are permanently visible at rest without heavily obstructing the view or competing with solid layers.
+- **Selected State**: Focus emphasis switches the outline to a solid, bold primary line (`border-2 border-solid border-[var(--booth-primary)]`) with a darker background to distinctly indicate the active editing target.
+- **Preview Only**: These visual outlines are enforced via component-level CSS styling in `DesignerCanvasPreview.tsx`. Because they are not part of the `composePhoto` data pipeline or domain logic, they exclusively aid the design experience and will not appear in the final printed Booth output or Gallery previews.
 
 ## Resize Handles
 
@@ -34,10 +43,13 @@ A dedicated `DesignerTransformHandles` component now overlays any actively selec
 - An initial offset is stored on `pointerdown` to ensure the layer does not instantly "jump" to point directly at the cursor, delivering a smooth, relative rotational drag experience.
 - The `rotation` value is normalized cleanly to the `0-360` degree range and propagates accurately to the property panel.
 
-## Snapping
+## Snapping (Canvas, Element, and Spacing)
 
 A localized snapping engine intercepts the `nextX`, `nextY`, `nextWidth`, and `nextHeight` values before updating state.
-- **Targets**: Elements snap seamlessly to the absolute canvas edges (`0`, `canvasWidth`, `canvasHeight`) and center points (`canvasWidth/2`, `canvasHeight/2`).
+- **Targets**: Elements snap seamlessly to:
+  - Absolute canvas edges (`0`, `canvasWidth`, `canvasHeight`) and center points (`canvasWidth/2`, `canvasHeight/2`).
+  - The bounding edges (left, right, top, bottom) and center lines (horizontal, vertical) of all other non-dragged elements.
+- **Spacing Snapping**: The engine dynamically extracts all existing vertical and horizontal gaps between static elements on the canvas. When the active element approaches one of those recognized gap distances relative to another element, it snaps, making it effortless to align elements equidistant from each other.
 - **Threshold**: Snapping requires the element edge or center to come within `12` output pixels of the target line.
 - **Guides**: If a coordinate is snapped, a subtle, semi-transparent teal guide line (`<div className="bg-[var(--booth-primary)] ...">`) briefly renders across the canvas to visually confirm alignment. Guides automatically disappear on `pointerup`.
 
@@ -65,7 +77,7 @@ A localized snapping engine intercepts the `nextX`, `nextY`, `nextWidth`, and `n
 ## Known Limitations
 
 - Rotational constraints on Photo slots are enforced exclusively because the underlying domain type `LayoutSlot` lacks a rotation property.
-- Complex alignment interactions (multi-element relative snapping, distributing space) are intentionally deferred. 
+- Spacing snapping utilizes a pairwise existing-gap discovery mechanism rather than full real-time three-body balancing to keep performance high and prevent multi-axis snap flickering when several elements are clustered.
 
 ## Recommended Next Tasks
 

@@ -16,7 +16,7 @@ import { getImageDimensions } from "@/shared/lib/image";
 import { useToast } from "@/shared/components/ui/toast/useToast";
 import { createEntityId } from "@/shared/lib/id";
 
-type SlotNumberField = "x" | "y" | "width" | "height" | "borderRadius";
+type SlotNumberField = "x" | "y" | "width" | "height" | "rotation" | "borderRadius";
 type LayerNumberField = "x" | "y" | "width" | "height" | "rotation" | "opacity" | "zIndex";
 
 export function useLayoutDesigner(eventSlug: string) {
@@ -113,6 +113,10 @@ export function useLayoutDesigner(eventSlug: string) {
     updateOverlayLayer(id, { [field]: value });
   }
 
+  function updateLayerBoolean(id: string, field: "aspectRatioLocked", value: boolean) {
+    updateOverlayLayer(id, { [field]: value });
+  }
+
   function toggleLayerVisibility(id: string) {
     const layer = overlayLayers.find((l) => l.id === id);
     if (layer) {
@@ -173,6 +177,25 @@ export function useLayoutDesigner(eventSlug: string) {
   }
 
   function updateSlotNumber(index: number, field: SlotNumberField, value?: number) {
+    updateLayout((current) => {
+      if (!current) {
+        return current;
+      }
+
+      const slots = current.slots.map((slot, slotIndex) =>
+        slotIndex === index
+          ? {
+              ...slot,
+              [field]: value
+            }
+          : slot
+      );
+
+      return normalizeDraftLayout({ ...current, slots });
+    });
+  }
+
+  function updateSlotBoolean(index: number, field: "aspectRatioLocked", value: boolean) {
     updateLayout((current) => {
       if (!current) {
         return current;
@@ -295,6 +318,8 @@ export function useLayoutDesigner(eventSlug: string) {
     selectSlot,
     selectLayer,
     updateSlotFit,
-    updateSlotNumber
+    updateSlotNumber,
+    updateSlotBoolean,
+    updateLayerBoolean
   };
 }

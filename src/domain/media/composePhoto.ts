@@ -104,6 +104,14 @@ function drawImageInSlot(
 ): void {
   context.save();
 
+  if (slot.rotation) {
+    const centerX = slot.x + slot.width / 2;
+    const centerY = slot.y + slot.height / 2;
+    context.translate(centerX, centerY);
+    context.rotate((slot.rotation * Math.PI) / 180);
+    context.translate(-centerX, -centerY);
+  }
+
   if (slot.borderRadius && slot.borderRadius > 0) {
     roundedRectPath(context, slot.x, slot.y, slot.width, slot.height, slot.borderRadius);
     context.clip();

@@ -41,7 +41,9 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
     selectSlot,
     selectLayer,
     updateSlotFit,
-    updateSlotNumber
+    updateSlotNumber,
+    updateSlotBoolean,
+    updateLayerBoolean
   } = useLayoutDesigner(eventSlug);
 
   if (!isLoaded) {
@@ -135,6 +137,7 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
                 onSelectSlot={selectSlot}
                 onUpdateSlotFit={updateSlotFit}
                 onUpdateSlotNumber={updateSlotNumber}
+                onUpdateSlotBoolean={updateSlotBoolean}
               />
             ) : null}
 
@@ -144,6 +147,7 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
                 layout={layout}
                 onRemoveLayer={removeOverlayLayer}
                 onUpdateLayerNumber={updateLayerNumber}
+                onUpdateLayerBoolean={updateLayerBoolean}
               />
             ) : null}
 

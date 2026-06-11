@@ -14,13 +14,19 @@ interface OverlayLayerEditorProps {
     field: "x" | "y" | "width" | "height" | "rotation" | "opacity" | "zIndex",
     value?: number
   ) => void;
+  onUpdateLayerBoolean: (
+    id: string,
+    field: "aspectRatioLocked",
+    value: boolean
+  ) => void;
 }
 
 export function OverlayLayerEditor({
   layer,
   layout,
   onRemoveLayer,
-  onUpdateLayerNumber
+  onUpdateLayerNumber,
+  onUpdateLayerBoolean
 }: OverlayLayerEditorProps) {
   return (
     <Card className="motion-card p-5">
@@ -94,6 +100,16 @@ export function OverlayLayerEditor({
             disabled={layer.locked}
             onChange={(value) => onUpdateLayerNumber(layer.id, "opacity", value)}
           />
+          <label className="col-span-full flex items-center gap-2 text-sm font-semibold text-[var(--booth-on-surface)] mt-2">
+            <input
+              type="checkbox"
+              checked={!!layer.aspectRatioLocked}
+              disabled={layer.locked}
+              onChange={(e) => onUpdateLayerBoolean(layer.id, "aspectRatioLocked", e.target.checked)}
+              className="h-4 w-4 rounded border-[var(--booth-outline-variant)] text-[var(--booth-primary)] focus:ring-[var(--booth-primary)] disabled:opacity-50"
+            />
+            Lock aspect ratio during drag resize
+          </label>
         </div>
       </div>
     </Card>

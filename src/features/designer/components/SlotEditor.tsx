@@ -19,8 +19,13 @@ interface SlotEditorProps {
   onUpdateSlotFit: (index: number, fit: SlotFit) => void;
   onUpdateSlotNumber: (
     index: number,
-    field: "x" | "y" | "width" | "height" | "borderRadius",
+    field: "x" | "y" | "width" | "height" | "rotation" | "borderRadius",
     value?: number
+  ) => void;
+  onUpdateSlotBoolean: (
+    index: number,
+    field: "aspectRatioLocked",
+    value: boolean
   ) => void;
 }
 
@@ -35,7 +40,8 @@ export function SlotEditor({
   onResetToDefault,
   onSelectSlot,
   onUpdateSlotFit,
-  onUpdateSlotNumber
+  onUpdateSlotNumber,
+  onUpdateSlotBoolean
 }: SlotEditorProps) {
   return (
     <Card className="motion-card p-5">
@@ -131,6 +137,13 @@ export function SlotEditor({
                 onChange={(value) => onUpdateSlotNumber(index, "height", value)}
               />
               <ScrubbableNumberField
+                label="Rotation"
+                value={slot.rotation ?? 0}
+                min={-360}
+                max={360}
+                onChange={(value) => onUpdateSlotNumber(index, "rotation", value)}
+              />
+              <ScrubbableNumberField
                 label="Radius"
                 value={slot.borderRadius ?? 0}
                 min={0}
@@ -151,6 +164,15 @@ export function SlotEditor({
                   <option value="cover">Cover</option>
                   <option value="contain">Contain</option>
                 </select>
+              </label>
+              <label className="col-span-full flex items-center gap-2 text-sm font-semibold text-[var(--booth-on-surface)] mt-2">
+                <input
+                  type="checkbox"
+                  checked={!!slot.aspectRatioLocked}
+                  onChange={(e) => onUpdateSlotBoolean(index, "aspectRatioLocked", e.target.checked)}
+                  className="h-4 w-4 rounded border-[var(--booth-outline-variant)] text-[var(--booth-primary)] focus:ring-[var(--booth-primary)]"
+                />
+                Lock aspect ratio during drag resize
               </label>
             </div>
           </article>

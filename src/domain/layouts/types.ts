@@ -14,6 +14,8 @@ export interface LayoutSlot {
   y: number;
   width: number;
   height: number;
+  rotation?: number;
   fit: SlotFit;
   borderRadius?: number;
+  aspectRatioLocked?: boolean;
 }

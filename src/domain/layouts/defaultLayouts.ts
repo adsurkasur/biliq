@@ -195,10 +195,12 @@ export function scaleLayoutDefinition(
       y: Math.round(slot.y * scaleY),
       width: Math.round(slot.width * scaleX),
       height: Math.round(slot.height * scaleY),
+      rotation: slot.rotation ?? 0,
       borderRadius:
         slot.borderRadius === undefined
           ? undefined
-          : Math.round(slot.borderRadius * Math.min(scaleX, scaleY))
+          : Math.round(slot.borderRadius * Math.min(scaleX, scaleY)),
+      aspectRatioLocked: slot.aspectRatioLocked
     }))
   };
 }
@@ -261,10 +263,12 @@ export function normalizeLayoutSlot(
     y,
     width,
     height,
+    rotation: slot.rotation ?? 0,
     fit: slot.fit === "contain" ? "contain" : "cover",
     borderRadius:
       borderRadiusValue === undefined || Number.isNaN(borderRadiusValue)
         ? undefined
-        : clampInteger(borderRadiusValue, 0, Math.floor(Math.min(width, height) / 2))
+        : clampInteger(borderRadiusValue, 0, Math.floor(Math.min(width, height) / 2)),
+    aspectRatioLocked: slot.aspectRatioLocked
   };
 }

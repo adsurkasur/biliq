@@ -15,6 +15,7 @@ export interface OverlayLayer {
   zIndex: number;
   visible: boolean;
   locked: boolean;
+  aspectRatioLocked?: boolean;
   createdAt: string;
   updatedAt: string;
 }
