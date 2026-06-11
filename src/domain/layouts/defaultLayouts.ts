@@ -241,18 +241,18 @@ export function normalizeLayoutSlot(
   canvasWidth: number,
   canvasHeight: number
 ): LayoutSlot {
-  const x = clampInteger(Number(slot.x) || 0, 0, Math.max(0, canvasWidth - 1));
-  const y = clampInteger(Number(slot.y) || 0, 0, Math.max(0, canvasHeight - 1));
   const width = clampInteger(
     Number(slot.width) || canvasWidth,
     1,
-    Math.max(1, canvasWidth - x)
+    canvasWidth
   );
   const height = clampInteger(
     Number(slot.height) || canvasHeight,
     1,
-    Math.max(1, canvasHeight - y)
+    canvasHeight
   );
+  const x = clampInteger(Number(slot.x) || 0, 0, Math.max(0, canvasWidth - width));
+  const y = clampInteger(Number(slot.y) || 0, 0, Math.max(0, canvasHeight - height));
   const borderRadiusValue =
     slot.borderRadius === undefined ? undefined : Number(slot.borderRadius);
 

@@ -15,7 +15,12 @@ interface EventNavigationProps {
 
 export function EventNavigation({ eventSlug, activeRoute, theme = "default" }: EventNavigationProps) {
   const pathname = usePathname();
-  const returnToQuery = `?returnTo=${encodeURIComponent(pathname)}`;
+
+  const getHrefWithReturnTo = (baseHref: string) => {
+    if (!pathname || pathname === "/") return baseHref;
+    const separator = baseHref.includes("?") ? "&" : "?";
+    return `${baseHref}${separator}returnTo=${encodeURIComponent(pathname)}`;
+  };
 
   const isBoothTheme = theme === "booth";
   const btnSize = isBoothTheme ? "icon" : "md";
@@ -34,7 +39,7 @@ export function EventNavigation({ eventSlug, activeRoute, theme = "default" }: E
   const getClasses = (route: "events" | "setup" | "booth" | "gallery" | "designer") => {
     return cn(
       buttonClassName({ variant: getVariant(route), size: btnSize }),
-      isBoothTheme && "border border-white/10 shadow-none bg-stone-950/60 backdrop-blur-md", // Custom dark glass look
+      isBoothTheme && "border border-white/10 shadow-none bg-stone-950/60 text-white backdrop-blur-md hover:bg-white/15 active:bg-white/20", // Custom dark glass look
       activeRoute === route && "pointer-events-none opacity-80",
       activeRoute === route && isBoothTheme && "bg-white/20 text-white border-white/20"
     );
@@ -54,7 +59,7 @@ export function EventNavigation({ eventSlug, activeRoute, theme = "default" }: E
       {eventSlug ? (
         <>
           <Link
-            href={`${routes.setup(eventSlug)}${returnToQuery}`}
+            href={getHrefWithReturnTo(routes.setup(eventSlug))}
             className={getClasses("setup")}
             aria-current={activeRoute === "setup" ? "page" : undefined}
             title={isBoothTheme ? "Setup" : undefined}
@@ -63,7 +68,7 @@ export function EventNavigation({ eventSlug, activeRoute, theme = "default" }: E
             <span className={labelClass}>Setup</span>
           </Link>
           <Link
-            href={`${routes.booth(eventSlug)}${returnToQuery}`}
+            href={getHrefWithReturnTo(routes.booth(eventSlug))}
             className={getClasses("booth")}
             aria-current={activeRoute === "booth" ? "page" : undefined}
             title={isBoothTheme ? "Booth" : undefined}
@@ -72,7 +77,7 @@ export function EventNavigation({ eventSlug, activeRoute, theme = "default" }: E
             <span className={labelClass}>Booth</span>
           </Link>
           <Link
-            href={`${routes.gallery(eventSlug)}${returnToQuery}`}
+            href={getHrefWithReturnTo(routes.gallery(eventSlug))}
             className={getClasses("gallery")}
             aria-current={activeRoute === "gallery" ? "page" : undefined}
             title={isBoothTheme ? "Gallery" : undefined}
@@ -81,7 +86,7 @@ export function EventNavigation({ eventSlug, activeRoute, theme = "default" }: E
             <span className={labelClass}>Gallery</span>
           </Link>
           <Link
-            href={`${routes.designer(eventSlug)}${returnToQuery}`}
+            href={getHrefWithReturnTo(routes.designer(eventSlug))}
             className={getClasses("designer")}
             aria-current={activeRoute === "designer" ? "page" : undefined}
             title={isBoothTheme ? "Designer" : undefined}
