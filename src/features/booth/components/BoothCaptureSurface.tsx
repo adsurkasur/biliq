@@ -3,8 +3,13 @@
 import type { RefObject } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Camera } from "lucide-react";
-import type { EventConfig } from "@/domain/events/types";
+import { Camera, Images, Repeat2, Video } from "lucide-react";
+import {
+  getEnabledCaptureModes,
+  getVideoCaptureSettings
+} from "@/domain/events/defaults";
+import { getCaptureModeLabel } from "@/domain/events/captureModes";
+import type { CaptureMode, EventConfig } from "@/domain/events/types";
 import { getCaptureCountForEvent } from "@/domain/layouts/defaultLayouts";
 import { CameraPreview } from "@/features/booth/components/CameraPreview";
 import { CaptureProgress } from "@/features/booth/components/CaptureProgress";
@@ -15,30 +20,37 @@ import { EventNavigation } from "@/shared/components/navigation/EventNavigation"
 
 interface BoothCaptureSurfaceProps {
   eventConfig: EventConfig;
+  activeMode: CaptureMode;
   captureState: CaptureState;
   cameraMessage: string;
   captureFeedbackKey: number;
   countdown: number | null;
   shotProgress: ShotProgress | null;
+  recordingSecondsRemaining: number | null;
   videoRef: RefObject<HTMLVideoElement | null>;
   onCameraReady: () => void;
   onCameraError: (message: string) => void;
+  onModeChange: (mode: CaptureMode) => void;
   onStart: () => void;
 }
 
 export function BoothCaptureSurface({
   eventConfig,
+  activeMode,
   captureState,
   cameraMessage,
   captureFeedbackKey,
   countdown,
   shotProgress,
+  recordingSecondsRemaining,
   videoRef,
   onCameraReady,
   onCameraError,
+  onModeChange,
   onStart
 }: BoothCaptureSurfaceProps) {
   const totalShots = getCaptureCountForEvent(eventConfig);
+  const enabledModes = getEnabledCaptureModes(eventConfig);
   const canStart = captureState === "ready";
   const frameRatio = eventConfig.outputWidth / eventConfig.outputHeight;
   const frameHeightRatio = eventConfig.outputHeight / eventConfig.outputWidth;
@@ -64,6 +76,7 @@ export function BoothCaptureSurface({
           outputWidth={eventConfig.outputWidth}
           outputHeight={eventConfig.outputHeight}
           eventConfig={eventConfig}
+          includeAudio={getVideoCaptureSettings(eventConfig).includeAudio}
           onReady={onCameraReady}
           onError={onCameraError}
           className="booth-viewfinder-enter rounded-none ring-1 ring-white/10 sm:rounded-[var(--booth-radius-xl)]"
@@ -78,8 +91,8 @@ export function BoothCaptureSurface({
             value={countdown}
             label={
               shotProgress
-                ? `Photo ${shotProgress.current} of ${shotProgress.total}`
-                : undefined
+                ? `${activeMode === "photo" ? "Photo" : "Frame"} ${shotProgress.current} of ${shotProgress.total}`
+                : getCaptureModeLabel(activeMode)
             }
           />
 
@@ -101,11 +114,41 @@ export function BoothCaptureSurface({
           ) : null}
 
           <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-4 p-5 text-center">
+            {canStart && enabledModes.length > 1 ? (
+              <div
+                className="pointer-events-auto grid max-w-2xl grid-cols-2 gap-2 rounded-[var(--booth-radius-2xl)] border border-white/10 bg-stone-950/72 p-2 shadow-[var(--booth-elevation-3)] backdrop-blur-md sm:grid-cols-4"
+                aria-label="Choose capture mode"
+              >
+                {enabledModes.map((mode) => {
+                  const Icon = modeIcon(mode);
+                  const isActive = mode === activeMode;
+                  return (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => onModeChange(mode)}
+                      className={`booth-focus-ring flex min-h-14 items-center justify-center gap-2 rounded-[var(--booth-radius-xl)] px-4 py-3 text-sm font-black transition-all ${
+                        isActive
+                          ? "bg-white text-stone-950 shadow-lg"
+                          : "text-white hover:bg-white/12"
+                      }`}
+                      aria-pressed={isActive}
+                    >
+                      <Icon className="h-5 w-5" aria-hidden="true" />
+                      {getCaptureModeLabel(mode)}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
+
             <CaptureProgress
+              activeMode={activeMode}
               captureState={captureState}
               countdown={countdown}
               cameraMessage={cameraMessage}
               shotProgress={shotProgress}
+              recordingSecondsRemaining={recordingSecondsRemaining}
             />
 
             <button
@@ -114,12 +157,35 @@ export function BoothCaptureSurface({
               onClick={onStart}
               className="booth-focus-ring booth-start-enter pointer-events-auto inline-flex min-h-16 items-center gap-3 rounded-[var(--booth-radius-full)] bg-[var(--booth-primary)] px-8 py-4 text-xl font-black text-white shadow-[var(--booth-elevation-3)] transition-all hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:animate-none disabled:opacity-40"
             >
-              <Camera className="h-7 w-7" aria-hidden="true" />
-              {totalShots > 1 ? `Start ${totalShots} Photos` : "Start"}
+              {activeMode === "video" ? (
+                <Video className="h-7 w-7" aria-hidden="true" />
+              ) : activeMode === "gif" ? (
+                <Images className="h-7 w-7" aria-hidden="true" />
+              ) : activeMode === "boomerang" ? (
+                <Repeat2 className="h-7 w-7" aria-hidden="true" />
+              ) : (
+                <Camera className="h-7 w-7" aria-hidden="true" />
+              )}
+              {startButtonLabel(activeMode, totalShots)}
             </button>
           </div>
         </CameraPreview>
       </div>
     </main>
   );
+}
+
+function modeIcon(mode: CaptureMode) {
+  if (mode === "gif") return Images;
+  if (mode === "boomerang") return Repeat2;
+  if (mode === "video") return Video;
+  return Camera;
+}
+
+function startButtonLabel(mode: CaptureMode, totalShots: number): string {
+  if (mode === "photo") {
+    return totalShots > 1 ? `Start ${totalShots} Photos` : "Take Photo";
+  }
+
+  return `Start ${getCaptureModeLabel(mode)}`;
 }

@@ -7,15 +7,28 @@ import {
   Camera,
   Check,
   CircleHelp,
+  Film,
   ImagePlus,
+  Images,
   LayoutTemplate,
   Palette,
   Play,
+  Repeat2,
   Save,
   Sparkles,
   Trash2
 } from "lucide-react";
 import { OUTPUT_PRESETS } from "@/domain/events/defaults";
+import {
+  getEnabledCaptureModes,
+  getGifCaptureSettings,
+  getVideoCaptureSettings
+} from "@/domain/events/defaults";
+import {
+  CAPTURE_MODE_DESCRIPTIONS,
+  CAPTURE_MODE_LABELS
+} from "@/domain/events/captureModes";
+import type { CaptureMode } from "@/domain/events/types";
 import {
   clampCaptureCount,
   defaultLayouts,
@@ -40,6 +53,16 @@ const STEPS = [
 const inputClass =
   "booth-focus-ring min-h-12 w-full rounded-[var(--booth-radius-md)] border border-transparent bg-[var(--booth-surface-container)] px-4 py-3 text-[var(--booth-on-surface)] transition-colors hover:bg-[var(--booth-surface-container-high)] focus:border-[var(--booth-primary)] focus:bg-[var(--booth-surface-container-lowest)]";
 
+const CAPTURE_MODE_OPTIONS: Array<{
+  id: CaptureMode;
+  icon: typeof Camera;
+}> = [
+  { id: "photo", icon: Camera },
+  { id: "gif", icon: Images },
+  { id: "boomerang", icon: Repeat2 },
+  { id: "video", icon: Film }
+];
+
 export function EventSetupForm() {
   const {
     eventConfig,
@@ -56,6 +79,7 @@ export function EventSetupForm() {
     removeOverlay,
     saveEvent,
     selectedPresetId,
+    toggleCaptureMode,
     updateConfig,
     updateEventName,
     updateEventSlug
@@ -76,6 +100,9 @@ export function EventSetupForm() {
   }
 
   const selectedLayout = eventConfig.customLayout ?? getLayoutById(eventConfig.layoutId);
+  const enabledCaptureModes = getEnabledCaptureModes(eventConfig);
+  const gifSettings = getGifCaptureSettings(eventConfig);
+  const videoSettings = getVideoCaptureSettings(eventConfig);
   function goNext() {
     if (step === 0 && !eventConfig?.name.trim()) return;
     setStep((current) => Math.min(current + 1, STEPS.length - 1));
@@ -187,6 +214,59 @@ export function EventSetupForm() {
                 </label>
 
                 <fieldset className="grid gap-3">
+                  <div>
+                    <legend className="text-sm font-bold text-[var(--booth-on-surface)]">
+                      What can guests create?
+                    </legend>
+                    <p className="mt-1 text-xs text-[var(--booth-on-surface-variant)]">
+                      Enable one focused experience or let guests choose at the booth.
+                    </p>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    {CAPTURE_MODE_OPTIONS.map(({ id, icon: Icon }) => {
+                      const isEnabled = enabledCaptureModes.includes(id);
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          onClick={() => toggleCaptureMode(id)}
+                          className={cn(
+                            "booth-focus-ring rounded-[var(--booth-radius-lg)] border p-4 text-left transition-all",
+                            isEnabled
+                              ? "border-[var(--booth-primary)] bg-[var(--booth-primary-container)]/35 shadow-[0_0_0_2px_var(--booth-state-hover-primary)]"
+                              : "border-[var(--booth-outline-variant)]/45 hover:border-[var(--booth-primary)] hover:bg-[var(--booth-surface-container)]"
+                          )}
+                          aria-pressed={isEnabled}
+                        >
+                          <span className="flex items-center justify-between gap-3">
+                            <span className="grid h-10 w-10 place-items-center rounded-full bg-[var(--booth-surface-container-high)] text-[var(--booth-primary)]">
+                              <Icon className="h-5 w-5" aria-hidden="true" />
+                            </span>
+                            <span
+                              className={cn(
+                                "rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wide",
+                                isEnabled
+                                  ? "bg-[var(--booth-primary)] text-[var(--booth-on-primary)]"
+                                  : "bg-[var(--booth-surface-container-high)] text-[var(--booth-on-surface-variant)]"
+                              )}
+                            >
+                              {isEnabled ? "On" : "Off"}
+                            </span>
+                          </span>
+                          <span className="mt-4 block font-bold">
+                            {CAPTURE_MODE_LABELS[id]}
+                          </span>
+                          <span className="mt-1 block text-xs leading-5 text-[var(--booth-on-surface-variant)]">
+                            {CAPTURE_MODE_DESCRIPTIONS[id]}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </fieldset>
+
+                {enabledCaptureModes.includes("photo") ? (
+                <fieldset className="grid gap-3">
                   <legend className="text-sm font-bold text-[var(--booth-on-surface)]">
                     How many photos in each session?
                   </legend>
@@ -223,6 +303,112 @@ export function EventSetupForm() {
                     })}
                   </div>
                 </fieldset>
+                ) : null}
+
+                {enabledCaptureModes.some((mode) => mode === "gif" || mode === "boomerang") ? (
+                  <section className="grid gap-4 rounded-[var(--booth-radius-xl)] border border-[var(--booth-outline-variant)]/35 bg-[var(--booth-surface-container-low)] p-5 sm:grid-cols-2">
+                    <div className="sm:col-span-2">
+                      <h3 className="font-bold">Animation timing</h3>
+                      <p className="mt-1 text-xs text-[var(--booth-on-surface-variant)]">
+                        These settings apply to both GIF and Boomerang sessions.
+                      </p>
+                    </div>
+                    <label className="grid gap-2">
+                      <span className="text-sm font-bold">Frames</span>
+                      <select
+                        className={inputClass}
+                        value={gifSettings.frameCount}
+                        onChange={(event) =>
+                          updateConfig({
+                            gifSettings: {
+                              ...gifSettings,
+                              frameCount: Number(event.target.value)
+                            }
+                          })
+                        }
+                      >
+                        {[4, 6, 8, 10, 12].map((count) => (
+                          <option key={count} value={count}>
+                            {count} frames
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="grid gap-2">
+                      <span className="text-sm font-bold">Playback speed</span>
+                      <select
+                        className={inputClass}
+                        value={gifSettings.frameDelayMs}
+                        onChange={(event) =>
+                          updateConfig({
+                            gifSettings: {
+                              ...gifSettings,
+                              frameDelayMs: Number(event.target.value)
+                            }
+                          })
+                        }
+                      >
+                        <option value={120}>Fast</option>
+                        <option value={220}>Balanced</option>
+                        <option value={350}>Relaxed</option>
+                        <option value={500}>Slow</option>
+                      </select>
+                    </label>
+                  </section>
+                ) : null}
+
+                {enabledCaptureModes.includes("video") ? (
+                  <section className="grid gap-4 rounded-[var(--booth-radius-xl)] border border-[var(--booth-outline-variant)]/35 bg-[var(--booth-surface-container-low)] p-5 sm:grid-cols-2">
+                    <div>
+                      <h3 className="font-bold">Video recording</h3>
+                      <p className="mt-1 text-xs leading-5 text-[var(--booth-on-surface-variant)]">
+                        Records directly in the browser using the best format supported by the device.
+                      </p>
+                    </div>
+                    <label className="grid gap-2">
+                      <span className="text-sm font-bold">Duration</span>
+                      <select
+                        className={inputClass}
+                        value={videoSettings.durationSeconds}
+                        onChange={(event) =>
+                          updateConfig({
+                            videoSettings: {
+                              ...videoSettings,
+                              durationSeconds: Number(event.target.value)
+                            }
+                          })
+                        }
+                      >
+                        {[5, 10, 15, 30, 60].map((seconds) => (
+                          <option key={seconds} value={seconds}>
+                            {seconds} seconds
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="flex items-center gap-3 rounded-[var(--booth-radius-lg)] border border-[var(--booth-outline-variant)]/35 bg-[var(--booth-surface-container-lowest)] p-4 sm:col-span-2">
+                      <input
+                        type="checkbox"
+                        checked={videoSettings.includeAudio}
+                        onChange={(event) =>
+                          updateConfig({
+                            videoSettings: {
+                              ...videoSettings,
+                              includeAudio: event.target.checked
+                            }
+                          })
+                        }
+                        className="h-5 w-5 accent-[var(--booth-primary)]"
+                      />
+                      <span>
+                        <span className="block text-sm font-bold">Record microphone audio</span>
+                        <span className="block text-xs text-[var(--booth-on-surface-variant)]">
+                          The booth device will request microphone permission.
+                        </span>
+                      </span>
+                    </label>
+                  </section>
+                ) : null}
 
                 <div className="grid gap-3 sm:grid-cols-[1fr_1.2fr]">
                   <label className="grid gap-2">
@@ -416,7 +602,9 @@ export function EventSetupForm() {
                   <ReviewItem
                     icon={Camera}
                     label="Capture"
-                    value={`${eventConfig.captureCount} photo${eventConfig.captureCount > 1 ? "s" : ""} · ${eventConfig.countdownSeconds}s countdown`}
+                    value={`${enabledCaptureModes
+                      .map((mode) => CAPTURE_MODE_LABELS[mode])
+                      .join(", ")} · ${eventConfig.countdownSeconds}s countdown`}
                   />
                   <ReviewItem
                     icon={LayoutTemplate}
@@ -532,7 +720,15 @@ export function EventSetupForm() {
           </div>
 
           <div className="mt-5 grid gap-3">
-            <SummaryRow label="Photos" value={String(eventConfig.captureCount)} />
+            <SummaryRow
+              label="Modes"
+              value={enabledCaptureModes
+                .map((mode) => CAPTURE_MODE_LABELS[mode])
+                .join(", ")}
+            />
+            {enabledCaptureModes.includes("photo") ? (
+              <SummaryRow label="Photo layout" value={`${eventConfig.captureCount} shots`} />
+            ) : null}
             <SummaryRow label="Countdown" value={`${eventConfig.countdownSeconds}s`} />
             <SummaryRow
               label="Canvas"

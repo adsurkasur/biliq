@@ -15,6 +15,8 @@ import {
   Trash2
 } from "lucide-react";
 import { deleteEventConfig, getEvents } from "@/domain/events/storage";
+import { getEnabledCaptureModes } from "@/domain/events/defaults";
+import { CAPTURE_MODE_LABELS } from "@/domain/events/captureModes";
 import type { EventConfig } from "@/domain/events/types";
 import { deletePhotosByEventId } from "@/domain/photos/storage";
 import { Badge } from "@/shared/components/ui/Badge";
@@ -46,7 +48,7 @@ export function EventConsole() {
       await deleteEventConfig(deleteTarget.id);
       setEvents(getEvents());
       toast(
-        `Deleted "${deleteTarget.name}" and ${deletedPhotos} saved photo${
+        `Deleted "${deleteTarget.name}" and ${deletedPhotos} saved capture${
           deletedPhotos === 1 ? "" : "s"
         }.`,
         "success"
@@ -129,7 +131,9 @@ export function EventConsole() {
                       </Badge>
                     </div>
                     <p className="mt-2 text-sm font-medium text-[var(--booth-on-surface-variant)]">
-                      {event.captureCount} photo{event.captureCount > 1 ? "s" : ""} per session · {event.outputWidth} × {event.outputHeight}px
+                      {getEnabledCaptureModes(event)
+                        .map((mode) => CAPTURE_MODE_LABELS[mode])
+                        .join(", ")} · {event.outputWidth} × {event.outputHeight}px
                     </p>
                   </div>
                   <Button
@@ -218,7 +222,7 @@ export function EventConsole() {
               <AlertTriangle className="h-5 w-5" aria-hidden="true" />
             </span>
             <p className="text-sm font-medium leading-6 text-[var(--booth-on-surface-variant)]">
-              This removes “{deleteTarget.name}”, its local design assets, and saved photos from this browser. This cannot be undone.
+              This removes “{deleteTarget.name}”, its local design assets, and saved captures from this browser. This cannot be undone.
             </p>
           </div>
           <div className="mt-6 grid gap-2 sm:grid-cols-2">

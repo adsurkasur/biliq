@@ -17,6 +17,7 @@ interface BoothClientProps {
 
 export function BoothClient({ eventSlug }: BoothClientProps) {
   const {
+    activeMode,
     cameraMessage,
     captureFeedbackKey,
     captureState,
@@ -24,11 +25,13 @@ export function BoothClient({ eventSlug }: BoothClientProps) {
     eventConfig,
     finalOutput,
     isEventLoaded,
+    recordingSecondsRemaining,
     savedPhoto,
     shotProgress,
     videoRef,
     handleCameraError,
     handleCameraReady,
+    handleModeChange,
     handleRetake,
     handleSave,
     handleStart
@@ -69,14 +72,17 @@ export function BoothClient({ eventSlug }: BoothClientProps) {
     return (
       <BoothCaptureSurface
         eventConfig={eventConfig}
+        activeMode={activeMode}
         captureState={captureState}
         cameraMessage={cameraMessage}
         captureFeedbackKey={captureFeedbackKey}
         countdown={countdown}
         shotProgress={shotProgress}
+        recordingSecondsRemaining={recordingSecondsRemaining}
         videoRef={videoRef}
         onCameraReady={handleCameraReady}
         onCameraError={handleCameraError}
+        onModeChange={handleModeChange}
         onStart={handleStart}
       />
     );
@@ -88,6 +94,7 @@ export function BoothClient({ eventSlug }: BoothClientProps) {
       captureState={captureState}
       eventConfig={eventConfig}
       finalOutput={finalOutput}
+      activeMode={activeMode}
       savedPhoto={savedPhoto}
       onRetake={handleRetake}
       onSave={handleSave}

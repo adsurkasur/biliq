@@ -12,6 +12,7 @@ export type CameraPreviewState = "requesting" | "ready" | "error";
 interface UseCameraStreamInput {
   videoRef: RefObject<HTMLVideoElement | null>;
   preferredFacingMode?: "environment" | "user";
+  includeAudio?: boolean;
   onReady?: () => void;
   onError?: (message: string) => void;
 }
@@ -19,6 +20,7 @@ interface UseCameraStreamInput {
 export function useCameraStream({
   videoRef,
   preferredFacingMode = "environment",
+  includeAudio = false,
   onReady,
   onError
 }: UseCameraStreamInput) {
@@ -34,7 +36,7 @@ export function useCameraStream({
       setMessage("Requesting camera access");
 
       try {
-        const stream = await getCameraStream(preferredFacingMode);
+        const stream = await getCameraStream(preferredFacingMode, includeAudio);
 
         if (!mounted) {
           stopCameraStream(stream);
@@ -88,7 +90,7 @@ export function useCameraStream({
         videoRef.current.srcObject = null;
       }
     };
-  }, [onError, onReady, preferredFacingMode, videoRef]);
+  }, [includeAudio, onError, onReady, preferredFacingMode, videoRef]);
 
   return { state, message };
 }

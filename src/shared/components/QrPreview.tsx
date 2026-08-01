@@ -43,9 +43,9 @@ export function QrPreview({ value }: QrPreviewProps) {
 
   return (
     <Card className="motion-enter grid max-w-xs gap-3 p-4">
-      <img src={qrDataUrl} alt="QR code for local photo page" className="w-48" />
+      <img src={qrDataUrl} alt="QR code for local capture page" className="w-48" />
       <p className="text-sm font-medium text-[var(--booth-on-surface-variant)]">
-        Local QR: opens this photo in the same browser storage until cloud sharing is
+        Local QR: opens this capture in the same browser storage until cloud sharing is
         added.
       </p>
     </Card>

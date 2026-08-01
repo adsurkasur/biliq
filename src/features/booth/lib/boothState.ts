@@ -5,6 +5,7 @@ export type CaptureState =
   | "ready"
   | "countdown"
   | "capturing"
+  | "recording"
   | "processing"
   | "preview"
   | "saved"
@@ -21,6 +22,7 @@ export function getStateLabel(state: CaptureState): string {
     ready: "Ready",
     countdown: "Countdown",
     capturing: "Capturing",
+    recording: "Recording",
     processing: "Processing",
     preview: "Preview",
     saved: "Saved",

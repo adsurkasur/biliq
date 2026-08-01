@@ -66,6 +66,27 @@ export function PrintClient({ photoId }: PrintClientProps) {
     return null;
   }
 
+  if ((photo.kind ?? "photo") !== "photo") {
+    return (
+      <main className="grid min-h-screen place-items-center px-5 py-8">
+        <EmptyState
+          icon={Printer}
+          title="This capture is not printable"
+          action={
+            <Link
+              href={routes.photo(photo.id)}
+              className={buttonClassName({ variant: "primary", size: "lg" })}
+            >
+              Back to capture
+            </Link>
+          }
+        >
+          GIF, Boomerang, and Video captures can be downloaded or shared instead.
+        </EmptyState>
+      </main>
+    );
+  }
+
   function printPhoto() {
     // Silent kiosk printing is intentionally not implemented in the MVP.
     // It requires browser/device setup such as Chrome or Edge kiosk printing mode.

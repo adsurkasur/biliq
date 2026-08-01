@@ -4,6 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   createDefaultEventConfig,
+  getEnabledCaptureModes,
+  getGifCaptureSettings,
+  getVideoCaptureSettings,
   OUTPUT_PRESETS
 } from "@/domain/events/defaults";
 import {
@@ -11,7 +14,11 @@ import {
   getEventBySlug,
   upsertEventConfig
 } from "@/domain/events/storage";
-import type { EventConfig, OverlayLayer } from "@/domain/events/types";
+import type {
+  CaptureMode,
+  EventConfig,
+  OverlayLayer
+} from "@/domain/events/types";
 import {
   clampCaptureCount,
   CUSTOM_LAYOUT_ID,
@@ -43,7 +50,16 @@ export function useEventSetupForm() {
     Promise.resolve(slug ? getEventBySlug(slug) : undefined)
       .then((existing) => {
         if (!isActive) return;
-        setEventConfig(existing ?? createDefaultEventConfig());
+        setEventConfig(
+          existing
+            ? {
+                ...existing,
+                captureModes: getEnabledCaptureModes(existing),
+                gifSettings: getGifCaptureSettings(existing),
+                videoSettings: getVideoCaptureSettings(existing)
+              }
+            : createDefaultEventConfig()
+        );
         setSlugTouched(Boolean(existing));
         setIsExistingEvent(Boolean(existing));
       })
@@ -111,6 +127,22 @@ export function useEventSetupForm() {
       captureCount,
       layoutId: getRecommendedLayoutIdForCaptureCount(captureCount),
       customLayout: undefined
+    });
+  }
+
+  function toggleCaptureMode(mode: CaptureMode) {
+    if (!eventConfig) return;
+    const enabledModes = getEnabledCaptureModes(eventConfig);
+
+    if (enabledModes.includes(mode) && enabledModes.length === 1) {
+      toast("Keep at least one capture mode enabled.", "info");
+      return;
+    }
+
+    updateConfig({
+      captureModes: enabledModes.includes(mode)
+        ? enabledModes.filter((enabledMode) => enabledMode !== mode)
+        : [...enabledModes, mode]
     });
   }
 
@@ -214,6 +246,9 @@ export function useEventSetupForm() {
         name: eventConfig.name.trim(),
         slug: eventConfig.slug || eventConfig.name,
         countdownSeconds: Math.max(0, Math.round(eventConfig.countdownSeconds)),
+        captureModes: getEnabledCaptureModes(eventConfig),
+        gifSettings: getGifCaptureSettings(eventConfig),
+        videoSettings: getVideoCaptureSettings(eventConfig),
         captureCount,
         layoutId: hasCustomLayout
           ? CUSTOM_LAYOUT_ID
@@ -257,6 +292,7 @@ export function useEventSetupForm() {
     removeOverlay,
     saveEvent,
     selectedPresetId,
+    toggleCaptureMode,
     updateConfig,
     updateEventName,
     updateEventSlug

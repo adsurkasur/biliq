@@ -16,7 +16,8 @@ export class CameraAccessError extends Error {
 }
 
 export async function getCameraStream(
-  preferredFacingMode: "environment" | "user" = "environment"
+  preferredFacingMode: "environment" | "user" = "environment",
+  includeAudio = false
 ): Promise<MediaStream> {
   if (
     typeof navigator === "undefined" ||
@@ -30,7 +31,12 @@ export async function getCameraStream(
   }
 
   const preferredConstraints: MediaStreamConstraints = {
-    audio: false,
+    audio: includeAudio
+      ? {
+          echoCancellation: true,
+          noiseSuppression: true
+        }
+      : false,
     video: {
       facingMode: { ideal: preferredFacingMode },
       width: { ideal: 1920 },
@@ -44,7 +50,7 @@ export async function getCameraStream(
     if (isFallbackCandidate(error)) {
       try {
         return await navigator.mediaDevices.getUserMedia({
-          audio: false,
+          audio: includeAudio,
           video: true
         });
       } catch (fallbackError) {

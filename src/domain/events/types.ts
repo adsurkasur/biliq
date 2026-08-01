@@ -2,6 +2,18 @@ import type { LayoutDefinition } from "@/domain/layouts/types";
 
 export type PrinterMode = "browser-print";
 
+export type CaptureMode = "photo" | "gif" | "boomerang" | "video";
+
+export interface GifCaptureSettings {
+  frameCount: number;
+  frameDelayMs: number;
+}
+
+export interface VideoCaptureSettings {
+  durationSeconds: number;
+  includeAudio: boolean;
+}
+
 export interface OverlayLayer {
   id: string;
   assetId?: string;
@@ -27,6 +39,9 @@ export interface EventConfig {
   slug: string;
   countdownSeconds: number;
   captureCount: number;
+  captureModes?: CaptureMode[];
+  gifSettings?: GifCaptureSettings;
+  videoSettings?: VideoCaptureSettings;
   outputWidth: number;
   outputHeight: number;
   layoutId: string;

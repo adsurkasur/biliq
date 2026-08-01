@@ -10,6 +10,7 @@ import { getEffectiveOverlayLayers } from "@/domain/events/storage";
 interface CameraPreviewProps {
   videoRef: RefObject<HTMLVideoElement | null>;
   preferredFacingMode?: "environment" | "user";
+  includeAudio?: boolean;
   outputWidth?: number;
   outputHeight?: number;
   eventConfig?: EventConfig;
@@ -23,6 +24,7 @@ interface CameraPreviewProps {
 export function CameraPreview({
   videoRef,
   preferredFacingMode = "environment",
+  includeAudio = false,
   outputWidth = 1200,
   outputHeight = 1600,
   eventConfig,
@@ -35,6 +37,7 @@ export function CameraPreview({
   const { state, message } = useCameraStream({
     videoRef,
     preferredFacingMode,
+    includeAudio,
     onReady,
     onError
   });
