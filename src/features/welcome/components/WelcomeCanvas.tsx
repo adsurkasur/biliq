@@ -311,7 +311,7 @@ export function WelcomeCanvas({
       <div
         ref={canvasRef}
         className={cn(
-          "relative mx-auto w-full max-w-[720px] overflow-visible rounded-[var(--booth-radius-lg)]",
+          "relative mx-auto w-full max-w-[720px] overflow-hidden rounded-[var(--booth-radius-lg)]",
           isOrientationAnimating && "will-change-[height]"
         )}
         style={{

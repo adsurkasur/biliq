@@ -44,6 +44,7 @@ import { CAPTURE_COUNT_OPTIONS } from "@/features/setup/lib/eventFormDefaults";
 import { useEventSetupForm } from "@/features/setup/hooks/useEventSetupForm";
 import { useOverlayDimensions } from "@/features/setup/hooks/useOverlayDimensions";
 import { Badge } from "@/shared/components/ui/Badge";
+import { AnimatedAspectBox } from "@/shared/components/ui/AnimatedAspectBox";
 import { Button, buttonClassName } from "@/shared/components/ui/Button";
 import { Card } from "@/shared/components/ui/Card";
 import { LoadingIndicator } from "@/shared/components/ui/LoadingIndicator";
@@ -622,9 +623,10 @@ export function EventSetupForm() {
                     ) : null}
                   </div>
 
-                  <div
-                    className="booth-checkerboard relative overflow-hidden rounded-[var(--booth-radius-lg)] border border-[var(--booth-outline-variant)]/35"
-                    style={{ aspectRatio: `${eventConfig.outputWidth} / ${eventConfig.outputHeight}` }}
+                  <AnimatedAspectBox
+                    aspectWidth={eventConfig.outputWidth}
+                    aspectHeight={eventConfig.outputHeight}
+                    className="booth-checkerboard relative w-full overflow-hidden rounded-[var(--booth-radius-lg)] border border-[var(--booth-outline-variant)]/35"
                   >
                     {primaryOverlay ? (
                       <img
@@ -645,7 +647,7 @@ export function EventSetupForm() {
                         </span>
                       </div>
                     )}
-                  </div>
+                  </AnimatedAspectBox>
                 </section>
 
                 <section className="grid gap-5 rounded-[var(--booth-radius-xl)] border border-[var(--booth-outline-variant)]/35 bg-[var(--booth-surface-container-low)] p-5 sm:grid-cols-[1fr_auto] sm:items-center" data-app-guide="welcome-screen-setting">

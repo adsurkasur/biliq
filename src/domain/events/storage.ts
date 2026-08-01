@@ -1,4 +1,13 @@
-import type { EventConfig } from "@/domain/events/types";
+import type {
+  EventConfig,
+  OverlayLayer,
+  WelcomeScreenConfig,
+  WelcomeScreenOrientation
+} from "@/domain/events/types";
+import {
+  getWelcomeScreenConfig,
+  syncActiveWelcomeScreenDesign
+} from "@/domain/events/defaults";
 import {
   clampCaptureCount,
   CUSTOM_LAYOUT_ID,
@@ -68,13 +77,26 @@ export async function upsertEventConfig(eventConfig: EventConfig): Promise<Event
         : getRecommendedLayoutIdForCaptureCount(captureCount);
   }
   const canonicalLayers = getEffectiveOverlayLayers(eventConfig);
-  const canonicalWelcomeLayers = eventConfig.welcomeScreen?.overlayLayers ?? [];
+  const normalizedWelcomeScreen = eventConfig.welcomeScreen
+    ? getWelcomeScreenConfig({
+        ...eventConfig,
+        welcomeScreen: syncActiveWelcomeScreenDesign(eventConfig.welcomeScreen)
+      })
+    : undefined;
+  const welcomeLayerGroups = getWelcomeLayerGroups(normalizedWelcomeScreen);
+  const canonicalWelcomeLayers = welcomeLayerGroups.flatMap((group) => group.layers);
   const hydratedAssets = await persistOverlayLayers(eventConfig.id, [
     ...canonicalLayers,
     ...canonicalWelcomeLayers
   ]);
   const hydratedLayers = hydratedAssets.slice(0, canonicalLayers.length);
   const hydratedWelcomeLayers = hydratedAssets.slice(canonicalLayers.length);
+  const hydratedWelcomeScreen = normalizedWelcomeScreen
+    ? applyWelcomeLayerGroups(
+        normalizedWelcomeScreen,
+        splitWelcomeLayers(hydratedWelcomeLayers, welcomeLayerGroups)
+      )
+    : undefined;
   const nextEvent: EventConfig = {
     ...eventConfig,
     customLayout,
@@ -82,9 +104,7 @@ export async function upsertEventConfig(eventConfig: EventConfig): Promise<Event
     layoutId,
     overlayDataUrl: undefined,
     overlayLayers: hydratedLayers,
-    welcomeScreen: eventConfig.welcomeScreen
-      ? { ...eventConfig.welcomeScreen, overlayLayers: hydratedWelcomeLayers }
-      : undefined,
+    welcomeScreen: hydratedWelcomeScreen,
     slug: toSlug(eventConfig.slug || eventConfig.name),
     updatedAt: new Date().toISOString()
   };
@@ -93,10 +113,7 @@ export async function upsertEventConfig(eventConfig: EventConfig): Promise<Event
     ...nextEvent,
     overlayLayers: stripOverlayPayloads(hydratedLayers),
     welcomeScreen: nextEvent.welcomeScreen
-      ? {
-          ...nextEvent.welcomeScreen,
-          overlayLayers: stripOverlayPayloads(hydratedWelcomeLayers)
-        }
+      ? stripWelcomePayloads(nextEvent.welcomeScreen)
       : undefined
   };
 
@@ -107,7 +124,11 @@ export async function upsertEventConfig(eventConfig: EventConfig): Promise<Event
       }
 
       const layers = getEffectiveOverlayLayers(event);
-      const welcomeLayers = event.welcomeScreen?.overlayLayers ?? [];
+      const normalizedWelcome = event.welcomeScreen
+        ? getWelcomeScreenConfig(event)
+        : undefined;
+      const existingWelcomeGroups = getWelcomeLayerGroups(normalizedWelcome);
+      const welcomeLayers = existingWelcomeGroups.flatMap((group) => group.layers);
       const hasEmbeddedPayload = Boolean(event.overlayDataUrl) ||
         [...layers, ...welcomeLayers].some((layer) => Boolean(layer.imageDataUrl));
 
@@ -121,15 +142,18 @@ export async function upsertEventConfig(eventConfig: EventConfig): Promise<Event
       ]);
       const migratedLayers = migratedAssets.slice(0, layers.length);
       const migratedWelcomeLayers = migratedAssets.slice(layers.length);
+      const migratedWelcome = normalizedWelcome
+        ? applyWelcomeLayerGroups(
+            normalizedWelcome,
+            splitWelcomeLayers(migratedWelcomeLayers, existingWelcomeGroups)
+          )
+        : undefined;
       return {
         ...event,
         overlayDataUrl: undefined,
         overlayLayers: stripOverlayPayloads(migratedLayers),
-        welcomeScreen: event.welcomeScreen
-          ? {
-              ...event.welcomeScreen,
-              overlayLayers: stripOverlayPayloads(migratedWelcomeLayers)
-            }
+        welcomeScreen: migratedWelcome
+          ? stripWelcomePayloads(migratedWelcome)
           : undefined
       };
     })
@@ -220,12 +244,19 @@ export function getEffectiveOverlayLayers(eventConfig: EventConfig): import("@/d
 }
 
 async function hydrateEventOverlayLayers(eventConfig: EventConfig): Promise<EventConfig> {
+  const normalizedWelcome = eventConfig.welcomeScreen
+    ? getWelcomeScreenConfig(eventConfig)
+    : undefined;
+  const welcomeGroups = getWelcomeLayerGroups(normalizedWelcome);
   const [hydratedLayers, hydratedWelcomeLayers] = await Promise.all([
     hydrateOverlayLayers(eventConfig.overlayLayers ?? []),
-    hydrateOverlayLayers(eventConfig.welcomeScreen?.overlayLayers ?? [])
+    hydrateOverlayLayers(welcomeGroups.flatMap((group) => group.layers))
   ]);
-  const welcomeScreen = eventConfig.welcomeScreen
-    ? { ...eventConfig.welcomeScreen, overlayLayers: hydratedWelcomeLayers }
+  const welcomeScreen = normalizedWelcome
+    ? applyWelcomeLayerGroups(
+        normalizedWelcome,
+        splitWelcomeLayers(hydratedWelcomeLayers, welcomeGroups)
+      )
     : undefined;
 
   if (hydratedLayers.length > 0) {
@@ -242,4 +273,63 @@ async function hydrateEventOverlayLayers(eventConfig: EventConfig): Promise<Even
     overlayLayers: getEffectiveOverlayLayers(eventConfig),
     welcomeScreen
   };
+}
+
+const WELCOME_ORIENTATIONS: WelcomeScreenOrientation[] = ["portrait", "landscape"];
+
+interface WelcomeLayerGroup {
+  orientation: WelcomeScreenOrientation;
+  layers: OverlayLayer[];
+}
+
+function getWelcomeLayerGroups(
+  welcomeScreen?: WelcomeScreenConfig
+): WelcomeLayerGroup[] {
+  if (!welcomeScreen) return [];
+  return WELCOME_ORIENTATIONS.map((orientation) => ({
+    orientation,
+    layers: welcomeScreen.designs[orientation].overlayLayers
+  }));
+}
+
+function splitWelcomeLayers(
+  layers: OverlayLayer[],
+  template: WelcomeLayerGroup[]
+): WelcomeLayerGroup[] {
+  let offset = 0;
+  return template.map((group) => {
+    const nextLayers = layers.slice(offset, offset + group.layers.length);
+    offset += group.layers.length;
+    return { orientation: group.orientation, layers: nextLayers };
+  });
+}
+
+function applyWelcomeLayerGroups(
+  welcomeScreen: WelcomeScreenConfig,
+  groups: WelcomeLayerGroup[]
+): WelcomeScreenConfig {
+  const designs = { ...welcomeScreen.designs };
+  for (const group of groups) {
+    designs[group.orientation] = {
+      ...designs[group.orientation],
+      overlayLayers: group.layers
+    };
+  }
+  return {
+    ...welcomeScreen,
+    designs,
+    overlayLayers: designs[welcomeScreen.orientation].overlayLayers
+  };
+}
+
+function stripWelcomePayloads(
+  welcomeScreen: WelcomeScreenConfig
+): WelcomeScreenConfig {
+  return applyWelcomeLayerGroups(
+    welcomeScreen,
+    getWelcomeLayerGroups(welcomeScreen).map((group) => ({
+      ...group,
+      layers: stripOverlayPayloads(group.layers)
+    }))
+  );
 }

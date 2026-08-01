@@ -23,10 +23,7 @@ export function GuideSpotlight({
   const cutout = rect && viewportWidth && viewportHeight
     ? getPaddedGuideRect(rect, viewportWidth, viewportHeight, padding)
     : null;
-  const dimClass = cn(
-    "fixed bg-stone-950/65 backdrop-blur-[1px] guide-spotlight-segment",
-    isExiting && "opacity-0"
-  );
+  const dismissClass = "fixed pointer-events-auto bg-transparent";
 
   if (!cutout) {
     return (
@@ -44,29 +41,35 @@ export function GuideSpotlight({
   }
 
   return (
-    <div className="fixed inset-0 pointer-events-none" style={{ zIndex }} aria-hidden="true">
-      <div data-guide-dismiss="top" className={cn(dimClass, "left-0 right-0 top-0 pointer-events-auto")} style={{ height: cutout.top }} onClick={onDismiss} />
+    <div className="pointer-events-none fixed inset-0 overflow-hidden" style={{ zIndex }} aria-hidden="true">
       <div
-        className={cn(dimClass, "left-0 pointer-events-auto")}
+        data-guide-highlight="true"
+        className={cn(
+          "pointer-events-none fixed rounded-[var(--booth-radius-lg)] ring-2 ring-[var(--booth-primary)] ring-offset-2 ring-offset-[var(--booth-guide-ring-offset)] transition-[top,left,width,height,opacity] duration-300 ease-out",
+          isExiting && "opacity-0"
+        )}
+        style={{
+          top: cutout.top,
+          left: cutout.left,
+          width: cutout.width,
+          height: cutout.height,
+          boxShadow: "0 0 0 9999px rgba(12, 10, 9, 0.68)"
+        }}
+      />
+      <div data-guide-dismiss="top" className={cn(dismissClass, "left-0 right-0 top-0")} style={{ height: cutout.top }} onClick={onDismiss} />
+      <div
+        className={cn(dismissClass, "left-0")}
         data-guide-dismiss="left"
         style={{ top: cutout.top, width: cutout.left, height: cutout.height }}
         onClick={onDismiss}
       />
       <div
-        className={cn(dimClass, "right-0 pointer-events-auto")}
+        className={cn(dismissClass, "right-0")}
         data-guide-dismiss="right"
         style={{ top: cutout.top, width: Math.max(0, viewportWidth - cutout.right), height: cutout.height }}
         onClick={onDismiss}
       />
-      <div data-guide-dismiss="bottom" className={cn(dimClass, "bottom-0 left-0 right-0 pointer-events-auto")} style={{ top: cutout.bottom }} onClick={onDismiss} />
-      <div
-        data-guide-highlight="true"
-        className={cn(
-          "pointer-events-none fixed rounded-[var(--booth-radius-lg)] ring-2 ring-[var(--booth-primary)] ring-offset-2 ring-offset-[var(--booth-guide-ring-offset)] guide-spotlight-ring",
-          isExiting && "opacity-0"
-        )}
-        style={{ top: cutout.top, left: cutout.left, width: cutout.width, height: cutout.height }}
-      />
+      <div data-guide-dismiss="bottom" className={cn(dismissClass, "bottom-0 left-0 right-0")} style={{ top: cutout.bottom }} onClick={onDismiss} />
     </div>
   );
 }

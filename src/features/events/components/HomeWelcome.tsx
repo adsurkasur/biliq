@@ -8,7 +8,6 @@ export function HomeWelcome() {
   return (
     <main
       className="relative isolate min-h-dvh overflow-hidden px-5 py-8 sm:px-8 lg:px-10"
-      data-app-guide="home-welcome"
     >
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute -left-32 top-[14%] h-[30rem] w-[30rem] rounded-full bg-[var(--booth-primary-container)]/35 blur-[110px]" />
@@ -39,7 +38,7 @@ export function HomeWelcome() {
         </nav>
 
         <section className="grid flex-1 items-center gap-12 py-12 lg:grid-cols-[minmax(0,.9fr)_minmax(480px,1.1fr)] lg:gap-16 lg:py-16">
-          <div className="motion-enter max-w-2xl">
+          <div className="motion-enter max-w-2xl" data-app-guide="home-welcome">
             <p className="inline-flex items-center gap-2 rounded-full border border-[var(--booth-primary)]/20 bg-[var(--booth-primary-container)]/65 px-4 py-2 text-sm font-black text-[var(--booth-on-primary-container)] shadow-[var(--booth-elevation-1)]">
               <Sparkles className="h-4 w-4" aria-hidden="true" />
               Welcome to Biliq

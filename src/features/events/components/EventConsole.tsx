@@ -72,8 +72,8 @@ export function EventConsole() {
         <div>
           <div className="mb-2 flex items-center gap-3">
             <BiliqLogo variant="mark" size="sm" />
-            <p className="m-0 text-sm font-semibold uppercase tracking-wide text-[var(--booth-primary)]">
-              Biliq Studio
+            <p className="m-0 text-sm font-semibold tracking-wide text-[var(--booth-primary)]">
+              Biliq
             </p>
           </div>
           <h1 className="text-3xl font-bold text-[var(--booth-on-surface)] sm:text-4xl">

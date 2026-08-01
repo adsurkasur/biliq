@@ -3,12 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
+  AlertTriangle,
   Camera,
   Check,
   Circle,
+  Copy,
   Eye,
   EyeOff,
   ImagePlus,
+  Info,
   Lock,
   RectangleHorizontal,
   RectangleVertical,
@@ -28,8 +31,10 @@ import { CanvasShortcutHints } from "@/shared/components/ui/CanvasShortcutHints"
 import { EmptyState } from "@/shared/components/ui/EmptyState";
 import { LoadingIndicator } from "@/shared/components/ui/LoadingIndicator";
 import { RangeSlider } from "@/shared/components/ui/RangeSlider";
+import { Tooltip } from "@/shared/components/ui/Tooltip";
 import { routes } from "@/shared/config/routes";
 import { cn } from "@/shared/lib/classNames";
+import { isCanvasObjectOutOfBounds } from "@/features/designer/lib/canvasBounds";
 
 const inputClass =
   "booth-focus-ring min-h-11 w-full rounded-[var(--booth-radius-md)] border border-transparent bg-[var(--booth-surface-container)] px-3 py-2.5 text-[var(--booth-on-surface)] transition-colors hover:bg-[var(--booth-surface-container-high)] focus:border-[var(--booth-primary)] focus:bg-[var(--booth-surface-container-lowest)]";
@@ -55,6 +60,7 @@ export function WelcomeScreenDesignerClient({ eventSlug }: WelcomeScreenDesigner
     updateElement,
     updateLayer,
     updateOrientation,
+    copyFromOrientation,
     addFrameLayer,
     removeLayer,
     saveWelcomeScreen
@@ -110,7 +116,7 @@ export function WelcomeScreenDesignerClient({ eventSlug }: WelcomeScreenDesigner
       : null;
 
   return (
-    <main className="min-h-screen px-5 py-8 sm:px-8 lg:px-10">
+    <main className="min-h-screen overflow-x-hidden px-5 py-8 sm:px-8 lg:px-10">
       <div className="motion-enter mx-auto grid max-w-[1700px] gap-5">
         <header className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--booth-outline-variant)]/30 pb-5">
           <div>
@@ -231,6 +237,27 @@ export function WelcomeScreenDesignerClient({ eventSlug }: WelcomeScreenDesigner
               {isSaving ? "Saving…" : hasUnsavedChanges ? "Save welcome" : "Saved"}
             </Button>
           </div>
+          <div className="flex w-full flex-wrap items-center justify-between gap-3 rounded-[var(--booth-radius-lg)] bg-[var(--booth-surface-container)] px-4 py-3 text-sm">
+            <div className="flex min-w-0 items-start gap-2 text-[var(--booth-on-surface-variant)]">
+              <Info className="mt-0.5 h-4 w-4 flex-none text-[var(--booth-primary)]" />
+              <p className="leading-5">
+                Portrait and landscape use separate layouts. Configure both, or copy and adapt the other orientation.
+              </p>
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={() =>
+                copyFromOrientation(
+                  welcomeScreen.orientation === "portrait" ? "landscape" : "portrait"
+                )
+              }
+            >
+              <Copy className="h-4 w-4" />
+              Copy from {welcomeScreen.orientation === "portrait" ? "Landscape" : "Portrait"}
+            </Button>
+          </div>
         </Card>
 
         {!welcomeScreen.enabled ? (
@@ -250,6 +277,8 @@ export function WelcomeScreenDesignerClient({ eventSlug }: WelcomeScreenDesigner
             onUpdateElement={updateElement}
             onUpdateLayer={updateLayer}
             onUpload={addFrameLayer}
+            canvasWidth={welcomeScreen.canvasWidth}
+            canvasHeight={welcomeScreen.canvasHeight}
           />
 
           <WelcomeCanvas
@@ -287,7 +316,9 @@ function WelcomeElementList({
   onSelectLayer,
   onUpdateElement,
   onUpdateLayer,
-  onUpload
+  onUpload,
+  canvasWidth,
+  canvasHeight
 }: {
   elements: WelcomeScreenElement[];
   layers: OverlayLayer[];
@@ -298,6 +329,8 @@ function WelcomeElementList({
   onUpdateElement: (id: string, updates: Partial<WelcomeScreenElement>) => void;
   onUpdateLayer: (id: string, updates: Partial<OverlayLayer>) => void;
   onUpload: (file?: File) => void;
+  canvasWidth: number;
+  canvasHeight: number;
 }) {
   return (
     <Card className="motion-card min-w-0 overflow-hidden xl:sticky xl:top-5" data-app-guide="welcome-elements">
@@ -312,6 +345,7 @@ function WelcomeElementList({
             label={elementLabel(element)}
             selected={selectedElement?.id === element.id}
             visible={element.visible}
+            outOfBounds={isCanvasObjectOutOfBounds(element, canvasWidth, canvasHeight)}
             onSelect={() => onSelectElement(element.id)}
             onToggle={() => onUpdateElement(element.id, { visible: !element.visible })}
           />
@@ -333,6 +367,9 @@ function WelcomeElementList({
             <button type="button" className="min-w-0 flex-1 truncate text-left text-sm font-semibold" onClick={() => onSelectLayer(layer.id)}>
               {layer.name}
             </button>
+            {isCanvasObjectOutOfBounds(layer, canvasWidth, canvasHeight) ? (
+              <OutOfBoundsIndicator />
+            ) : null}
             <button
               type="button"
               className="booth-focus-ring rounded p-1.5 text-[var(--booth-on-surface-variant)] hover:bg-[var(--booth-surface-container-highest)]"
@@ -375,10 +412,11 @@ function WelcomeElementList({
   );
 }
 
-function ElementRow({ label, selected, visible, onSelect, onToggle }: {
+function ElementRow({ label, selected, visible, outOfBounds, onSelect, onToggle }: {
   label: string;
   selected: boolean;
   visible: boolean;
+  outOfBounds: boolean;
   onSelect: () => void;
   onToggle: () => void;
 }) {
@@ -392,6 +430,7 @@ function ElementRow({ label, selected, visible, onSelect, onToggle }: {
       <button type="button" className="min-w-0 flex-1 truncate text-left text-sm font-semibold" onClick={onSelect}>
         {label}
       </button>
+      {outOfBounds ? <OutOfBoundsIndicator /> : null}
       <button
         type="button"
         className="booth-focus-ring rounded p-1.5 text-[var(--booth-on-surface-variant)] hover:bg-[var(--booth-surface-container-highest)]"
@@ -401,6 +440,25 @@ function ElementRow({ label, selected, visible, onSelect, onToggle }: {
         {visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
       </button>
     </div>
+  );
+}
+
+function OutOfBoundsIndicator() {
+  return (
+    <Tooltip
+      content="Part of this element is outside the canvas and will be cropped in the booth output."
+      delayMs={180}
+      touchHold
+    >
+      <span
+        role="img"
+        tabIndex={0}
+        aria-label="Element is outside the canvas"
+        className="booth-focus-ring grid h-7 w-7 flex-none place-items-center rounded-full bg-[var(--booth-tertiary-container)] text-[var(--booth-on-tertiary-container)]"
+      >
+        <AlertTriangle className="h-4 w-4" aria-hidden="true" />
+      </span>
+    </Tooltip>
   );
 }
 

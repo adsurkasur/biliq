@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import {
-  getWelcomeScreenCanvasSize,
-  getWelcomeScreenConfig
+  copyWelcomeScreenDesign,
+  getWelcomeScreenConfig,
+  setWelcomeScreenOrientation,
+  syncActiveWelcomeScreenDesign
 } from "@/domain/events/defaults";
 import { getEventBySlug, upsertEventConfig } from "@/domain/events/storage";
 import type {
@@ -55,19 +57,21 @@ export function useWelcomeScreenDesigner(eventSlug: string) {
   }, [eventSlug]);
 
   function updateWelcome(updates: Partial<WelcomeScreenConfig>) {
-    setWelcomeScreen((current) => (current ? { ...current, ...updates } : current));
+    setWelcomeScreen((current) =>
+      current ? syncActiveWelcomeScreenDesign({ ...current, ...updates }) : current
+    );
     setHasUnsavedChanges(true);
   }
 
   function updateElement(id: string, updates: Partial<WelcomeScreenElement>) {
     setWelcomeScreen((current) =>
       current
-        ? {
+        ? syncActiveWelcomeScreenDesign({
             ...current,
             elements: current.elements.map((element) =>
               element.id === id ? { ...element, ...updates } : element
             )
-          }
+          })
         : current
     );
     setHasUnsavedChanges(true);
@@ -76,55 +80,38 @@ export function useWelcomeScreenDesigner(eventSlug: string) {
   function updateLayer(id: string, updates: Partial<OverlayLayer>) {
     setWelcomeScreen((current) =>
       current
-        ? {
+        ? syncActiveWelcomeScreenDesign({
             ...current,
             overlayLayers: current.overlayLayers.map((layer) =>
               layer.id === id
                 ? { ...layer, ...updates, updatedAt: new Date().toISOString() }
                 : layer
             )
-          }
+          })
         : current
     );
     setHasUnsavedChanges(true);
   }
 
   function updateOrientation(orientation: WelcomeScreenOrientation) {
-    if (!eventConfig) return;
+    setWelcomeScreen((current) =>
+      current ? setWelcomeScreenOrientation(current, orientation) : current
+    );
+    setHasUnsavedChanges(true);
+  }
+
+  function copyFromOrientation(sourceOrientation: WelcomeScreenOrientation) {
     setWelcomeScreen((current) => {
-      if (!current || current.orientation === orientation) return current;
-      const { width, height } = getWelcomeScreenCanvasSize(
-        eventConfig.outputWidth,
-        eventConfig.outputHeight,
-        orientation
-      );
-      const scaleX = width / current.canvasWidth;
-      const scaleY = height / current.canvasHeight;
-      const scaleText = Math.min(scaleX, scaleY);
-      return {
-        ...current,
-        orientation,
-        canvasWidth: width,
-        canvasHeight: height,
-        overlayLayers: current.overlayLayers.map((layer) => ({
-          ...layer,
-          x: Math.round(layer.x * scaleX),
-          y: Math.round(layer.y * scaleY),
-          width: Math.round(layer.width * scaleX),
-          height: Math.round(layer.height * scaleY),
-          updatedAt: new Date().toISOString()
-        })),
-        elements: current.elements.map((element) => ({
-          ...element,
-          x: Math.round(element.x * scaleX),
-          y: Math.round(element.y * scaleY),
-          width: Math.round(element.width * scaleX),
-          height: Math.round(element.height * scaleY),
-          fontSize: Math.max(12, Math.round(element.fontSize * scaleText))
-        }))
-      };
+      if (!current) return current;
+      const targetOrientation = current.orientation;
+      if (sourceOrientation === targetOrientation) return current;
+      return copyWelcomeScreenDesign(current, sourceOrientation, targetOrientation);
     });
     setHasUnsavedChanges(true);
+    toast(
+      `Copied the ${sourceOrientation} layout without stretching. Review its position before saving.`,
+      "success"
+    );
   }
 
   async function addFrameLayer(file?: File) {
@@ -180,11 +167,10 @@ export function useWelcomeScreenDesigner(eventSlug: string) {
     if (!eventConfig || !welcomeScreen || isSaving) return;
     setIsSaving(true);
     try {
+      const normalizedWelcomeScreen = syncActiveWelcomeScreenDesign(welcomeScreen);
       const saved = await upsertEventConfig({
         ...eventConfig,
-        welcomeScreen: {
-          ...welcomeScreen
-        }
+        welcomeScreen: normalizedWelcomeScreen
       });
       setEventConfig(saved);
       setWelcomeScreen(getWelcomeScreenConfig(saved));
@@ -209,6 +195,7 @@ export function useWelcomeScreenDesigner(eventSlug: string) {
     updateElement,
     updateLayer,
     updateOrientation,
+    copyFromOrientation,
     addFrameLayer,
     removeLayer,
     saveWelcomeScreen

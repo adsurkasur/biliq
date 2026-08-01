@@ -20,7 +20,7 @@ import { Button } from "@/shared/components/ui/Button";
 import { Tooltip } from "@/shared/components/ui/Tooltip";
 import { routes } from "@/shared/config/routes";
 
-const WELCOME_SEEN_KEY = "biliq-app-welcome-seen.v1";
+const EVENTS_WELCOME_SEEN_KEY = "biliq-events-welcome-seen.v1";
 
 interface GuideStep {
   title: string;
@@ -63,9 +63,9 @@ export function AppGuide() {
   }, [pathname]);
 
   useEffect(() => {
-    if (pathname !== "/") return;
+    if (pathname !== "/events") return;
     try {
-      if (localStorage.getItem(WELCOME_SEEN_KEY)) return;
+      if (localStorage.getItem(EVENTS_WELCOME_SEEN_KEY)) return;
     } catch {
       // The welcome guide can still be opened manually.
       return;
@@ -97,7 +97,8 @@ export function AppGuide() {
         return;
       }
       const rect = target.getBoundingClientRect();
-      setTargetRect(getVisibleGuideRect(rect, window.innerWidth, window.innerHeight));
+      const nextRect = getVisibleGuideRect(rect, window.innerWidth, window.innerHeight);
+      setTargetRect((current) => guideRectsMatch(current, nextRect) ? current : nextRect);
     };
 
     const target = findTarget();
@@ -113,12 +114,19 @@ export function AppGuide() {
 
     updateRect();
     const delayedUpdate = window.setTimeout(updateRect, 380);
+    let animationFrame = 0;
+    const trackAnimatedTarget = () => {
+      updateRect();
+      animationFrame = window.requestAnimationFrame(trackAnimatedTarget);
+    };
+    animationFrame = window.requestAnimationFrame(trackAnimatedTarget);
     const observer = target ? new ResizeObserver(updateRect) : null;
     if (target) observer?.observe(target);
     window.addEventListener("resize", updateRect);
     window.addEventListener("scroll", updateRect, true);
     return () => {
       window.clearTimeout(delayedUpdate);
+      window.cancelAnimationFrame(animationFrame);
       observer?.disconnect();
       window.removeEventListener("resize", updateRect);
       window.removeEventListener("scroll", updateRect, true);
@@ -136,7 +144,7 @@ export function AppGuide() {
 
   function markWelcomeSeen() {
     try {
-      localStorage.setItem(WELCOME_SEEN_KEY, "true");
+      localStorage.setItem(EVENTS_WELCOME_SEEN_KEY, "true");
     } catch {
       // Device-local persistence is optional.
     }
@@ -166,11 +174,9 @@ export function AppGuide() {
     setActiveTopicId(null);
     setIsClosing(false);
     setPhase(
-      pathname === "/"
-        ? "welcome"
-        : guide.topics && guide.topics.length > 1
-          ? "menu"
-          : "tour"
+      guide.topics && guide.topics.length > 1
+        ? "menu"
+        : "tour"
     );
   }
 
@@ -255,7 +261,7 @@ export function AppGuide() {
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
                 <BiliqLogo variant="mark" size="sm" />
-                <p className="text-sm font-bold uppercase tracking-wide text-[var(--booth-primary)]">
+                <p className="text-sm font-bold tracking-wide text-[var(--booth-primary)]">
                   Welcome to Biliq
                 </p>
               </div>
@@ -273,14 +279,14 @@ export function AppGuide() {
               <Sparkles className="h-7 w-7" />
             </div>
             <h2 id="biliq-welcome-title" className="mt-4 text-3xl font-bold text-[var(--booth-on-surface)]">
-              Your booth, from setup to guest-ready
+              Your event workspace
             </h2>
             <p className="mt-3 text-sm leading-6 text-[var(--booth-on-surface-variant)]">
-              Biliq keeps the main workflow simple. You can always reopen this guide from the Guide button.
+              Create, continue, and operate every booth event from one consistent workspace. You can reopen this tour from the Guide button.
             </p>
 
             <ol className="mt-6 grid gap-2 sm:grid-cols-4">
-              {["Create event", "Set experience", "Design output", "Open booth"].map((item, index) => (
+              {["Create event", "Configure experience", "Design output", "Open booth"].map((item, index) => (
                 <li key={item} className="rounded-[var(--booth-radius-md)] bg-[var(--booth-surface-container)] p-3 text-sm font-bold">
                   <span className="mb-2 grid h-6 w-6 place-items-center rounded-full bg-[var(--booth-primary)] text-xs text-[var(--booth-on-primary)]">
                     {index + 1}
@@ -475,9 +481,9 @@ function getPageGuide(pathname: string): PageGuide {
     return {
       label: "Home",
       steps: [
-        { title: "Welcome to Biliq", description: "Home is now a focused greeting and a clear entry point, separate from day-to-day event operations.", selector: "[data-app-guide='home-welcome']" },
-        { title: "Open the studio", description: "Enter the dedicated Events workspace to continue an event, or create a new one directly.", selector: "[data-app-guide='open-studio']" },
-        { title: "Adjust the app", description: "Theme and motion settings follow this device. Settings stays available from every page.", selector: "[data-app-guide='global-settings']" }
+        { title: "Welcome to Biliq", description: "This focused home screen is the starting point for your booth workspace.", selector: "[data-app-guide='home-welcome']" },
+        { title: "Enter event studio", description: "Open the Events workspace to continue, test, or manage an existing event.", selector: "[data-app-guide='open-studio']" },
+        { title: "Create a new event", description: "Start a fresh event directly when you do not need to open the existing event list first.", selector: "[data-app-guide='create-event']" }
       ]
     };
   }
@@ -558,7 +564,7 @@ function getPageGuide(pathname: string): PageGuide {
       label: "Welcome Screen",
       steps: [
         { title: "Welcome canvas", description: "This canvas is shown before guests enter the booth. The real booth keeps its camera active behind these elements.", selector: "[data-app-guide='welcome-canvas']" },
-        { title: "Portrait or landscape", description: "Choose the welcome orientation independently. Biliq rescales the design while preserving every element and frame layer.", selector: "[data-app-guide='welcome-orientation']" },
+        { title: "Separate orientations", description: "Portrait and landscape keep independent layouts. Configure both, or copy the other orientation as a proportionally translated starting point without stretching.", selector: "[data-app-guide='welcome-orientation']" },
         { title: "Move and transform", description: "Drag an item to move it. Side handles resize one axis, corner handles resize both, and the top handle rotates. Hold Shift for axis/proportions, Alt to resize from center, or Ctrl/Cmd to bypass magnetic snapping.", selector: "[data-app-guide='welcome-canvas']" },
         { title: "Screen elements", description: "Select the title, subtitle, start button, or a custom frame layer. Eye controls hide items; frame locks prevent accidental canvas movement.", selector: "[data-app-guide='welcome-elements']" },
         { title: "Precise properties", description: "Edit wording, position, size, rotation, opacity, and colors here. Canvas dragging and property values always update the same selected item.", selector: "[data-app-guide='welcome-properties']" },
@@ -639,4 +645,17 @@ function getPageGuide(pathname: string): PageGuide {
       { title: "Navigation", description: "Use the page header to return or continue to the next part of the workflow.", selector: "header" }
     ]
   };
+}
+
+function guideRectsMatch(
+  current: GuideTargetRect | null,
+  next: GuideTargetRect | null
+): boolean {
+  if (!current || !next) return current === next;
+  return (
+    Math.abs(current.top - next.top) < 0.5 &&
+    Math.abs(current.left - next.left) < 0.5 &&
+    Math.abs(current.width - next.width) < 0.5 &&
+    Math.abs(current.height - next.height) < 0.5
+  );
 }

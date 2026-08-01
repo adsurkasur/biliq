@@ -17,7 +17,7 @@ export default function AboutPage() {
         <div>
           <div className="flex items-center gap-3 mb-2">
             <BiliqLogo variant="mark" size="sm" />
-            <p className="text-sm font-semibold uppercase tracking-wide text-[var(--booth-primary)] m-0">
+            <p className="m-0 text-sm font-semibold tracking-wide text-[var(--booth-primary)]">
               Biliq
             </p>
           </div>

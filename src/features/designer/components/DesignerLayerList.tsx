@@ -1,9 +1,10 @@
-import { ImagePlus, Camera, Layers, Lock, Unlock, Eye, EyeOff, GripVertical } from "lucide-react";
+import { AlertTriangle, ImagePlus, Camera, Lock, Unlock, Eye, EyeOff, GripVertical } from "lucide-react";
 import type { LayoutDefinition } from "@/domain/layouts/types";
 import type { OverlayLayer } from "@/domain/events/types";
 import { Card } from "@/shared/components/ui/Card";
 import { Tooltip } from "@/shared/components/ui/Tooltip";
 import { cn } from "@/shared/lib/classNames";
+import { isCanvasObjectOutOfBounds } from "@/features/designer/lib/canvasBounds";
 
 interface DesignerLayerListProps {
   layout: LayoutDefinition;
@@ -76,6 +77,11 @@ export function DesignerLayerList({
               </button>
 
               <div className="flex flex-none items-center gap-1">
+                {isCanvasObjectOutOfBounds(
+                  layer,
+                  layout.canvasWidth,
+                  layout.canvasHeight
+                ) ? <OutOfBoundsIndicator /> : null}
                 <Tooltip content="Prevent this layer from being moved, resized, or rotated.">
                   <button
                     type="button"
@@ -133,6 +139,11 @@ export function DesignerLayerList({
                     Photo {index + 1}
                   </span>
                 </button>
+                {isCanvasObjectOutOfBounds(
+                  slot,
+                  layout.canvasWidth,
+                  layout.canvasHeight
+                ) ? <OutOfBoundsIndicator /> : null}
               </div>
             ))}
           </div>
@@ -152,5 +163,24 @@ export function DesignerLayerList({
         </label>
       </div>
     </Card>
+  );
+}
+
+function OutOfBoundsIndicator() {
+  return (
+    <Tooltip
+      content="Part of this element is outside the canvas and will be cropped in the booth output."
+      delayMs={180}
+      touchHold
+    >
+      <span
+        role="img"
+        tabIndex={0}
+        aria-label="Element is outside the canvas"
+        className="booth-focus-ring grid h-7 w-7 flex-none place-items-center rounded-full bg-[var(--booth-tertiary-container)] text-[var(--booth-on-tertiary-container)]"
+      >
+        <AlertTriangle className="h-4 w-4" aria-hidden="true" />
+      </span>
+    </Tooltip>
   );
 }

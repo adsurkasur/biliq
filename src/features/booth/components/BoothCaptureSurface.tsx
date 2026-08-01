@@ -83,7 +83,9 @@ export function BoothCaptureSurface({
 
         <CameraPreview
           videoRef={videoRef}
-          preferredFacingMode={isWelcomeVisible ? welcomeScreen.cameraFacingMode : "environment"}
+          preferredFacingMode={
+            welcomeScreen.enabled ? welcomeScreen.cameraFacingMode : "environment"
+          }
           outputWidth={activeCanvasWidth}
           outputHeight={activeCanvasHeight}
           eventConfig={eventConfig}

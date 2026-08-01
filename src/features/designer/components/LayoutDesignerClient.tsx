@@ -137,7 +137,7 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
   }
 
   return (
-    <main className="min-h-screen px-5 py-8 sm:px-8 lg:px-10">
+    <main className="min-h-screen overflow-x-hidden px-5 py-8 sm:px-8 lg:px-10">
       <div className="mx-auto grid max-w-[1600px] gap-5 motion-enter">
         <header className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--booth-outline-variant)]/30 pb-5">
           <div>

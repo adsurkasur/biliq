@@ -8,6 +8,7 @@ import type {
   EventConfig,
   GifCaptureSettings,
   WelcomeScreenConfig,
+  WelcomeScreenDesign,
   WelcomeScreenOrientation,
   VideoCaptureSettings
 } from "@/domain/events/types";
@@ -112,12 +113,31 @@ export function createDefaultWelcomeScreenConfig(
   canvasWidth: number,
   canvasHeight: number
 ): WelcomeScreenConfig {
+  const orientation: WelcomeScreenOrientation =
+    canvasHeight >= canvasWidth ? "portrait" : "landscape";
+  const portraitSize = getWelcomeScreenCanvasSize(canvasWidth, canvasHeight, "portrait");
+  const landscapeSize = getWelcomeScreenCanvasSize(canvasWidth, canvasHeight, "landscape");
+  const designs = {
+    portrait: createDefaultWelcomeScreenDesign(portraitSize.width, portraitSize.height),
+    landscape: createDefaultWelcomeScreenDesign(landscapeSize.width, landscapeSize.height)
+  };
+
   return {
     enabled: true,
-    orientation: canvasHeight >= canvasWidth ? "portrait" : "landscape",
+    orientation,
     showCamera: true,
     cameraFacingMode: "user",
     cameraFit: "cover",
+    designs,
+    ...cloneWelcomeScreenDesign(designs[orientation])
+  };
+}
+
+function createDefaultWelcomeScreenDesign(
+  canvasWidth: number,
+  canvasHeight: number
+): WelcomeScreenDesign {
+  return {
     canvasWidth,
     canvasHeight,
     backgroundColor: "#171715",
@@ -181,42 +201,129 @@ export function getWelcomeScreenConfig(event: EventConfig): WelcomeScreenConfig 
   const configured = event.welcomeScreen;
   if (!configured) return fallback;
 
-  const sourceWidth = configured.canvasWidth || event.outputWidth;
-  const sourceHeight = configured.canvasHeight || event.outputHeight;
   const orientation: WelcomeScreenOrientation =
-    configured.orientation ?? (sourceHeight >= sourceWidth ? "portrait" : "landscape");
-  const { width: targetWidth, height: targetHeight } = getWelcomeScreenCanvasSize(
+    configured.orientation ??
+    (configured.canvasHeight >= configured.canvasWidth ? "portrait" : "landscape");
+  const legacyDesign = getLegacyWelcomeScreenDesign(configured, fallback.designs[orientation]);
+  const activeSource = configured.designs?.[orientation] ?? legacyDesign;
+  const otherOrientation = oppositeWelcomeOrientation(orientation);
+  const otherSource = configured.designs?.[otherOrientation] ?? activeSource;
+  const activeSize = getWelcomeScreenCanvasSize(
     event.outputWidth,
     event.outputHeight,
     orientation
   );
-  const scaleX = targetWidth / sourceWidth;
-  const scaleY = targetHeight / sourceHeight;
-  const scaleText = Math.min(scaleX, scaleY);
+  const otherSize = getWelcomeScreenCanvasSize(
+    event.outputWidth,
+    event.outputHeight,
+    otherOrientation
+  );
+  const activeDesign = translateWelcomeScreenDesign(
+    activeSource,
+    activeSize.width,
+    activeSize.height
+  );
+  const otherDesign = translateWelcomeScreenDesign(
+    otherSource,
+    otherSize.width,
+    otherSize.height
+  );
+  const designs = {
+    ...fallback.designs,
+    [orientation]: activeDesign,
+    [otherOrientation]: otherDesign
+  };
 
   return {
     ...fallback,
     ...configured,
     orientation,
+    designs,
+    ...cloneWelcomeScreenDesign(designs[orientation])
+  };
+}
+
+export function syncActiveWelcomeScreenDesign(
+  config: WelcomeScreenConfig
+): WelcomeScreenConfig {
+  const activeDesign = pickWelcomeScreenDesign(config);
+  return {
+    ...config,
+    designs: {
+      ...config.designs,
+      [config.orientation]: activeDesign
+    }
+  };
+}
+
+export function setWelcomeScreenOrientation(
+  config: WelcomeScreenConfig,
+  orientation: WelcomeScreenOrientation
+): WelcomeScreenConfig {
+  if (orientation === config.orientation) return syncActiveWelcomeScreenDesign(config);
+  const synced = syncActiveWelcomeScreenDesign(config);
+  const targetDesign = synced.designs[orientation];
+  return {
+    ...synced,
+    orientation,
+    ...cloneWelcomeScreenDesign(targetDesign)
+  };
+}
+
+export function copyWelcomeScreenDesign(
+  config: WelcomeScreenConfig,
+  sourceOrientation: WelcomeScreenOrientation,
+  targetOrientation: WelcomeScreenOrientation
+): WelcomeScreenConfig {
+  const synced = syncActiveWelcomeScreenDesign(config);
+  const target = synced.designs[targetOrientation];
+  const translated = translateWelcomeScreenDesign(
+    synced.designs[sourceOrientation],
+    target.canvasWidth,
+    target.canvasHeight
+  );
+  const next = {
+    ...synced,
+    designs: {
+      ...synced.designs,
+      [targetOrientation]: translated
+    }
+  };
+  return targetOrientation === next.orientation
+    ? { ...next, ...cloneWelcomeScreenDesign(translated) }
+    : next;
+}
+
+export function translateWelcomeScreenDesign(
+  source: WelcomeScreenDesign,
+  targetWidth: number,
+  targetHeight: number
+): WelcomeScreenDesign {
+  const sourceWidth = Math.max(1, source.canvasWidth || targetWidth);
+  const sourceHeight = Math.max(1, source.canvasHeight || targetHeight);
+  const scale = Math.min(targetWidth / sourceWidth, targetHeight / sourceHeight);
+  const offsetX = (targetWidth - sourceWidth * scale) / 2;
+  const offsetY = (targetHeight - sourceHeight * scale) / 2;
+
+  return {
     canvasWidth: targetWidth,
     canvasHeight: targetHeight,
-    overlayLayers: (configured.overlayLayers ?? []).map((layer) => ({
+    backgroundColor: source.backgroundColor,
+    overlayLayers: (source.overlayLayers ?? []).map((layer) => ({
       ...layer,
-      x: Math.round(layer.x * scaleX),
-      y: Math.round(layer.y * scaleY),
-      width: Math.round(layer.width * scaleX),
-      height: Math.round(layer.height * scaleY)
+      x: Math.round(offsetX + layer.x * scale),
+      y: Math.round(offsetY + layer.y * scale),
+      width: Math.round(layer.width * scale),
+      height: Math.round(layer.height * scale)
     })),
-    elements: (configured.elements?.length ? configured.elements : fallback.elements).map(
-      (element) => ({
-        ...element,
-        x: Math.round(element.x * scaleX),
-        y: Math.round(element.y * scaleY),
-        width: Math.round(element.width * scaleX),
-        height: Math.round(element.height * scaleY),
-        fontSize: Math.max(12, Math.round(element.fontSize * scaleText))
-      })
-    )
+    elements: (source.elements ?? []).map((element) => ({
+      ...element,
+      x: Math.round(offsetX + element.x * scale),
+      y: Math.round(offsetY + element.y * scale),
+      width: Math.round(element.width * scale),
+      height: Math.round(element.height * scale),
+      fontSize: Math.max(12, Math.round(element.fontSize * scale))
+    }))
   };
 }
 
@@ -230,6 +337,39 @@ export function getWelcomeScreenCanvasSize(
   return orientation === "portrait"
     ? { width: shortSide, height: longSide }
     : { width: longSide, height: shortSide };
+}
+
+function getLegacyWelcomeScreenDesign(
+  configured: WelcomeScreenConfig,
+  fallback: WelcomeScreenDesign
+): WelcomeScreenDesign {
+  return {
+    canvasWidth: configured.canvasWidth || fallback.canvasWidth,
+    canvasHeight: configured.canvasHeight || fallback.canvasHeight,
+    backgroundColor: configured.backgroundColor || fallback.backgroundColor,
+    overlayLayers: configured.overlayLayers ?? [],
+    elements: configured.elements?.length ? configured.elements : fallback.elements
+  };
+}
+
+function pickWelcomeScreenDesign(config: WelcomeScreenConfig): WelcomeScreenDesign {
+  return cloneWelcomeScreenDesign(config);
+}
+
+function cloneWelcomeScreenDesign(design: WelcomeScreenDesign): WelcomeScreenDesign {
+  return {
+    canvasWidth: design.canvasWidth,
+    canvasHeight: design.canvasHeight,
+    backgroundColor: design.backgroundColor,
+    overlayLayers: design.overlayLayers.map((layer) => ({ ...layer })),
+    elements: design.elements.map((element) => ({ ...element }))
+  };
+}
+
+function oppositeWelcomeOrientation(
+  orientation: WelcomeScreenOrientation
+): WelcomeScreenOrientation {
+  return orientation === "portrait" ? "landscape" : "portrait";
 }
 
 function clampNumber(

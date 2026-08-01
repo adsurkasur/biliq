@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
   createDefaultEventConfig,
+  copyWelcomeScreenDesign,
   getEnabledCaptureModes,
   getGifCaptureSettings,
   getWelcomeScreenConfig,
-  getVideoCaptureSettings
+  getVideoCaptureSettings,
+  setWelcomeScreenOrientation,
+  syncActiveWelcomeScreenDesign
 } from "@/domain/events/defaults";
 
 describe("capture mode defaults", () => {
@@ -80,5 +83,28 @@ describe("capture mode defaults", () => {
     expect(welcome.canvasHeight).toBe(800);
     expect(welcome.elements[0].x).toBe(Math.round(event.welcomeScreen!.elements[0].x / 2));
     expect(welcome.elements[0].fontSize).toBe(Math.round(event.welcomeScreen!.elements[0].fontSize / 2));
+  });
+
+  it("keeps portrait and landscape welcome layouts independent", () => {
+    const event = createDefaultEventConfig();
+    let welcome = getWelcomeScreenConfig(event);
+    welcome.elements[0] = { ...welcome.elements[0], text: "Portrait only" };
+    welcome = syncActiveWelcomeScreenDesign(welcome);
+
+    const landscape = setWelcomeScreenOrientation(welcome, "landscape");
+    expect(landscape.elements[0].text).toBe("Welcome!");
+
+    const portrait = setWelcomeScreenOrientation(landscape, "portrait");
+    expect(portrait.elements[0].text).toBe("Portrait only");
+  });
+
+  it("copies between orientations with a uniform scale instead of stretching", () => {
+    const event = createDefaultEventConfig();
+    const welcome = getWelcomeScreenConfig(event);
+    const source = welcome.designs.portrait.elements[0];
+    const copied = copyWelcomeScreenDesign(welcome, "portrait", "landscape");
+    const target = copied.designs.landscape.elements[0];
+
+    expect(target.width / target.height).toBeCloseTo(source.width / source.height, 1);
   });
 });

@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { IDBKeyRange, indexedDB } from "fake-indexeddb";
-import { createDefaultEventConfig } from "@/domain/events/defaults";
+import {
+  createDefaultEventConfig,
+  syncActiveWelcomeScreenDesign
+} from "@/domain/events/defaults";
 import {
   getEffectiveOverlayLayers,
   getEventBySlug,
@@ -141,6 +144,34 @@ describe("event overlay persistence", () => {
     expect(loaded?.welcomeScreen?.overlayLayers[0].imageDataUrl).toBe(
       "data:image/png;base64,WELCOME"
     );
+  });
+
+  it("persists independent portrait and landscape welcome assets", async () => {
+    const event = createDefaultEventConfig({
+      id: "event-welcome-orientations",
+      name: "Welcome Orientations",
+      slug: "welcome-orientations"
+    });
+    event.welcomeScreen!.designs.portrait.overlayLayers = [
+      createLayer("portrait-frame", "data:image/png;base64,PORTRAIT")
+    ];
+    event.welcomeScreen!.designs.landscape.overlayLayers = [
+      createLayer("landscape-frame", "data:image/png;base64,LANDSCAPE")
+    ];
+    event.welcomeScreen = syncActiveWelcomeScreenDesign({
+      ...event.welcomeScreen!,
+      overlayLayers: event.welcomeScreen!.designs.portrait.overlayLayers
+    });
+
+    await upsertEventConfig(event);
+    const loaded = await getEventBySlug("welcome-orientations");
+
+    expect(
+      loaded?.welcomeScreen?.designs.portrait.overlayLayers[0].imageDataUrl
+    ).toBe("data:image/png;base64,PORTRAIT");
+    expect(
+      loaded?.welcomeScreen?.designs.landscape.overlayLayers[0].imageDataUrl
+    ).toBe("data:image/png;base64,LANDSCAPE");
   });
 });
 

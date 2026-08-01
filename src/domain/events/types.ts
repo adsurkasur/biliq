@@ -56,17 +56,21 @@ export interface WelcomeScreenElement {
   visible: boolean;
 }
 
-export interface WelcomeScreenConfig {
-  enabled: boolean;
-  orientation: WelcomeScreenOrientation;
-  showCamera: boolean;
-  cameraFacingMode: "user" | "environment";
-  cameraFit: "cover" | "contain";
+export interface WelcomeScreenDesign {
   canvasWidth: number;
   canvasHeight: number;
   backgroundColor: string;
   overlayLayers: OverlayLayer[];
   elements: WelcomeScreenElement[];
+}
+
+export interface WelcomeScreenConfig extends WelcomeScreenDesign {
+  enabled: boolean;
+  orientation: WelcomeScreenOrientation;
+  showCamera: boolean;
+  cameraFacingMode: "user" | "environment";
+  cameraFit: "cover" | "contain";
+  designs: Record<WelcomeScreenOrientation, WelcomeScreenDesign>;
 }
 
 export interface EventConfig {
