@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Camera } from "lucide-react";
 import type {
   OverlayLayer,
@@ -19,6 +19,7 @@ import {
   type CanvasSnapGuide
 } from "@/features/designer/lib/canvasSnapping";
 import type { WelcomeSelection } from "@/features/welcome/hooks/useWelcomeScreenDesigner";
+import { CanvasShortcutHints } from "@/shared/components/ui/CanvasShortcutHints";
 import { cn } from "@/shared/lib/classNames";
 
 const MIN_SIZE = 24;
@@ -26,6 +27,7 @@ const MIN_SIZE = 24;
 interface WelcomeCanvasProps {
   config: WelcomeScreenConfig;
   selection: WelcomeSelection;
+  isOrientationAnimating?: boolean;
   onSelect: (selection: WelcomeSelection) => void;
   onUpdateElement: (id: string, updates: Partial<WelcomeScreenElement>) => void;
   onUpdateLayer: (id: string, updates: Partial<OverlayLayer>) => void;
@@ -50,14 +52,69 @@ interface DragState {
 export function WelcomeCanvas({
   config,
   selection,
+  isOrientationAnimating = false,
   onSelect,
   onUpdateElement,
   onUpdateLayer
 }: WelcomeCanvasProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
+  const previousCanvasHeightRef = useRef<number | null>(null);
+  const orientationFrameRef = useRef<number | null>(null);
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [snapGuides, setSnapGuides] = useState<CanvasSnapGuide[]>([]);
+  const [animatedCanvasHeight, setAnimatedCanvasHeight] = useState<number | null>(null);
+
+  useLayoutEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const nextHeight = canvas.getBoundingClientRect().height;
+    const previousHeight = previousCanvasHeightRef.current;
+    previousCanvasHeightRef.current = nextHeight;
+
+    if (
+      !isOrientationAnimating ||
+      previousHeight === null ||
+      Math.abs(previousHeight - nextHeight) < 2 ||
+      document.documentElement.dataset.motion === "reduced"
+    ) return;
+
+    if (orientationFrameRef.current) cancelAnimationFrame(orientationFrameRef.current);
+    const startedAt = performance.now();
+    const duration = 560;
+    setAnimatedCanvasHeight(previousHeight);
+
+    const tick = (now: number) => {
+      const progress = Math.min(1, (now - startedAt) / duration);
+      const eased = progress < 0.5
+        ? 4 * progress * progress * progress
+        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+      setAnimatedCanvasHeight(previousHeight + (nextHeight - previousHeight) * eased);
+      if (progress < 1) {
+        orientationFrameRef.current = requestAnimationFrame(tick);
+      } else {
+        orientationFrameRef.current = null;
+        setAnimatedCanvasHeight(null);
+      }
+    };
+    orientationFrameRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (orientationFrameRef.current) cancelAnimationFrame(orientationFrameRef.current);
+      orientationFrameRef.current = null;
+    };
+    // This transition starts only when the persisted canvas dimensions change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config.canvasHeight, config.canvasWidth]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || isOrientationAnimating) return;
+    const observer = new ResizeObserver(() => {
+      previousCanvasHeightRef.current = canvas.getBoundingClientRect().height;
+    });
+    observer.observe(canvas);
+    return () => observer.disconnect();
+  }, [isOrientationAnimating]);
 
   useEffect(() => {
     if (!dragState) return;
@@ -234,6 +291,13 @@ export function WelcomeCanvas({
     });
   }
 
+  const selectedElement = selection.kind === "element"
+    ? config.elements.find((element) => element.id === selection.id) ?? null
+    : null;
+  const selectedLayer = selection.kind === "layer"
+    ? config.overlayLayers.find((layer) => layer.id === selection.id) ?? null
+    : null;
+
   return (
     <section className="motion-card rounded-[var(--booth-radius-xl)] border border-[var(--booth-outline-variant)]/25 bg-[var(--booth-surface-container-lowest)] p-5 shadow-[var(--booth-elevation-1)]" data-app-guide="welcome-canvas">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
@@ -241,17 +305,19 @@ export function WelcomeCanvas({
           <p className="text-xs font-bold uppercase tracking-wide text-[var(--booth-primary)]">Live welcome canvas</p>
           <h2 className="mt-1 text-xl font-bold">{config.canvasWidth} × {config.canvasHeight}px</h2>
         </div>
-        <p className="text-sm text-[var(--booth-on-surface-variant)]">
-          Shift: axis/ratio · Alt: resize from center · Ctrl/Cmd: free placement
-        </p>
+        <CanvasShortcutHints />
       </div>
 
       <div
         ref={canvasRef}
-        className="relative mx-auto w-full max-w-[720px]"
+        className={cn(
+          "relative mx-auto w-full max-w-[720px] overflow-visible rounded-[var(--booth-radius-lg)]",
+          isOrientationAnimating && "will-change-[height]"
+        )}
         style={{
           aspectRatio: `${config.canvasWidth} / ${config.canvasHeight}`,
-          containerType: "inline-size"
+          containerType: "inline-size",
+          height: animatedCanvasHeight === null ? undefined : animatedCanvasHeight
         }}
       >
         <CameraPreview
@@ -266,7 +332,7 @@ export function WelcomeCanvas({
           style={{ backgroundColor: config.backgroundColor }}
         />
 
-        <div className="pointer-events-none absolute inset-0 z-30 overflow-visible rounded-[var(--booth-radius-lg)]">
+        <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden rounded-[var(--booth-radius-lg)]">
           <div
             className={cn(
               "absolute inset-0 rounded-[var(--booth-radius-lg)] transition-opacity duration-[var(--booth-duration-medium)]",
@@ -288,16 +354,16 @@ export function WelcomeCanvas({
               key={`${guide.type}-${guide.pos}-${index}`}
               className="absolute z-[70] bg-[var(--booth-primary)] shadow-[0_0_0_1px_rgba(255,255,255,.25)]"
               style={guide.type === "vertical"
-                ? { left: `${(guide.pos / config.canvasWidth) * 100}%`, top: "-8%", bottom: "-8%", width: 1 }
-                : { top: `${(guide.pos / config.canvasHeight) * 100}%`, left: "-8%", right: "-8%", height: 1 }}
+                ? { left: `${(guide.pos / config.canvasWidth) * 100}%`, top: 0, bottom: 0, width: 1 }
+                : { top: `${(guide.pos / config.canvasHeight) * 100}%`, left: 0, right: 0, height: 1 }}
             />
           ))}
 
           {config.overlayLayers.filter((layer) => layer.visible).map((layer) => {
             const selected = selection.kind === "layer" && selection.id === layer.id;
             return (
-              <div key={layer.id}>
-                <button
+              <button
+                  key={layer.id}
                   type="button"
                   aria-label={`Select ${layer.name}`}
                   onPointerDown={(event) => {
@@ -307,7 +373,11 @@ export function WelcomeCanvas({
                     }
                     beginInteraction(event, "layer", layer.id, "move", layer, Boolean(layer.aspectRatioLocked));
                   }}
-                  className={cn("pointer-events-auto absolute touch-none", selected ? "ring-2 ring-[var(--booth-primary)]" : "hover:ring-2 hover:ring-[var(--booth-primary)]/45")}
+                  className={cn(
+                    "pointer-events-auto absolute touch-none",
+                    isOrientationAnimating && "canvas-object-orientation-motion",
+                    selected ? "ring-2 ring-[var(--booth-primary)]" : "hover:ring-2 hover:ring-[var(--booth-primary)]/45"
+                  )}
                   style={{
                     left: `${(layer.x / config.canvasWidth) * 100}%`,
                     top: `${(layer.y / config.canvasHeight) * 100}%`,
@@ -320,33 +390,19 @@ export function WelcomeCanvas({
                 >
                   <img src={layer.imageDataUrl} alt="" className="pointer-events-none h-full w-full select-none object-fill" draggable={false} />
                 </button>
-                {selected && !layer.locked ? (
-                  <DesignerTransformHandles
-                    x={layer.x}
-                    y={layer.y}
-                    width={layer.width}
-                    height={layer.height}
-                    rotation={layer.rotation}
-                    canvasWidth={config.canvasWidth}
-                    canvasHeight={config.canvasHeight}
-                    canRotate
-                    canResize
-                    onPointerDown={(event, action) => beginInteraction(event, "layer", layer.id, action, layer, Boolean(layer.aspectRatioLocked))}
-                  />
-                ) : null}
-              </div>
             );
           })}
 
           {config.elements.filter((element) => element.visible).map((element) => {
             const selected = selection.kind === "element" && selection.id === element.id;
             return (
-              <div key={element.id}>
-                <button
+              <button
+                  key={element.id}
                   type="button"
                   onPointerDown={(event) => beginInteraction(event, "element", element.id, "move", element, false)}
                   className={cn(
                     "pointer-events-auto absolute grid touch-none place-items-center overflow-hidden px-3 text-center leading-tight",
+                    isOrientationAnimating && "canvas-object-orientation-motion",
                     selected ? "ring-2 ring-[var(--booth-primary)]" : "hover:ring-2 hover:ring-[var(--booth-primary)]/45"
                   )}
                   style={{
@@ -367,24 +423,39 @@ export function WelcomeCanvas({
                 >
                   {element.text}
                 </button>
-                {selected ? (
-                  <DesignerTransformHandles
-                    x={element.x}
-                    y={element.y}
-                    width={element.width}
-                    height={element.height}
-                    rotation={element.rotation}
-                    canvasWidth={config.canvasWidth}
-                    canvasHeight={config.canvasHeight}
-                    canRotate
-                    canResize
-                    onPointerDown={(event, action) => beginInteraction(event, "element", element.id, action, element, false)}
-                  />
-                ) : null}
-              </div>
             );
           })}
         </div>
+
+        {selectedLayer && !selectedLayer.locked ? (
+          <DesignerTransformHandles
+            x={selectedLayer.x}
+            y={selectedLayer.y}
+            width={selectedLayer.width}
+            height={selectedLayer.height}
+            rotation={selectedLayer.rotation}
+            canvasWidth={config.canvasWidth}
+            canvasHeight={config.canvasHeight}
+            canRotate
+            canResize
+            onPointerDown={(event, action) => beginInteraction(event, "layer", selectedLayer.id, action, selectedLayer, Boolean(selectedLayer.aspectRatioLocked))}
+          />
+        ) : null}
+
+        {selectedElement ? (
+          <DesignerTransformHandles
+            x={selectedElement.x}
+            y={selectedElement.y}
+            width={selectedElement.width}
+            height={selectedElement.height}
+            rotation={selectedElement.rotation}
+            canvasWidth={config.canvasWidth}
+            canvasHeight={config.canvasHeight}
+            canRotate
+            canResize
+            onPointerDown={(event, action) => beginInteraction(event, "element", selectedElement.id, action, selectedElement, false)}
+          />
+        ) : null}
       </div>
     </section>
   );

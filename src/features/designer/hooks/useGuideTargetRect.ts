@@ -1,16 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { getVisibleGuideRect, type GuideTargetRect } from "@/shared/components/guide/guideGeometry";
 
-/** The bounding rect of a guide target element, in viewport coordinates. */
-export interface GuideTargetRect {
-  top: number;
-  left: number;
-  width: number;
-  height: number;
-  bottom: number;
-  right: number;
-}
+export type { GuideTargetRect } from "@/shared/components/guide/guideGeometry";
 
 /**
  * Tracks the bounding rect of a DOM element identified by
@@ -34,17 +27,17 @@ export function useGuideTargetRect(targetIds: string | string[] | null): GuideTa
     // Try to find the first matching target
     let el: Element | null = null;
     for (const id of ids) {
-      el = document.querySelector(`[data-guide-target="${id}"]`);
+      el = document.querySelector(`[data-guide-target~="${id}"]`);
       if (el) break;
     }
 
     if (!el) {
       // Fallback: try designer-canvas as a universal fallback
       if (!ids.includes("designer-canvas")) {
-        const fallback = document.querySelector(`[data-guide-target="designer-canvas"]`);
+        const fallback = document.querySelector(`[data-guide-target~="designer-canvas"]`);
         if (fallback) {
           const r = fallback.getBoundingClientRect();
-          setRect({ top: r.top, left: r.left, width: r.width, height: r.height, bottom: r.bottom, right: r.right });
+          setRect(getVisibleGuideRect(r, window.innerWidth, window.innerHeight));
           return;
         }
       }
@@ -53,7 +46,7 @@ export function useGuideTargetRect(targetIds: string | string[] | null): GuideTa
     }
 
     const r = el.getBoundingClientRect();
-    setRect({ top: r.top, left: r.left, width: r.width, height: r.height, bottom: r.bottom, right: r.right });
+    setRect(getVisibleGuideRect(r, window.innerWidth, window.innerHeight));
   }, [targetIds]);
 
   // Measure on targetId change

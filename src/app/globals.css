@@ -178,6 +178,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+:where(a, button, input, select, textarea, summary, [role="button"]) {
+  transition-duration: var(--booth-duration-short);
+  transition-timing-function: var(--booth-ease-standard);
+}
+
 html[data-theme="dark"] body {
   background:
     radial-gradient(ellipse at top left, rgba(136, 201, 191, 0.04), transparent 38rem),
@@ -461,6 +466,55 @@ html[data-theme="dark"] .booth-focus-ring {
   animation: modal-panel-exit var(--booth-duration-short) var(--booth-ease-standard) both;
 }
 
+.motion-guide-step {
+  animation: motion-guide-step var(--booth-duration-medium) var(--booth-ease-standard) both;
+}
+
+.motion-guide-context-panel {
+  animation: motion-guide-context-panel var(--booth-duration-medium) var(--booth-ease-emphasized) both;
+  transition:
+    top var(--booth-duration-medium) var(--booth-ease-standard),
+    right var(--booth-duration-medium) var(--booth-ease-standard),
+    bottom var(--booth-duration-medium) var(--booth-ease-standard),
+    left var(--booth-duration-medium) var(--booth-ease-standard),
+    opacity var(--booth-duration-short) var(--booth-ease-standard),
+    transform var(--booth-duration-medium) var(--booth-ease-standard);
+}
+
+.motion-guide-hint {
+  animation: motion-guide-hint var(--booth-duration-medium) var(--booth-ease-standard) both;
+}
+
+.guide-hint-position,
+.guide-spotlight-segment,
+.guide-spotlight-ring {
+  transition:
+    top var(--booth-duration-medium) var(--booth-ease-standard),
+    right var(--booth-duration-medium) var(--booth-ease-standard),
+    bottom var(--booth-duration-medium) var(--booth-ease-standard),
+    left var(--booth-duration-medium) var(--booth-ease-standard),
+    width var(--booth-duration-medium) var(--booth-ease-standard),
+    height var(--booth-duration-medium) var(--booth-ease-standard),
+    opacity var(--booth-duration-short) var(--booth-ease-standard);
+}
+
+.guide-spotlight-segment {
+  animation: modal-backdrop-enter var(--booth-duration-short) var(--booth-ease-standard) both;
+}
+
+.guide-spotlight-ring {
+  animation: guide-ring-enter var(--booth-duration-medium) var(--booth-ease-emphasized) both;
+}
+
+.canvas-object-orientation-motion {
+  transition:
+    left 560ms var(--booth-ease-standard),
+    top 560ms var(--booth-ease-standard),
+    width 560ms var(--booth-ease-standard),
+    height 560ms var(--booth-ease-standard),
+    font-size 560ms var(--booth-ease-standard);
+}
+
 /* ─── Keyframes ─── */
 
 @keyframes motion-enter {
@@ -562,11 +616,13 @@ html[data-theme="dark"] .booth-focus-ring {
 @keyframes modal-panel-enter {
   from {
     opacity: 0;
-    transform: translateY(16px) scale(0.95);
+    transform: translateY(10px) scale(0.98);
+    filter: blur(3px);
   }
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+    filter: blur(0);
   }
 }
 
@@ -577,8 +633,43 @@ html[data-theme="dark"] .booth-focus-ring {
   }
   to {
     opacity: 0;
-    transform: translateY(-8px) scale(0.98);
+    transform: translateY(6px) scale(0.985);
+    filter: blur(2px);
   }
+}
+
+@keyframes motion-guide-step {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes motion-guide-context-panel {
+  from {
+    opacity: 0;
+    filter: blur(3px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@keyframes motion-guide-hint {
+  from { opacity: 0; filter: blur(3px); }
+  to { opacity: 1; filter: blur(0); }
+}
+
+@keyframes guide-ring-enter {
+  from { opacity: 0; box-shadow: 0 0 0 0 color-mix(in srgb, var(--booth-primary) 0%, transparent); }
+  to { opacity: 1; box-shadow: 0 0 0 6px color-mix(in srgb, var(--booth-primary) 12%, transparent); }
 }
 
 @keyframes booth-viewfinder-enter {

@@ -1,5 +1,6 @@
 export const routes = {
   home: "/",
+  events: "/events",
   setup: (eventSlug?: string) =>
     eventSlug ? `/setup?slug=${encodeURIComponent(eventSlug)}` : "/setup",
   designer: (eventSlug: string) => `/designer/${encodeURIComponent(eventSlug)}`,

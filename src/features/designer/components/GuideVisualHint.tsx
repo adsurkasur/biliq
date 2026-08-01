@@ -24,8 +24,8 @@ export function GuideVisualHint({ type, targetRect, isExiting }: GuideVisualHint
       return (
         <div 
           className={cn(
-            "absolute z-[61] pointer-events-none flex flex-col items-center gap-2 transition-all duration-300",
-            isExiting ? "opacity-0 scale-95" : "motion-enter opacity-100 scale-100"
+            "fixed z-[61] pointer-events-none flex flex-col items-center gap-2 guide-hint-position",
+            isExiting ? "opacity-0" : "motion-guide-hint opacity-100"
           )}
           style={{
             top: targetRect.top + targetRect.height / 2,
@@ -49,8 +49,8 @@ export function GuideVisualHint({ type, targetRect, isExiting }: GuideVisualHint
       return (
         <div 
           className={cn(
-            "absolute z-[61] pointer-events-none transition-all duration-300",
-            isExiting ? "opacity-0 scale-95" : "motion-enter opacity-100 scale-100"
+            "fixed z-[61] pointer-events-none guide-hint-position",
+            isExiting ? "opacity-0" : "motion-guide-hint opacity-100"
           )}
           style={{
             top: targetRect.top - 8,
@@ -78,8 +78,8 @@ export function GuideVisualHint({ type, targetRect, isExiting }: GuideVisualHint
       return (
         <div 
           className={cn(
-            "absolute z-[61] pointer-events-none flex flex-col items-center transition-all duration-300",
-            isExiting ? "opacity-0 scale-95" : "motion-enter opacity-100 scale-100"
+            "fixed z-[61] pointer-events-none flex flex-col items-center guide-hint-position",
+            isExiting ? "opacity-0" : "motion-guide-hint opacity-100"
           )}
           style={{
             top: targetRect.top - 48,
@@ -102,8 +102,8 @@ export function GuideVisualHint({ type, targetRect, isExiting }: GuideVisualHint
       return (
         <div 
           className={cn(
-            "fixed z-[61] pointer-events-none overflow-hidden transition-all duration-300",
-            isExiting ? "opacity-0 scale-95" : "motion-enter opacity-100 scale-100"
+            "fixed z-[61] pointer-events-none overflow-hidden guide-hint-position",
+            isExiting ? "opacity-0" : "motion-guide-hint opacity-100"
           )}
           style={{
             top: targetRect.top,

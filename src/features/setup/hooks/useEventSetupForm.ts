@@ -325,7 +325,7 @@ export function useEventSetupForm() {
       } else if (destination === "booth") {
         router.push(routes.booth(saved.slug));
       } else {
-        router.push(routes.home);
+        router.push(routes.events);
       }
     } catch (error) {
       toast(

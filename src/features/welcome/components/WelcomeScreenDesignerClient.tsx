@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   Camera,
@@ -23,6 +24,7 @@ import { BiliqLogo } from "@/shared/components/brand/BiliqLogo";
 import { EventNavigation } from "@/shared/components/navigation/EventNavigation";
 import { Button, buttonClassName } from "@/shared/components/ui/Button";
 import { Card } from "@/shared/components/ui/Card";
+import { CanvasShortcutHints } from "@/shared/components/ui/CanvasShortcutHints";
 import { EmptyState } from "@/shared/components/ui/EmptyState";
 import { LoadingIndicator } from "@/shared/components/ui/LoadingIndicator";
 import { RangeSlider } from "@/shared/components/ui/RangeSlider";
@@ -39,6 +41,8 @@ interface WelcomeScreenDesignerClientProps {
 }
 
 export function WelcomeScreenDesignerClient({ eventSlug }: WelcomeScreenDesignerClientProps) {
+  const [isOrientationAnimating, setIsOrientationAnimating] = useState(false);
+  const orientationTimerRef = useRef<number | null>(null);
   const {
     eventConfig,
     welcomeScreen,
@@ -55,6 +59,18 @@ export function WelcomeScreenDesignerClient({ eventSlug }: WelcomeScreenDesigner
     removeLayer,
     saveWelcomeScreen
   } = useWelcomeScreenDesigner(eventSlug);
+
+  useEffect(() => () => {
+    if (orientationTimerRef.current) window.clearTimeout(orientationTimerRef.current);
+  }, []);
+
+  function changeOrientation(orientation: "portrait" | "landscape") {
+    if (!welcomeScreen || welcomeScreen.orientation === orientation) return;
+    if (orientationTimerRef.current) window.clearTimeout(orientationTimerRef.current);
+    setIsOrientationAnimating(true);
+    updateOrientation(orientation);
+    orientationTimerRef.current = window.setTimeout(() => setIsOrientationAnimating(false), 560);
+  }
 
   if (!isLoaded) {
     return (
@@ -94,7 +110,7 @@ export function WelcomeScreenDesignerClient({ eventSlug }: WelcomeScreenDesigner
       : null;
 
   return (
-    <main className="min-h-screen px-4 py-5 sm:px-6 lg:px-8">
+    <main className="min-h-screen px-5 py-8 sm:px-8 lg:px-10">
       <div className="motion-enter mx-auto grid max-w-[1700px] gap-5">
         <header className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--booth-outline-variant)]/30 pb-5">
           <div>
@@ -160,7 +176,7 @@ export function WelcomeScreenDesignerClient({ eventSlug }: WelcomeScreenDesigner
                 type="button"
                 size="sm"
                 variant={welcomeScreen.orientation === "portrait" ? "tonal" : "ghost-surface"}
-                onClick={() => updateOrientation("portrait")}
+                onClick={() => changeOrientation("portrait")}
                 aria-pressed={welcomeScreen.orientation === "portrait"}
                 className="min-h-9 px-3"
               >
@@ -171,7 +187,7 @@ export function WelcomeScreenDesignerClient({ eventSlug }: WelcomeScreenDesigner
                 type="button"
                 size="sm"
                 variant={welcomeScreen.orientation === "landscape" ? "tonal" : "ghost-surface"}
-                onClick={() => updateOrientation("landscape")}
+                onClick={() => changeOrientation("landscape")}
                 aria-pressed={welcomeScreen.orientation === "landscape"}
                 className="min-h-9 px-3"
               >
@@ -239,6 +255,7 @@ export function WelcomeScreenDesignerClient({ eventSlug }: WelcomeScreenDesigner
           <WelcomeCanvas
             config={welcomeScreen}
             selection={selection}
+            isOrientationAnimating={isOrientationAnimating}
             onSelect={setSelection}
             onUpdateElement={updateElement}
             onUpdateLayer={updateLayer}

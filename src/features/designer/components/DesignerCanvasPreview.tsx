@@ -400,6 +400,9 @@ export function DesignerCanvasPreview({
     };
   }, [dragState, eventConfig.outputWidth, eventConfig.outputHeight, onUpdateSlotNumber, onUpdateLayerNumber]);
 
+  const selectedSlot = selectedSlotIndex !== null ? layout.slots[selectedSlotIndex] ?? null : null;
+  const selectedLayer = selectedLayerId ? visibleLayers.find((layer) => layer.id === selectedLayerId) ?? null : null;
+
   return (
     <section className="motion-card rounded-[var(--booth-radius-xl)] border border-[var(--booth-outline-variant)]/20 bg-[var(--booth-surface-container-lowest)] p-5 shadow-[var(--booth-elevation-1)]">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
@@ -422,15 +425,16 @@ export function DesignerCanvasPreview({
         data-guide-target="live-layout-preview canvas-viewport"
         style={{ aspectRatio: `${eventConfig.outputWidth} / ${eventConfig.outputHeight}` }}
       >
-        <div
-          className="pointer-events-none absolute inset-0 overflow-hidden rounded-[var(--booth-radius-lg)]"
-          style={{
-            background:
-              "linear-gradient(45deg, rgba(0,121,107,0.06) 25%, transparent 25%), linear-gradient(-45deg, rgba(0,121,107,0.06) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, rgba(0,121,107,0.06) 75%), linear-gradient(-45deg, transparent 75%, rgba(0,121,107,0.06) 75%)",
-            backgroundPosition: "0 0, 0 16px, 16px -16px, -16px 0",
-            backgroundSize: "32px 32px"
-          }}
-        />
+        <div className="absolute inset-0 overflow-hidden rounded-[var(--booth-radius-lg)]">
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(45deg, rgba(0,121,107,0.06) 25%, transparent 25%), linear-gradient(-45deg, rgba(0,121,107,0.06) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, rgba(0,121,107,0.06) 75%), linear-gradient(-45deg, transparent 75%, rgba(0,121,107,0.06) 75%)",
+              backgroundPosition: "0 0, 0 16px, 16px -16px, -16px 0",
+              backgroundSize: "32px 32px"
+            }}
+          />
 
         {snapGuides.map((guide, i) => (
           <div
@@ -490,47 +494,6 @@ export function DesignerCanvasPreview({
                 Photo {index + 1}
               </button>
               
-              {isSelected && (
-                <DesignerTransformHandles
-                  x={slot.x}
-                  y={slot.y}
-                  width={slot.width}
-                  height={slot.height}
-                  rotation={slot.rotation ?? 0}
-                  canvasWidth={layout.canvasWidth}
-                  canvasHeight={layout.canvasHeight}
-                  canResize={true}
-                  canRotate={true}
-                  guideTarget="transform-handles"
-                  onPointerDown={(e, action) => {
-                    let initialPointerAngle = 0;
-                    if (action === "rotate" && canvasRef.current) {
-                      const rect = canvasRef.current.getBoundingClientRect();
-                      const centerX = slot.x + slot.width / 2;
-                      const centerY = slot.y + slot.height / 2;
-                      const screenCenterX = rect.left + (centerX / layout.canvasWidth) * rect.width;
-                      const screenCenterY = rect.top + (centerY / layout.canvasHeight) * rect.height;
-                      initialPointerAngle = Math.atan2(e.clientY - screenCenterY, e.clientX - screenCenterX);
-                    }
-                    
-                    setDragState({
-                      type: "slot",
-                      id: index,
-                      action,
-                      startX: e.clientX,
-                      startY: e.clientY,
-                      initialX: slot.x,
-                      initialY: slot.y,
-                      initialWidth: slot.width,
-                      initialHeight: slot.height,
-                      initialRotation: slot.rotation ?? 0,
-                      initialPointerAngle,
-                      aspectRatioLocked: !!slot.aspectRatioLocked,
-                      aspectRatio: slot.width / slot.height
-                    });
-                  }}
-                />
-              )}
             </div>
           );
         })}
@@ -592,50 +555,94 @@ export function DesignerCanvasPreview({
                 />
               </button>
               
-              {isSelected && !layer.locked && (
-                <DesignerTransformHandles
-                  x={layer.x}
-                  y={layer.y}
-                  width={layer.width}
-                  height={layer.height}
-                  rotation={layer.rotation}
-                  canvasWidth={eventConfig.outputWidth}
-                  canvasHeight={eventConfig.outputHeight}
-                  canResize={true}
-                  canRotate={true}
-                  guideTarget="transform-handles"
-                  onPointerDown={(e, action) => {
-                    let initialPointerAngle = 0;
-                    if (action === "rotate" && canvasRef.current) {
-                      const rect = canvasRef.current.getBoundingClientRect();
-                      const centerX = layer.x + layer.width / 2;
-                      const centerY = layer.y + layer.height / 2;
-                      const screenCenterX = rect.left + (centerX / eventConfig.outputWidth) * rect.width;
-                      const screenCenterY = rect.top + (centerY / eventConfig.outputHeight) * rect.height;
-                      initialPointerAngle = Math.atan2(e.clientY - screenCenterY, e.clientX - screenCenterX);
-                    }
-                    
-                    setDragState({
-                      type: "layer",
-                      id: layer.id,
-                      action,
-                      startX: e.clientX,
-                      startY: e.clientY,
-                      initialX: layer.x,
-                      initialY: layer.y,
-                      initialWidth: layer.width,
-                      initialHeight: layer.height,
-                      initialRotation: layer.rotation,
-                      initialPointerAngle,
-                      aspectRatioLocked: !!layer.aspectRatioLocked,
-                      aspectRatio: layer.width / layer.height
-                    });
-                  }}
-                />
-              )}
             </div>
           );
         })}
+        </div>
+
+        {selectedSlot && selectedSlotIndex !== null ? (
+          <DesignerTransformHandles
+            x={selectedSlot.x}
+            y={selectedSlot.y}
+            width={selectedSlot.width}
+            height={selectedSlot.height}
+            rotation={selectedSlot.rotation ?? 0}
+            canvasWidth={layout.canvasWidth}
+            canvasHeight={layout.canvasHeight}
+            canResize
+            canRotate
+            guideTarget="transform-handles"
+            onPointerDown={(event, action) => {
+              let initialPointerAngle = 0;
+              if (action === "rotate" && canvasRef.current) {
+                const rect = canvasRef.current.getBoundingClientRect();
+                const centerX = selectedSlot.x + selectedSlot.width / 2;
+                const centerY = selectedSlot.y + selectedSlot.height / 2;
+                initialPointerAngle = Math.atan2(
+                  event.clientY - (rect.top + (centerY / layout.canvasHeight) * rect.height),
+                  event.clientX - (rect.left + (centerX / layout.canvasWidth) * rect.width)
+                );
+              }
+              setDragState({
+                type: "slot",
+                id: selectedSlotIndex,
+                action,
+                startX: event.clientX,
+                startY: event.clientY,
+                initialX: selectedSlot.x,
+                initialY: selectedSlot.y,
+                initialWidth: selectedSlot.width,
+                initialHeight: selectedSlot.height,
+                initialRotation: selectedSlot.rotation ?? 0,
+                initialPointerAngle,
+                aspectRatioLocked: Boolean(selectedSlot.aspectRatioLocked),
+                aspectRatio: selectedSlot.width / selectedSlot.height
+              });
+            }}
+          />
+        ) : null}
+
+        {selectedLayer && !selectedLayer.locked ? (
+          <DesignerTransformHandles
+            x={selectedLayer.x}
+            y={selectedLayer.y}
+            width={selectedLayer.width}
+            height={selectedLayer.height}
+            rotation={selectedLayer.rotation}
+            canvasWidth={eventConfig.outputWidth}
+            canvasHeight={eventConfig.outputHeight}
+            canResize
+            canRotate
+            guideTarget="transform-handles"
+            onPointerDown={(event, action) => {
+              let initialPointerAngle = 0;
+              if (action === "rotate" && canvasRef.current) {
+                const rect = canvasRef.current.getBoundingClientRect();
+                const centerX = selectedLayer.x + selectedLayer.width / 2;
+                const centerY = selectedLayer.y + selectedLayer.height / 2;
+                initialPointerAngle = Math.atan2(
+                  event.clientY - (rect.top + (centerY / eventConfig.outputHeight) * rect.height),
+                  event.clientX - (rect.left + (centerX / eventConfig.outputWidth) * rect.width)
+                );
+              }
+              setDragState({
+                type: "layer",
+                id: selectedLayer.id,
+                action,
+                startX: event.clientX,
+                startY: event.clientY,
+                initialX: selectedLayer.x,
+                initialY: selectedLayer.y,
+                initialWidth: selectedLayer.width,
+                initialHeight: selectedLayer.height,
+                initialRotation: selectedLayer.rotation,
+                initialPointerAngle,
+                aspectRatioLocked: Boolean(selectedLayer.aspectRatioLocked),
+                aspectRatio: selectedLayer.width / selectedLayer.height
+              });
+            }}
+          />
+        ) : null}
       </div>
     </section>
   );

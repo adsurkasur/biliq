@@ -1,6 +1,6 @@
 "use client";
 
-import { type MouseEvent, type ReactNode, useCallback, useEffect, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
@@ -48,12 +48,6 @@ export function Modal({ children, title, onClose, className }: ModalProps) {
     return () => document.removeEventListener("keydown", handleEscape);
   }, [handleEscape]);
 
-  function handleBackdropClick(event: MouseEvent<HTMLDivElement>) {
-    if (event.target === event.currentTarget) {
-      triggerClose();
-    }
-  }
-
   if (!mounted) return null;
 
   const modalContent = (
@@ -62,7 +56,8 @@ export function Modal({ children, title, onClose, className }: ModalProps) {
         "fixed inset-0 z-50 grid place-items-center bg-black/50 px-4 py-6 backdrop-blur-sm",
         isClosing ? "modal-backdrop-exit" : "modal-backdrop-enter"
       )}
-      onClick={handleBackdropClick}
+      onPointerDown={triggerClose}
+      data-modal-backdrop="true"
     >
       <section
         role="dialog"
@@ -73,6 +68,7 @@ export function Modal({ children, title, onClose, className }: ModalProps) {
           isClosing ? "modal-panel-exit" : "modal-panel-enter",
           className
         )}
+        onPointerDown={(event) => event.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4">
           <h2

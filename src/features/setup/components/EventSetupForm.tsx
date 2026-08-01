@@ -531,7 +531,7 @@ export function EventSetupForm() {
                     <p className="mt-2 text-sm leading-6 text-[var(--booth-on-surface-variant)]">
                       Upload a transparent PNG, then choose how it sits on the output. The photo layout already follows the session count from Step 1.
                     </p>
-                    <fieldset className="mt-4 grid gap-2">
+                    <fieldset className="mt-4 grid gap-2" data-app-guide="frame-placement">
                       <legend className="text-xs font-bold uppercase tracking-wide text-[var(--booth-on-surface-variant)]">
                         Frame placement
                       </legend>

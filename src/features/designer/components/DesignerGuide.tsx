@@ -30,6 +30,7 @@ import {
   type GuideTargetRect,
 } from "@/features/designer/hooks/useGuideTargetRect";
 import { GuideVisualHint, type GuideHintType } from "@/features/designer/components/GuideVisualHint";
+import { GuideSpotlight } from "@/shared/components/guide/GuideSpotlight";
 
 // ---------------------------------------------------------------------------
 // Guide step definitions
@@ -216,7 +217,7 @@ const GUIDE_STEPS: GuideStep[] = [
           </li>
           <li className="flex gap-2">
             <span className="mt-0.5 text-[var(--booth-primary)]">•</span>
-            Elements may intentionally extend beyond the canvas. Edge snapping remains active, and the final exported output safely clips anything outside it.
+            Elements may intentionally extend past an edge, but the canvas masks that overflow underneath its boundary exactly like the exported output.
           </li>
           <li className="flex gap-2">
             <span className="mt-0.5 text-[var(--booth-primary)]">•</span>
@@ -392,64 +393,6 @@ function computePanelPlacement(targetRect: GuideTargetRect | null): {
 // Spotlight overlay with target cutout
 // ---------------------------------------------------------------------------
 
-function GuideSpotlight({ rect, isExiting }: { rect: GuideTargetRect | null; isExiting?: boolean }) {
-  if (!rect) return null;
-
-  const pad = 8;
-  const r = 12;
-
-  return (
-    <div
-      className={cn(
-        "fixed inset-0 z-[60] pointer-events-none transition-opacity duration-300",
-        isExiting ? "opacity-0" : "opacity-100"
-      )}
-    >
-      {/* Dimmed overlay with cutout */}
-      <svg
-        className="absolute inset-0 h-full w-full"
-        preserveAspectRatio="none"
-      >
-        <defs>
-          <mask id="guide-spotlight-mask">
-            <rect x="0" y="0" width="100%" height="100%" fill="white" />
-            <rect
-              x={rect.left - pad}
-              y={rect.top - pad}
-              width={rect.width + pad * 2}
-              height={rect.height + pad * 2}
-              rx={r}
-              ry={r}
-              fill="black"
-            />
-          </mask>
-        </defs>
-        <rect
-          x="0"
-          y="0"
-          width="100%"
-          height="100%"
-          fill="rgba(0,0,0,0.45)"
-          mask="url(#guide-spotlight-mask)"
-        />
-      </svg>
-
-      {/* Highlight ring around target */}
-      <div
-        className="absolute rounded-[var(--booth-radius-lg)] ring-2 ring-[var(--booth-primary)]/60 ring-offset-2 ring-offset-transparent"
-        style={{
-          top: 0,
-          left: 0,
-          width: rect.width + pad * 2,
-          height: rect.height + pad * 2,
-          transform: `translate3d(${rect.left - pad}px, ${rect.top - pad}px, 0)`,
-          transition: "transform 350ms cubic-bezier(0.2, 0, 0, 1), width 350ms cubic-bezier(0.2, 0, 0, 1), height 350ms cubic-bezier(0.2, 0, 0, 1)",
-        }}
-      />
-    </div>
-  );
-}
-
 // ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
@@ -551,7 +494,7 @@ function GuidePanel({
     const targets = Array.isArray(currentStep.target) ? currentStep.target : [currentStep.target];
     let el: Element | null = null;
     for (const t of targets) {
-      el = document.querySelector(`[data-guide-target="${t}"]`);
+      el = document.querySelector(`[data-guide-target~="${t}"]`);
       if (el) break;
     }
     
@@ -567,19 +510,17 @@ function GuidePanel({
   return (
     <>
       {/* Spotlight overlay — allows clicks through except on dimmed areas */}
-      <GuideSpotlight rect={targetRect} isExiting={guideState.isExiting} />
+      <GuideSpotlight
+        rect={targetRect}
+        isExiting={guideState.isExiting}
+        onDismiss={onClose}
+        zIndex={60}
+      />
 
       {/* Visual hints based on step */}
       <GuideVisualHint type={currentStep.hintType ?? null} targetRect={targetRect} isExiting={guideState.isExiting} />
 
       {/* Clickable backdrop to dismiss — sits behind the panel but above spotlight */}
-      <div
-        className="fixed inset-0 z-[61]"
-        onClick={onClose}
-        aria-hidden="true"
-        style={{ cursor: "default" }}
-      />
-
       <div
         role="dialog"
         aria-modal="true"
@@ -587,12 +528,11 @@ function GuidePanel({
         className={cn(
           "z-[62] rounded-[var(--booth-radius-2xl)]",
           "bg-[var(--booth-surface-container-lowest)] shadow-[var(--booth-elevation-4)]",
-          guideState.isExiting ? "opacity-0 scale-95 pointer-events-none" : "motion-enter opacity-100 scale-100"
+          guideState.isExiting ? "opacity-0 pointer-events-none" : "motion-guide-context-panel opacity-100"
         )}
         style={{ 
           ...panelStyle, 
-          outline: "none",
-          transition: "top 350ms cubic-bezier(0.2, 0, 0, 1), left 350ms cubic-bezier(0.2, 0, 0, 1), bottom 350ms cubic-bezier(0.2, 0, 0, 1), transform 350ms cubic-bezier(0.2, 0, 0, 1)"
+          outline: "none"
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -630,7 +570,7 @@ function GuidePanel({
         </div>
 
         {/* Body */}
-        <div className="relative px-5 py-4 text-sm leading-relaxed">
+        <div key={`designer-guide-step-${step}`} className="motion-guide-step relative px-5 py-4 text-sm leading-relaxed">
           {/* Preparing state if target is not found immediately */}
           <div 
             className={cn(

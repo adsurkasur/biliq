@@ -23,6 +23,7 @@ import { Button, buttonClassName } from "@/shared/components/ui/Button";
 import { Card } from "@/shared/components/ui/Card";
 import { EmptyState } from "@/shared/components/ui/EmptyState";
 import { LoadingIndicator } from "@/shared/components/ui/LoadingIndicator";
+import { CanvasShortcutHints } from "@/shared/components/ui/CanvasShortcutHints";
 import { BiliqLogo } from "@/shared/components/brand/BiliqLogo";
 import { EventNavigation } from "@/shared/components/navigation/EventNavigation";
 import { routes } from "@/shared/config/routes";
@@ -136,7 +137,7 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
   }
 
   return (
-    <main className="min-h-screen px-4 py-5 sm:px-6 lg:px-8">
+    <main className="min-h-screen px-5 py-8 sm:px-8 lg:px-10">
       <div className="mx-auto grid max-w-[1600px] gap-5 motion-enter">
         <header className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--booth-outline-variant)]/30 pb-5">
           <div>
@@ -172,7 +173,7 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
         </header>
 
         <Card elevation={0} className="flex flex-wrap items-center justify-between gap-4 border border-[var(--booth-outline-variant)]/35 p-3">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-3">
             <div className="inline-flex rounded-full bg-[var(--booth-surface-container)] p-1" aria-label="Designer mode" data-guide-target="designer-mode">
               <button
                 type="button"
@@ -203,9 +204,7 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
                 Advanced
               </button>
             </div>
-            <p className="hidden text-sm text-[var(--booth-on-surface-variant)] md:block">
-              Drag freely beyond the canvas; edges and centers stay magnetic. Use Ctrl/Cmd to bypass snapping.
-            </p>
+            <CanvasShortcutHints />
           </div>
 
           <Button

@@ -50,7 +50,7 @@ export function EventNavigation({
     return (
       <nav className="flex max-w-[calc(100vw-1.5rem)] gap-1.5 overflow-x-auto p-1" aria-label="Event navigation">
         {prefixActions}
-        <Link href={routes.home} className={baseClass} title="Events">
+        <Link href={routes.events} className={baseClass} title="Events">
           <LayoutGrid className="h-4 w-4" aria-hidden="true" />
           <span className="sr-only">Events</span>
         </Link>
@@ -87,7 +87,7 @@ export function EventNavigation({
   return (
     <nav className="-m-1 flex max-w-full flex-nowrap gap-2 overflow-x-auto p-1 sm:flex-wrap" aria-label="Event navigation">
       {prefixActions}
-      <Link href={routes.home} className={cn(classesFor(), "shrink-0")}>
+      <Link href={routes.events} className={cn(classesFor(), "shrink-0")}>
         <LayoutGrid className="h-4 w-4" aria-hidden="true" />
         Events
       </Link>

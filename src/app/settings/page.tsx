@@ -29,7 +29,7 @@ export default function SettingsPage() {
           </p>
         </div>
         <Suspense fallback={<div className="h-9 w-20" />}>
-          <ContextualBackButton fallbackRoute={routes.home} fallbackLabel="Events" />
+          <ContextualBackButton fallbackRoute={routes.events} fallbackLabel="Events" />
         </Suspense>
       </header>
 

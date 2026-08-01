@@ -59,7 +59,7 @@ export function PhotoDetailClient({ photoId }: PhotoDetailClientProps) {
           title={status}
           action={
             <Link
-              href={routes.home}
+              href={routes.events}
               className={buttonClassName({ variant: "primary", size: "lg" })}
             >
               Events

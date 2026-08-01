@@ -49,7 +49,7 @@ export function PrintClient({ photoId }: PrintClientProps) {
           title={status}
           action={
             <Link
-              href={routes.home}
+              href={routes.events}
               className={buttonClassName({ variant: "primary", size: "lg" })}
             >
               Events
