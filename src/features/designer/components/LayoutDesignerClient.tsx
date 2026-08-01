@@ -173,7 +173,7 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
 
         <Card elevation={0} className="flex flex-wrap items-center justify-between gap-4 border border-[var(--booth-outline-variant)]/35 p-3">
           <div className="flex items-center gap-2">
-            <div className="inline-flex rounded-full bg-[var(--booth-surface-container)] p-1" aria-label="Designer mode">
+            <div className="inline-flex rounded-full bg-[var(--booth-surface-container)] p-1" aria-label="Designer mode" data-guide-target="designer-mode">
               <button
                 type="button"
                 className={cn(
@@ -254,7 +254,7 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
             />
           </div>
 
-          <div className="grid gap-5 lg:sticky lg:top-5" data-guide-target="property-panel">
+          <div className="motion-section grid gap-5 lg:sticky lg:top-5" data-guide-target="property-panel" key={advancedMode ? "advanced-properties" : "simple-properties"}>
             {advancedMode ? (
               <>
                 {selectedSlotIndex !== null ? (

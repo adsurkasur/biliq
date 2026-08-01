@@ -18,7 +18,7 @@ export function Toast({ children, tone = "info", className }: ToastProps) {
     <div
       role="status"
       className={cn(
-        "motion-toast inline-flex items-start gap-3 rounded-[var(--booth-radius-lg)] px-4 py-3 text-sm font-semibold shadow-[var(--booth-elevation-2)]",
+        "motion-toast-enter inline-flex items-start gap-3 rounded-[var(--booth-radius-lg)] px-4 py-3 text-sm font-semibold shadow-[var(--booth-elevation-2)]",
         tone === "success" &&
           "bg-[var(--booth-primary-container)] text-[var(--booth-on-primary-container)]",
         tone === "info" &&

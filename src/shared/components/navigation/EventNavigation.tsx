@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Camera, GalleryHorizontal, LayoutGrid, Palette, Pencil } from "lucide-react";
+import { Camera, GalleryHorizontal, LayoutGrid, Palette, Pencil, Sparkles } from "lucide-react";
 import { buttonClassName } from "@/shared/components/ui/Button";
 import { routes } from "@/shared/config/routes";
 import { cn } from "@/shared/lib/classNames";
 
-type EventRoute = "setup" | "designer" | "booth" | "gallery";
+type EventRoute = "setup" | "welcome" | "designer" | "booth" | "gallery";
 
 interface EventNavigationProps {
   eventSlug?: string;
@@ -34,6 +34,7 @@ export function EventNavigation({
   const eventItems = eventSlug
     ? [
         { id: "setup" as const, label: "Setup", icon: Pencil, href: withReturnTo(routes.setup(eventSlug)) },
+        { id: "welcome" as const, label: "Welcome", icon: Sparkles, href: withReturnTo(routes.welcome(eventSlug)) },
         { id: "designer" as const, label: "Designer", icon: Palette, href: withReturnTo(routes.designer(eventSlug)) },
         { id: "booth" as const, label: "Booth", icon: Camera, href: routes.booth(eventSlug) },
         { id: "gallery" as const, label: "Gallery", icon: GalleryHorizontal, href: withReturnTo(routes.gallery(eventSlug)) }
@@ -47,7 +48,7 @@ export function EventNavigation({
     );
 
     return (
-      <nav className="flex gap-1.5" aria-label="Event navigation">
+      <nav className="flex max-w-[calc(100vw-1.5rem)] gap-1.5 overflow-x-auto p-1" aria-label="Event navigation">
         {prefixActions}
         <Link href={routes.home} className={baseClass} title="Events">
           <LayoutGrid className="h-4 w-4" aria-hidden="true" />
@@ -84,9 +85,9 @@ export function EventNavigation({
     );
 
   return (
-    <nav className="flex flex-wrap gap-2" aria-label="Event navigation">
+    <nav className="-m-1 flex max-w-full flex-nowrap gap-2 overflow-x-auto p-1 sm:flex-wrap" aria-label="Event navigation">
       {prefixActions}
-      <Link href={routes.home} className={classesFor()}>
+      <Link href={routes.home} className={cn(classesFor(), "shrink-0")}>
         <LayoutGrid className="h-4 w-4" aria-hidden="true" />
         Events
       </Link>
@@ -94,7 +95,7 @@ export function EventNavigation({
         <Link
           key={id}
           href={href}
-          className={classesFor(id)}
+          className={cn(classesFor(id), "shrink-0")}
           aria-current={activeRoute === id ? "page" : undefined}
         >
           <Icon className="h-4 w-4" aria-hidden="true" />

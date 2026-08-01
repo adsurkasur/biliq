@@ -3,6 +3,7 @@ import {
   createDefaultEventConfig,
   getEnabledCaptureModes,
   getGifCaptureSettings,
+  getWelcomeScreenConfig,
   getVideoCaptureSettings
 } from "@/domain/events/defaults";
 
@@ -36,5 +37,34 @@ describe("capture mode defaults", () => {
       durationSeconds: 60,
       includeAudio: true
     });
+  });
+
+  it("creates an enabled live-camera welcome screen by default", () => {
+    const event = createDefaultEventConfig();
+    const welcome = getWelcomeScreenConfig(event);
+
+    expect(welcome.enabled).toBe(true);
+    expect(welcome.showCamera).toBe(true);
+    expect(welcome.cameraFacingMode).toBe("user");
+    expect(welcome.elements.map((element) => element.type)).toEqual([
+      "title",
+      "subtitle",
+      "start-button"
+    ]);
+  });
+
+  it("rescales a welcome design when the event output changes", () => {
+    const event = createDefaultEventConfig({ outputWidth: 600, outputHeight: 800 });
+    event.welcomeScreen = {
+      ...event.welcomeScreen!,
+      canvasWidth: 1200,
+      canvasHeight: 1600
+    };
+
+    const welcome = getWelcomeScreenConfig(event);
+    expect(welcome.canvasWidth).toBe(600);
+    expect(welcome.canvasHeight).toBe(800);
+    expect(welcome.elements[0].x).toBe(Math.round(event.welcomeScreen!.elements[0].x / 2));
+    expect(welcome.elements[0].fontSize).toBe(Math.round(event.welcomeScreen!.elements[0].fontSize / 2));
   });
 });

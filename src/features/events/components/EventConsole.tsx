@@ -92,15 +92,6 @@ export function EventConsole() {
             <Plus className="h-5 w-5" aria-hidden="true" />
             Create event
           </Link>
-          <Link
-            href={routes.settings}
-            data-app-guide="app-settings"
-            className={buttonClassName({ variant: "ghost-surface", size: "icon" })}
-            title="Settings"
-            aria-label="Open app settings"
-          >
-            <Settings className="h-5 w-5" aria-hidden="true" />
-          </Link>
         </div>
       </header>
 
@@ -113,7 +104,7 @@ export function EventConsole() {
             </h2>
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="motion-stagger grid gap-4 lg:grid-cols-2">
             {events.map((event) => (
               <Card
                 as="article"
@@ -165,13 +156,20 @@ export function EventConsole() {
                   </div>
                 </div>
 
-                <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4" data-app-guide="event-actions">
+                <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5" data-app-guide="event-actions">
                   <Link
                     href={routes.setup(event.slug)}
                     className={buttonClassName({ variant: "secondary", size: "sm" })}
                   >
                     <Settings className="h-4 w-4" aria-hidden="true" />
                     Setup
+                  </Link>
+                  <Link
+                    href={routes.welcome(event.slug)}
+                    className={buttonClassName({ variant: "secondary", size: "sm" })}
+                  >
+                    <Sparkles className="h-4 w-4" aria-hidden="true" />
+                    Welcome
                   </Link>
                   <Link
                     href={routes.designer(event.slug)}

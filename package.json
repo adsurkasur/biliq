@@ -1,6 +1,6 @@
 {
   "name": "biliq-photo-booth",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -8,7 +8,16 @@
     "start": "next start",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "check": "npm run test && npm run typecheck && npm run build"
+    "check": "npm run test && npm run typecheck && npm run build",
+    "version:help": "node scripts/version.mjs help",
+    "version:show": "node scripts/version.mjs show",
+    "version:check": "node scripts/version.mjs check",
+    "version:patch": "node scripts/version.mjs patch",
+    "version:minor": "node scripts/version.mjs minor",
+    "version:major": "node scripts/version.mjs major",
+    "version:prerelease": "node scripts/version.mjs prerelease",
+    "version:release": "node scripts/version.mjs release",
+    "version:set": "node scripts/version.mjs set"
   },
   "dependencies": {
     "gifenc": "^1.0.3",

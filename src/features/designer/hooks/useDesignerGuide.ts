@@ -22,7 +22,7 @@ export type GuideState =
       isExiting?: boolean;
     };
 
-export const GUIDE_STEP_COUNT = 8;
+export const GUIDE_STEP_COUNT = 10;
 
 export interface UseDesignerGuideReturn {
   guideState: GuideState;

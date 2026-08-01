@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -26,6 +27,7 @@ import { OUTPUT_PRESETS } from "@/domain/events/defaults";
 import {
   getEnabledCaptureModes,
   getGifCaptureSettings,
+  getWelcomeScreenConfig,
   getVideoCaptureSettings
 } from "@/domain/events/defaults";
 import {
@@ -42,11 +44,12 @@ import { CAPTURE_COUNT_OPTIONS } from "@/features/setup/lib/eventFormDefaults";
 import { useEventSetupForm } from "@/features/setup/hooks/useEventSetupForm";
 import { useOverlayDimensions } from "@/features/setup/hooks/useOverlayDimensions";
 import { Badge } from "@/shared/components/ui/Badge";
-import { Button } from "@/shared/components/ui/Button";
+import { Button, buttonClassName } from "@/shared/components/ui/Button";
 import { Card } from "@/shared/components/ui/Card";
 import { LoadingIndicator } from "@/shared/components/ui/LoadingIndicator";
 import { cn } from "@/shared/lib/classNames";
 import { formatAspectRatio } from "@/shared/lib/validation";
+import { routes } from "@/shared/config/routes";
 
 const STEPS = [
   { label: "Essentials", helper: "Name and capture" },
@@ -91,6 +94,17 @@ export function EventSetupForm() {
   const [step, setStep] = useState(0);
   const overlayDimensions = useOverlayDimensions(primaryOverlay?.imageDataUrl);
 
+  useEffect(() => {
+    const handleGuideStep = (event: Event) => {
+      const requestedStep = (event as CustomEvent<{ step?: number }>).detail?.step;
+      if (requestedStep === 0 || requestedStep === 1 || requestedStep === 2) {
+        setStep(requestedStep);
+      }
+    };
+    window.addEventListener("biliq:guide-setup-step", handleGuideStep);
+    return () => window.removeEventListener("biliq:guide-setup-step", handleGuideStep);
+  }, []);
+
   if (!isLoaded || !eventConfig) {
     return (
       <Card className="p-8">
@@ -107,6 +121,7 @@ export function EventSetupForm() {
   const enabledCaptureModes = getEnabledCaptureModes(eventConfig);
   const gifSettings = getGifCaptureSettings(eventConfig);
   const videoSettings = getVideoCaptureSettings(eventConfig);
+  const welcomeScreen = getWelcomeScreenConfig(eventConfig);
   const framePlacement = eventConfig.framePlacement ?? "fit";
   const frameHasRatioMismatch = Boolean(
     overlayDimensions &&
@@ -209,7 +224,7 @@ export function EventSetupForm() {
 
           <div className="p-6 sm:p-8">
             {step === 0 ? (
-              <div className="grid gap-8">
+              <div className="motion-section grid gap-8" key="setup-essentials">
                 <label className="grid gap-2">
                   <span className="text-sm font-bold text-[var(--booth-on-surface)]">
                     Event name
@@ -227,7 +242,7 @@ export function EventSetupForm() {
                   </span>
                 </label>
 
-                <fieldset className="grid gap-3">
+                <fieldset className="grid gap-3" data-app-guide="capture-modes">
                   <div>
                     <legend className="text-sm font-bold text-[var(--booth-on-surface)]">
                       What can guests create?
@@ -280,7 +295,7 @@ export function EventSetupForm() {
                 </fieldset>
 
                 {enabledCaptureModes.includes("photo") ? (
-                <fieldset className="grid gap-3">
+                <fieldset className="grid gap-3" data-app-guide="photo-count">
                   <legend className="text-sm font-bold text-[var(--booth-on-surface)]">
                     How many photos in each session?
                   </legend>
@@ -320,7 +335,7 @@ export function EventSetupForm() {
                 ) : null}
 
                 {enabledCaptureModes.some((mode) => mode === "gif" || mode === "boomerang") ? (
-                  <section className="grid gap-4 rounded-[var(--booth-radius-xl)] border border-[var(--booth-outline-variant)]/35 bg-[var(--booth-surface-container-low)] p-5 sm:grid-cols-2">
+                  <section className="grid gap-4 rounded-[var(--booth-radius-xl)] border border-[var(--booth-outline-variant)]/35 bg-[var(--booth-surface-container-low)] p-5 sm:grid-cols-2" data-app-guide="animation-settings">
                     <div className="sm:col-span-2">
                       <h3 className="font-bold">Animation timing</h3>
                       <p className="mt-1 text-xs text-[var(--booth-on-surface-variant)]">
@@ -372,7 +387,7 @@ export function EventSetupForm() {
                 ) : null}
 
                 {enabledCaptureModes.includes("video") ? (
-                  <section className="grid gap-4 rounded-[var(--booth-radius-xl)] border border-[var(--booth-outline-variant)]/35 bg-[var(--booth-surface-container-low)] p-5 sm:grid-cols-2">
+                  <section className="grid gap-4 rounded-[var(--booth-radius-xl)] border border-[var(--booth-outline-variant)]/35 bg-[var(--booth-surface-container-low)] p-5 sm:grid-cols-2" data-app-guide="video-settings">
                     <div>
                       <h3 className="font-bold">Video recording</h3>
                       <p className="mt-1 text-xs leading-5 text-[var(--booth-on-surface-variant)]">
@@ -425,7 +440,7 @@ export function EventSetupForm() {
                 ) : null}
 
                 <div className="grid gap-3 sm:grid-cols-[1fr_1.2fr]">
-                  <label className="grid gap-2">
+                  <label className="grid gap-2" data-app-guide="countdown-setting">
                     <span className="text-sm font-bold text-[var(--booth-on-surface)]">
                       Countdown
                     </span>
@@ -469,8 +484,8 @@ export function EventSetupForm() {
             ) : null}
 
             {step === 1 ? (
-              <div className="grid gap-8">
-                <fieldset className="grid gap-3">
+              <div className="motion-section grid gap-8" key="setup-look-layout">
+                <fieldset className="grid gap-3" data-app-guide="output-format">
                   <legend className="text-sm font-bold text-[var(--booth-on-surface)]">
                     Output format
                   </legend>
@@ -529,6 +544,7 @@ export function EventSetupForm() {
                           <button
                             key={id}
                             type="button"
+                            data-app-guide={`frame-${id}`}
                             className={cn(
                               "booth-focus-ring rounded-[var(--booth-radius-md)] border p-3 text-left transition-all",
                               framePlacement === id
@@ -586,7 +602,7 @@ export function EventSetupForm() {
                             : "Checking image…"}
                         </p>
                         {frameHasRatioMismatch ? (
-                          <div className="mt-3 flex items-start gap-2 rounded-[var(--booth-radius-md)] bg-[var(--booth-tertiary-container)] p-3 text-[var(--booth-on-tertiary-container)]">
+                          <div className="mt-3 flex items-start gap-2 rounded-[var(--booth-radius-md)] bg-[var(--booth-tertiary-container)] p-3 text-[var(--booth-on-tertiary-container)]" data-app-guide="frame-ratio-warning">
                             <AlertTriangle className="mt-0.5 h-4 w-4 flex-none" />
                             <p>
                               Aspect ratios differ. {framePlacement === "fit"
@@ -607,7 +623,7 @@ export function EventSetupForm() {
                   </div>
 
                   <div
-                    className="relative overflow-hidden rounded-[var(--booth-radius-lg)] border border-[var(--booth-outline-variant)]/35 bg-[linear-gradient(45deg,#d7d4cf_25%,transparent_25%),linear-gradient(-45deg,#d7d4cf_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#d7d4cf_75%),linear-gradient(-45deg,transparent_75%,#d7d4cf_75%)] bg-[length:20px_20px]"
+                    className="booth-checkerboard relative overflow-hidden rounded-[var(--booth-radius-lg)] border border-[var(--booth-outline-variant)]/35"
                     style={{ aspectRatio: `${eventConfig.outputWidth} / ${eventConfig.outputHeight}` }}
                   >
                     {primaryOverlay ? (
@@ -623,17 +639,72 @@ export function EventSetupForm() {
                         }}
                       />
                     ) : (
-                      <div className="absolute inset-0 grid place-items-center p-5 text-center text-xs font-semibold text-[var(--booth-on-surface-variant)]">
-                        Your frame preview appears here
+                      <div className="absolute inset-0 grid place-items-center p-5 text-center text-xs font-semibold text-[var(--booth-on-surface)]">
+                        <span className="rounded-full bg-[var(--booth-surface-container-lowest)]/90 px-3 py-2 shadow-[var(--booth-elevation-1)] backdrop-blur-sm">
+                          Your frame preview appears here
+                        </span>
                       </div>
                     )}
                   </div>
+                </section>
+
+                <section className="grid gap-5 rounded-[var(--booth-radius-xl)] border border-[var(--booth-outline-variant)]/35 bg-[var(--booth-surface-container-low)] p-5 sm:grid-cols-[1fr_auto] sm:items-center" data-app-guide="welcome-screen-setting">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-5 w-5 text-[var(--booth-primary)]" />
+                      <h3 className="font-bold">Guest welcome screen</h3>
+                    </div>
+                    <p className="mt-2 text-sm leading-6 text-[var(--booth-on-surface-variant)]">
+                      Show a branded start screen before capture. It has a separate canvas and keeps the live camera visible by default.
+                    </p>
+                    <div className="mt-4 flex flex-wrap gap-4">
+                      <label className="flex items-center gap-2 text-sm font-bold">
+                        <input
+                          type="checkbox"
+                          checked={welcomeScreen.enabled}
+                          onChange={(event) =>
+                            updateConfig({
+                              welcomeScreen: { ...welcomeScreen, enabled: event.target.checked }
+                            })
+                          }
+                          className="h-5 w-5 accent-[var(--booth-primary)]"
+                        />
+                        Enable welcome screen
+                      </label>
+                      <label className="flex items-center gap-2 text-sm font-bold">
+                        <input
+                          type="checkbox"
+                          checked={welcomeScreen.showCamera}
+                          onChange={(event) =>
+                            updateConfig({
+                              welcomeScreen: { ...welcomeScreen, showCamera: event.target.checked }
+                            })
+                          }
+                          className="h-5 w-5 accent-[var(--booth-primary)]"
+                        />
+                        Show live camera
+                      </label>
+                    </div>
+                  </div>
+                  {isExistingEvent ? (
+                    <Link
+                      href={routes.welcome(eventConfig.slug)}
+                      className={buttonClassName({ variant: "tonal", size: "lg" })}
+                    >
+                      <Palette className="h-5 w-5" />
+                      Edit welcome canvas
+                    </Link>
+                  ) : (
+                    <p className="max-w-48 rounded-[var(--booth-radius-md)] bg-[var(--booth-surface-container)] p-3 text-xs leading-5 text-[var(--booth-on-surface-variant)]">
+                      Save this new event first, then open its welcome canvas.
+                    </p>
+                  )}
                 </section>
               </div>
             ) : null}
 
             {step === 2 ? (
-              <div className="grid gap-5">
+              <div className="motion-section grid gap-5" key="setup-review" data-app-guide="setup-review">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <ReviewItem
                     icon={Sparkles}
@@ -675,7 +746,7 @@ export function EventSetupForm() {
                   </div>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-3">
+                <div className="grid gap-3 sm:grid-cols-3" data-app-guide="setup-save-actions">
                   <Button
                     type="button"
                     variant="secondary"

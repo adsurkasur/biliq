@@ -13,6 +13,8 @@ import {
   SlidersHorizontal,
   Save,
   Camera,
+  Layers,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import { Modal } from "@/shared/components/ui/Modal";
@@ -59,6 +61,21 @@ const GUIDE_STEPS: GuideStep[] = [
     ),
   },
   {
+    title: "Simple and Advanced Modes",
+    icon: Sparkles,
+    target: "designer-mode",
+    body: (
+      <div>
+        <p className="text-[var(--booth-on-surface-variant)]">
+          Start in <strong className="text-[var(--booth-on-surface)]">Simple</strong> mode for the safest everyday controls. Switch to <strong className="text-[var(--booth-on-surface)]">Advanced</strong> when you need exact position, size, rotation, opacity, or slot settings.
+        </p>
+        <p className="mt-3 text-sm text-[var(--booth-on-surface-variant)]">
+          Both modes edit the same design. Switching modes never discards your canvas changes.
+        </p>
+      </div>
+    ),
+  },
+  {
     title: "Photo Slots",
     icon: Camera,
     target: ["photo-slot", "designer-canvas"],
@@ -80,6 +97,23 @@ const GUIDE_STEPS: GuideStep[] = [
             <span className="mt-0.5 text-[var(--booth-primary)]">•</span>
             Click a Photo slot on the canvas or in the Hierarchy panel to select it.
           </li>
+        </ul>
+      </div>
+    ),
+  },
+  {
+    title: "Canvas Element Stack",
+    icon: Layers,
+    target: "layer-list",
+    body: (
+      <div>
+        <p className="text-[var(--booth-on-surface-variant)]">
+          The element stack keeps photo areas and image overlays in one predictable place. Select an item here when it is difficult to click on the canvas.
+        </p>
+        <ul className="mt-3 space-y-2 text-sm text-[var(--booth-on-surface-variant)]">
+          <li>Overlay layers are listed from front to back.</li>
+          <li>Use the eye to hide a layer and the lock to prevent accidental movement.</li>
+          <li>Add transparent PNG artwork here for frames, logos, and decorations.</li>
         </ul>
       </div>
     ),

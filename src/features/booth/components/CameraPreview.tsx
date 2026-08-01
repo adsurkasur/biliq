@@ -4,7 +4,7 @@ import { type CSSProperties, type ReactNode, type RefObject } from "react";
 import { Camera, VideoOff } from "lucide-react";
 import { useCameraStream } from "@/features/booth/hooks/useCameraStream";
 import { Spinner } from "@/shared/components/ui/Spinner";
-import type { EventConfig } from "@/domain/events/types";
+import type { EventConfig, OverlayLayer } from "@/domain/events/types";
 import { getEffectiveOverlayLayers } from "@/domain/events/storage";
 
 interface CameraPreviewProps {
@@ -14,6 +14,9 @@ interface CameraPreviewProps {
   outputWidth?: number;
   outputHeight?: number;
   eventConfig?: EventConfig;
+  overlayLayers?: OverlayLayer[];
+  videoVisible?: boolean;
+  videoFit?: "cover" | "contain";
   className?: string;
   style?: CSSProperties;
   children?: ReactNode;
@@ -28,6 +31,9 @@ export function CameraPreview({
   outputWidth = 1200,
   outputHeight = 1600,
   eventConfig,
+  overlayLayers: overlayLayersOverride,
+  videoVisible = true,
+  videoFit = "cover",
   className = "",
   style,
   children,
@@ -42,7 +48,7 @@ export function CameraPreview({
     onError
   });
 
-  const overlayLayers = eventConfig ? getEffectiveOverlayLayers(eventConfig) : [];
+  const overlayLayers = overlayLayersOverride ?? (eventConfig ? getEffectiveOverlayLayers(eventConfig) : []);
   const visibleLayers = overlayLayers.filter((layer) => layer.visible).sort((a, b) => a.zIndex - b.zIndex);
 
   return (
@@ -52,7 +58,7 @@ export function CameraPreview({
     >
       <video
         ref={videoRef}
-        className="absolute inset-0 h-full w-full object-cover"
+        className={`absolute inset-0 h-full w-full transition-opacity duration-[var(--booth-duration-medium)] ${videoFit === "contain" ? "object-contain" : "object-cover"} ${videoVisible ? "opacity-100" : "opacity-0"}`}
         playsInline
         muted
         autoPlay

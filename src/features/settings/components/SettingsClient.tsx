@@ -6,6 +6,7 @@ import { Button } from "@/shared/components/ui/Button";
 import { buttonClassName } from "@/shared/components/ui/Button";
 import { Card } from "@/shared/components/ui/Card";
 import { routes } from "@/shared/config/routes";
+import { APP_VERSION_LABEL } from "@/shared/config/appVersion";
 import {
   useAppPreferences,
   type ThemeMode,
@@ -58,7 +59,7 @@ export function SettingsClient() {
   } = useAppPreferences();
 
   return (
-    <div className="grid gap-6">
+    <div className="motion-stagger grid gap-6">
       {/* Appearance */}
       <Card className="motion-card grid gap-5 p-6" data-app-guide="theme-settings">
         <div>
@@ -128,7 +129,7 @@ export function SettingsClient() {
             Help
           </p>
           <h2 className="mt-1 text-xl font-bold text-[var(--booth-on-surface)]">
-            About Biliq
+            About Biliq · {APP_VERSION_LABEL}
           </h2>
           <p className="mt-1.5 text-sm text-[var(--booth-on-surface-variant)]">
             Learn about this app — its purpose, local-first design, and version information.

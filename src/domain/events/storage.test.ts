@@ -117,6 +117,31 @@ describe("event overlay persistence", () => {
     const loaded = await getEventBySlug("remove-test");
     expect(getEffectiveOverlayLayers(loaded!)).toHaveLength(0);
   });
+
+  it("persists and hydrates welcome-frame assets alongside output-frame assets", async () => {
+    const event = createDefaultEventConfig({
+      id: "event-welcome-assets",
+      name: "Welcome Assets",
+      slug: "welcome-assets",
+      overlayLayers: [createLayer("output-frame", "data:image/png;base64,OUTPUT")]
+    });
+    event.welcomeScreen = {
+      ...event.welcomeScreen!,
+      overlayLayers: [createLayer("welcome-frame", "data:image/png;base64,WELCOME")]
+    };
+
+    await upsertEventConfig(event);
+
+    const rawEvents = JSON.parse(localStorage.getItem(storageKeys.events) ?? "[]");
+    expect(rawEvents[0].overlayLayers[0].imageDataUrl).toBe("");
+    expect(rawEvents[0].welcomeScreen.overlayLayers[0].imageDataUrl).toBe("");
+
+    const loaded = await getEventBySlug("welcome-assets");
+    expect(loaded?.overlayLayers?.[0].imageDataUrl).toBe("data:image/png;base64,OUTPUT");
+    expect(loaded?.welcomeScreen?.overlayLayers[0].imageDataUrl).toBe(
+      "data:image/png;base64,WELCOME"
+    );
+  });
 });
 
 function createLayer(name: string, imageDataUrl: string): OverlayLayer {

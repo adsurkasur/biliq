@@ -5,6 +5,7 @@ import { ArrowLeft, Database, Globe, ImageIcon, Layers, Settings } from "lucide-
 import { buttonClassName } from "@/shared/components/ui/Button";
 import { Card } from "@/shared/components/ui/Card";
 import { routes } from "@/shared/config/routes";
+import { APP_VERSION_LABEL } from "@/shared/config/appVersion";
 
 interface AboutFeature {
   icon: React.ElementType;
@@ -62,7 +63,7 @@ export function AboutClient() {
           It is a browser-based event photo booth system designed to run locally, without cloud services, user accounts, or a backend. All event data and photos remain in your browser.
         </p>
         <p className="text-sm font-medium text-[var(--booth-primary)]">
-          Status: Prototype / MVP — local-first build.
+          Biliq {APP_VERSION_LABEL} · Active development · PT ACS property.
         </p>
       </Card>
 

@@ -1,17 +1,21 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
   CheckCircle2,
   HelpCircle,
+  Settings,
   Sparkles,
   X
 } from "lucide-react";
 import { BiliqLogo } from "@/shared/components/brand/BiliqLogo";
 import { Button } from "@/shared/components/ui/Button";
+import { APP_VERSION_LABEL } from "@/shared/config/appVersion";
+import { routes } from "@/shared/config/routes";
 
 const WELCOME_SEEN_KEY = "biliq-app-welcome-seen.v1";
 
@@ -24,6 +28,15 @@ interface GuideStep {
 interface PageGuide {
   label: string;
   steps: GuideStep[];
+  topics?: GuideTopic[];
+}
+
+interface GuideTopic {
+  id: string;
+  label: string;
+  description: string;
+  steps: GuideStep[];
+  prepareEvent?: { name: string; detail?: Record<string, unknown> };
 }
 
 interface TargetRect {
@@ -37,16 +50,22 @@ interface TargetRect {
 
 export function AppGuide() {
   const pathname = usePathname();
-  const [phase, setPhase] = useState<"welcome" | "tour" | null>(null);
+  const [phase, setPhase] = useState<"welcome" | "menu" | "tour" | null>(null);
   const [isClosing, setIsClosing] = useState(false);
   const [step, setStep] = useState(0);
+  const [activeTopicId, setActiveTopicId] = useState<string | null>(null);
   const [targetRect, setTargetRect] = useState<TargetRect | null>(null);
   const guide = useMemo(() => getPageGuide(pathname), [pathname]);
+  const activeGuide = useMemo(() => {
+    const topic = guide.topics?.find((candidate) => candidate.id === activeTopicId);
+    return topic ? { label: topic.label, steps: topic.steps } : guide;
+  }, [activeTopicId, guide]);
 
   useEffect(() => {
     setPhase(null);
     setIsClosing(false);
     setStep(0);
+    setActiveTopicId(null);
   }, [pathname]);
 
   useEffect(() => {
@@ -67,7 +86,7 @@ export function AppGuide() {
       return;
     }
 
-    const selector = guide.steps[step]?.selector;
+    const selector = activeGuide.steps[step]?.selector;
     const target = selector ? document.querySelector<HTMLElement>(selector) : null;
 
     const updateRect = () => {
@@ -108,7 +127,7 @@ export function AppGuide() {
       window.removeEventListener("resize", updateRect);
       window.removeEventListener("scroll", updateRect, true);
     };
-  }, [guide.steps, phase, step]);
+  }, [activeGuide.steps, phase, step]);
 
   useEffect(() => {
     if (!phase) return;
@@ -135,6 +154,7 @@ export function AppGuide() {
       () => {
         setPhase(null);
         setStep(0);
+        setActiveTopicId(null);
         setIsClosing(false);
       },
       document.documentElement.dataset.motion === "reduced" ? 1 : 220
@@ -147,37 +167,76 @@ export function AppGuide() {
       return;
     }
     setStep(0);
+    setActiveTopicId(null);
     setIsClosing(false);
-    setPhase(pathname === "/" ? "welcome" : "tour");
+    setPhase(
+      pathname === "/"
+        ? "welcome"
+        : guide.topics && guide.topics.length > 1
+          ? "menu"
+          : "tour"
+    );
   }
 
   function startTour() {
     markWelcomeSeen();
     setStep(0);
+    setActiveTopicId(null);
     setIsClosing(false);
     setPhase("tour");
   }
 
   function goNext() {
-    if (step >= guide.steps.length - 1) {
+    if (step >= activeGuide.steps.length - 1) {
       closeGuide();
       return;
     }
     setStep((current) => current + 1);
   }
 
+  function openTopic(topic: GuideTopic) {
+    setActiveTopicId(topic.id);
+    setStep(0);
+    if (topic.prepareEvent) {
+      window.dispatchEvent(
+        new CustomEvent(topic.prepareEvent.name, { detail: topic.prepareEvent.detail })
+      );
+    }
+    window.setTimeout(() => setPhase("tour"), 80);
+  }
+
   return (
     <>
       {!phase ? (
-        <button
-          type="button"
-          onClick={openGuide}
-          className="booth-focus-ring no-print fixed bottom-5 right-5 z-[90] inline-flex min-h-11 items-center gap-2 rounded-full border border-[var(--booth-outline-variant)]/35 bg-[var(--booth-surface-container-lowest)] px-4 py-2.5 text-sm font-bold text-[var(--booth-on-surface)] shadow-[var(--booth-elevation-3)] transition-all hover:-translate-y-0.5 hover:bg-[var(--booth-primary-container)] active:translate-y-0"
-          aria-label={`Open ${guide.label} guide`}
-        >
-          <HelpCircle className="h-5 w-5 text-[var(--booth-primary)]" />
-          Guide
-        </button>
+        <div className={`motion-pop no-print fixed right-4 z-[90] flex items-center gap-1.5 rounded-full border border-[var(--booth-outline-variant)]/30 bg-[var(--booth-surface-container-lowest)]/92 p-1.5 shadow-[var(--booth-elevation-3)] backdrop-blur-md ${pathname.startsWith("/booth/") ? "top-20" : "bottom-4"}`}>
+          <Link
+            href={routes.about}
+            className="booth-focus-ring rounded-full px-2.5 py-2 text-xs font-bold text-[var(--booth-on-surface-variant)] hover:bg-[var(--booth-surface-container)] hover:text-[var(--booth-on-surface)]"
+            aria-label={`Biliq ${APP_VERSION_LABEL}. Open About`}
+          >
+            {APP_VERSION_LABEL}
+          </Link>
+          {pathname !== routes.settings ? (
+            <Link
+              href={`${routes.settings}?returnTo=${encodeURIComponent(pathname)}`}
+              data-app-guide="global-settings"
+              className="booth-focus-ring inline-flex min-h-10 items-center gap-2 rounded-full px-3 py-2 text-sm font-bold text-[var(--booth-on-surface-variant)] hover:bg-[var(--booth-surface-container)] hover:text-[var(--booth-on-surface)]"
+              aria-label="Open app settings"
+            >
+              <Settings className="h-4 w-4" />
+              <span className="hidden sm:inline">Settings</span>
+            </Link>
+          ) : null}
+          <button
+            type="button"
+            onClick={openGuide}
+            className="booth-focus-ring inline-flex min-h-10 items-center gap-2 rounded-full bg-[var(--booth-primary-container)] px-3 py-2 text-sm font-bold text-[var(--booth-on-primary-container)] hover:-translate-y-0.5 hover:brightness-105 active:translate-y-0"
+            aria-label={`Open ${guide.label} guide`}
+          >
+            <HelpCircle className="h-4 w-4" />
+            Guide
+          </button>
+        </div>
       ) : null}
 
       {phase === "welcome" ? (
@@ -241,7 +300,7 @@ export function AppGuide() {
 
       {phase === "tour" ? (
         <GuideTour
-          guide={guide}
+          guide={activeGuide}
           isClosing={isClosing}
           step={step}
           targetRect={targetRect}
@@ -250,7 +309,69 @@ export function AppGuide() {
           onNext={goNext}
         />
       ) : null}
+
+      {phase === "menu" && guide.topics ? (
+        <GuideMenu
+          label={guide.label}
+          topics={guide.topics}
+          isClosing={isClosing}
+          onClose={closeGuide}
+          onSelect={openTopic}
+        />
+      ) : null}
     </>
+  );
+}
+
+function GuideMenu({
+  label,
+  topics,
+  isClosing,
+  onClose,
+  onSelect
+}: {
+  label: string;
+  topics: GuideTopic[];
+  isClosing: boolean;
+  onClose: () => void;
+  onSelect: (topic: GuideTopic) => void;
+}) {
+  return (
+    <div className={`fixed inset-0 z-[130] grid place-items-center bg-stone-950/65 p-4 backdrop-blur-sm ${isClosing ? "motion-guide-backdrop-exit" : "motion-guide-backdrop"}`}>
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${label} guide topics`}
+        className={`${isClosing ? "motion-guide-panel-exit" : "motion-guide-panel"} w-full max-w-2xl rounded-[var(--booth-radius-2xl)] border border-[var(--booth-outline-variant)]/30 bg-[var(--booth-surface-container-lowest)] p-6 shadow-[var(--booth-elevation-4)]`}
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide text-[var(--booth-primary)]">{label} guide</p>
+            <h2 className="mt-2 text-2xl font-bold">What would you like to learn?</h2>
+            <p className="mt-2 text-sm text-[var(--booth-on-surface-variant)]">Choose a focused walkthrough. You can return and open another topic anytime.</p>
+          </div>
+          <button type="button" onClick={onClose} className="booth-focus-ring rounded-full p-2 hover:bg-[var(--booth-surface-container)]" aria-label="Close guide topics">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="motion-stagger mt-6 grid gap-3 sm:grid-cols-2">
+          {topics.map((topic) => (
+            <button
+              key={topic.id}
+              type="button"
+              onClick={() => onSelect(topic)}
+              className="booth-focus-ring rounded-[var(--booth-radius-lg)] border border-[var(--booth-outline-variant)]/35 bg-[var(--booth-surface-container-low)] p-4 text-left hover:-translate-y-0.5 hover:border-[var(--booth-primary)] hover:bg-[var(--booth-primary-container)]/15"
+            >
+              <span className="font-bold text-[var(--booth-on-surface)]">{topic.label}</span>
+              <span className="mt-1 block text-sm leading-5 text-[var(--booth-on-surface-variant)]">{topic.description}</span>
+              <span className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-[var(--booth-primary)]">
+                {topic.steps.length} steps <ArrowRight className="h-3.5 w-3.5" />
+              </span>
+            </button>
+          ))}
+        </div>
+      </section>
+    </div>
   );
 }
 
@@ -284,7 +405,7 @@ function GuideTour({
           <div className="fixed right-0 bg-stone-950/65 transition-all" style={{ top: Math.max(0, targetRect.top - padding), width: Math.max(0, window.innerWidth - targetRect.right - padding), height: targetRect.height + padding * 2 }} />
           <div className="fixed bottom-0 left-0 right-0 bg-stone-950/65 transition-all" style={{ top: targetRect.bottom + padding }} />
           <div
-            className="pointer-events-none fixed rounded-[var(--booth-radius-lg)] ring-4 ring-[var(--booth-primary)] ring-offset-2 ring-offset-white/80 transition-all"
+            className="pointer-events-none fixed rounded-[var(--booth-radius-lg)] ring-4 ring-[var(--booth-primary)] ring-offset-2 ring-offset-[var(--booth-guide-ring-offset)] transition-all"
             style={{
               top: targetRect.top - padding,
               left: targetRect.left - padding,
@@ -362,8 +483,8 @@ function getPageGuide(pathname: string): PageGuide {
       steps: [
         { title: "Your event workspace", description: "Every event lives here, with one clear path from setup to booth operation.", selector: "[data-app-guide='page-header']" },
         { title: "Create an event", description: "Start here. Biliq will ask only for the guest experience first, then visual output.", selector: "[data-app-guide='create-event']" },
-        { title: "Continue an event", description: "Each card follows the same order: Setup, Designer, Booth, then Gallery.", selector: "[data-app-guide='event-list']" },
-        { title: "Adjust the app", description: "Theme and motion settings follow this device, including System mode.", selector: "[data-app-guide='app-settings']" }
+        { title: "Continue an event", description: "Each card follows the same order: Setup, Welcome, Designer, Booth, then Gallery.", selector: "[data-app-guide='event-list']" },
+        { title: "Adjust the app", description: "Theme and motion settings follow this device. Settings stays available from every page.", selector: "[data-app-guide='global-settings']" }
       ]
     };
   }
@@ -372,9 +493,72 @@ function getPageGuide(pathname: string): PageGuide {
       label: "Event Setup",
       steps: [
         { title: "Follow the three-step flow", description: "Set the guest experience once, style the output, then review and save.", selector: "[data-app-guide='setup-progress']" },
-        { title: "Work on one decision at a time", description: "The main panel contains the current step. Photo count is defined only in Essentials.", selector: "[data-app-guide='setup-form']" },
         { title: "Check the outcome", description: "The live summary reflects your choices without adding duplicate controls.", selector: "[data-app-guide='setup-summary']" },
-        { title: "Move through the event", description: "The same Setup, Designer, Booth, and Gallery order is used throughout Biliq.", selector: "nav[aria-label='Event navigation']" }
+        { title: "Move through the event", description: "Setup, Welcome, Designer, Booth, and Gallery always appear in the same workflow order.", selector: "nav[aria-label='Event navigation']" }
+      ],
+      topics: [
+        {
+          id: "setup-workflow",
+          label: "Setup workflow",
+          description: "Understand the three steps, live summary, navigation, and safe draft behavior.",
+          prepareEvent: { name: "biliq:guide-setup-step", detail: { step: 0 } },
+          steps: [
+            { title: "Three focused steps", description: "Essentials controls the guest experience, Look & layout controls the visual output, and Review is the only place that saves and launches.", selector: "[data-app-guide='setup-progress']" },
+            { title: "One main work area", description: "Only the current step contains editable controls, which prevents the same decision from appearing twice.", selector: "[data-app-guide='setup-form']" },
+            { title: "Live summary", description: "This is read-only confirmation. It updates instantly but does not change the booth until you save.", selector: "[data-app-guide='setup-summary']" },
+            { title: "Event navigation", description: "Use the stable workflow order to move between configuration, the welcome screen, design, operation, and results.", selector: "nav[aria-label='Event navigation']" }
+          ]
+        },
+        {
+          id: "capture-modes",
+          label: "Photo, GIF & Video",
+          description: "Learn what every guest capture mode does and which settings affect it.",
+          prepareEvent: { name: "biliq:guide-setup-step", detail: { step: 0 } },
+          steps: [
+            { title: "Capture modes", description: "Photo creates a composed still image. GIF records a short looping sequence. Boomerang plays that sequence forward and backward. Video records a timed clip and can include microphone audio.", selector: "[data-app-guide='capture-modes']" },
+            { title: "Photo session count", description: "This setting exists only for Photo. It controls both how many times the countdown runs and how many photo areas the starting layout receives.", selector: "[data-app-guide='photo-count']" },
+            { title: "GIF and Boomerang timing", description: "Frames controls smoothness and capture length. Playback speed controls the delay between frames. Both settings are shared by GIF and Boomerang.", selector: "[data-app-guide='animation-settings']" },
+            { title: "Video recording", description: "Choose a short duration for fast guest turnover. Enable microphone only when the venue and consent flow support audio recording.", selector: "[data-app-guide='video-settings']" },
+            { title: "Countdown", description: "The countdown gives guests time to pose before each Photo, or before an animation/video session begins. Zero starts immediately.", selector: "[data-app-guide='countdown-setting']" }
+          ]
+        },
+        {
+          id: "output-frame",
+          label: "Output & event frame",
+          description: "Understand portrait, square, landscape, plus Fit, Fill, and Stretch behavior.",
+          prepareEvent: { name: "biliq:guide-setup-step", detail: { step: 1 } },
+          steps: [
+            { title: "Output format", description: "Tablet Portrait is best for vertical booths and prints, Square is flexible for social sharing, and Landscape suits wide displays. Changing format recalculates the frame preview.", selector: "[data-app-guide='output-format']" },
+            { title: "Fit", description: "Fit preserves the complete frame and its proportions. If the aspect ratios differ, empty space can remain around it.", selector: "[data-app-guide='frame-fit']" },
+            { title: "Fill", description: "Fill preserves proportions and covers the entire canvas. Parts of the frame can be cropped outside the canvas edge.", selector: "[data-app-guide='frame-fill']" },
+            { title: "Stretch", description: "Stretch forces the image to the exact output dimensions. It never leaves gaps, but a mismatched frame can look distorted.", selector: "[data-app-guide='frame-stretch']" },
+            { title: "Aspect-ratio warning", description: "When this warning appears, compare Fit and Fill first. Use Stretch only when the artwork was intentionally designed to scale non-proportionally.", selector: "[data-app-guide='frame-ratio-warning']" },
+            { title: "Welcome screen", description: "The guest welcome screen has its own canvas and frame. Its camera remains live by default and does not alter the final photo frame.", selector: "[data-app-guide='welcome-screen-setting']" }
+          ]
+        },
+        {
+          id: "save-launch",
+          label: "Save & launch",
+          description: "Review what will be saved and choose the correct next destination.",
+          prepareEvent: { name: "biliq:guide-setup-step", detail: { step: 2 } },
+          steps: [
+            { title: "Final review", description: "Confirm capture modes, countdown, output dimensions, layout, and design layers before saving.", selector: "[data-app-guide='setup-review']" },
+            { title: "Choose the next step", description: "Save event returns to the dashboard, Fine-tune design opens the output canvas, and Test booth starts the camera experience.", selector: "[data-app-guide='setup-save-actions']" }
+          ]
+        }
+      ]
+    };
+  }
+  if (pathname.startsWith("/welcome/")) {
+    return {
+      label: "Welcome Screen",
+      steps: [
+        { title: "Welcome canvas", description: "This canvas is shown before guests enter the booth. The real booth keeps its camera active behind these elements.", selector: "[data-app-guide='welcome-canvas']" },
+        { title: "Move and transform", description: "Drag an item to move it. Side handles resize one axis, corner handles resize both, and the top handle rotates. Hold Shift for proportions or Alt to resize from the center.", selector: "[data-app-guide='welcome-canvas']" },
+        { title: "Screen elements", description: "Select the title, subtitle, start button, or a custom frame layer. Eye controls hide items; frame locks prevent accidental canvas movement.", selector: "[data-app-guide='welcome-elements']" },
+        { title: "Precise properties", description: "Edit wording, position, size, rotation, opacity, and colors here. Canvas dragging and property values always update the same selected item.", selector: "[data-app-guide='welcome-properties']" },
+        { title: "Camera behavior", description: "Keep the live camera visible for the familiar mirror-like Lumabooth experience, or hide it for a branded splash screen.", selector: "[data-app-guide='welcome-camera']" },
+        { title: "Save to the booth", description: "Save applies the welcome screen to this event without changing the final photo output design.", selector: "[data-app-guide='welcome-save']" }
       ]
     };
   }
@@ -400,8 +584,8 @@ function getPageGuide(pathname: string): PageGuide {
     return {
       label: "Booth",
       steps: [
-        { title: "Live guest preview", description: "The camera preview uses the event output ratio so framing stays predictable.", selector: "main" },
-        { title: "Guest controls", description: "Guests choose an enabled capture mode, then use the single primary capture button.", selector: "[data-app-guide='capture-controls']" },
+        { title: "Live guest preview", description: "The camera opens on the branded welcome screen first. Guests tap its Start button to enter capture; disabled welcome screens go straight to capture.", selector: "main" },
+        { title: "Guest controls", description: "After Start, guests choose an enabled capture mode and use the single primary capture button. The configured countdown then guides the session.", selector: "[data-app-guide='capture-controls']" },
         { title: "Operator navigation", description: "These compact controls return to Setup, Designer, and Gallery without crowding the guest flow.", selector: "nav[aria-label='Event navigation']" }
       ]
     };

@@ -68,7 +68,13 @@ export async function upsertEventConfig(eventConfig: EventConfig): Promise<Event
         : getRecommendedLayoutIdForCaptureCount(captureCount);
   }
   const canonicalLayers = getEffectiveOverlayLayers(eventConfig);
-  const hydratedLayers = await persistOverlayLayers(eventConfig.id, canonicalLayers);
+  const canonicalWelcomeLayers = eventConfig.welcomeScreen?.overlayLayers ?? [];
+  const hydratedAssets = await persistOverlayLayers(eventConfig.id, [
+    ...canonicalLayers,
+    ...canonicalWelcomeLayers
+  ]);
+  const hydratedLayers = hydratedAssets.slice(0, canonicalLayers.length);
+  const hydratedWelcomeLayers = hydratedAssets.slice(canonicalLayers.length);
   const nextEvent: EventConfig = {
     ...eventConfig,
     customLayout,
@@ -76,13 +82,22 @@ export async function upsertEventConfig(eventConfig: EventConfig): Promise<Event
     layoutId,
     overlayDataUrl: undefined,
     overlayLayers: hydratedLayers,
+    welcomeScreen: eventConfig.welcomeScreen
+      ? { ...eventConfig.welcomeScreen, overlayLayers: hydratedWelcomeLayers }
+      : undefined,
     slug: toSlug(eventConfig.slug || eventConfig.name),
     updatedAt: new Date().toISOString()
   };
 
   const persistedEvent: EventConfig = {
     ...nextEvent,
-    overlayLayers: stripOverlayPayloads(hydratedLayers)
+    overlayLayers: stripOverlayPayloads(hydratedLayers),
+    welcomeScreen: nextEvent.welcomeScreen
+      ? {
+          ...nextEvent.welcomeScreen,
+          overlayLayers: stripOverlayPayloads(hydratedWelcomeLayers)
+        }
+      : undefined
   };
 
   const migratedEvents = await Promise.all(
@@ -92,18 +107,30 @@ export async function upsertEventConfig(eventConfig: EventConfig): Promise<Event
       }
 
       const layers = getEffectiveOverlayLayers(event);
+      const welcomeLayers = event.welcomeScreen?.overlayLayers ?? [];
       const hasEmbeddedPayload = Boolean(event.overlayDataUrl) ||
-        layers.some((layer) => Boolean(layer.imageDataUrl));
+        [...layers, ...welcomeLayers].some((layer) => Boolean(layer.imageDataUrl));
 
       if (!hasEmbeddedPayload) {
         return event;
       }
 
-      const migratedLayers = await persistOverlayLayers(event.id, layers);
+      const migratedAssets = await persistOverlayLayers(event.id, [
+        ...layers,
+        ...welcomeLayers
+      ]);
+      const migratedLayers = migratedAssets.slice(0, layers.length);
+      const migratedWelcomeLayers = migratedAssets.slice(layers.length);
       return {
         ...event,
         overlayDataUrl: undefined,
-        overlayLayers: stripOverlayPayloads(migratedLayers)
+        overlayLayers: stripOverlayPayloads(migratedLayers),
+        welcomeScreen: event.welcomeScreen
+          ? {
+              ...event.welcomeScreen,
+              overlayLayers: stripOverlayPayloads(migratedWelcomeLayers)
+            }
+          : undefined
       };
     })
   );
@@ -193,14 +220,26 @@ export function getEffectiveOverlayLayers(eventConfig: EventConfig): import("@/d
 }
 
 async function hydrateEventOverlayLayers(eventConfig: EventConfig): Promise<EventConfig> {
-  const hydratedLayers = await hydrateOverlayLayers(eventConfig.overlayLayers ?? []);
+  const [hydratedLayers, hydratedWelcomeLayers] = await Promise.all([
+    hydrateOverlayLayers(eventConfig.overlayLayers ?? []),
+    hydrateOverlayLayers(eventConfig.welcomeScreen?.overlayLayers ?? [])
+  ]);
+  const welcomeScreen = eventConfig.welcomeScreen
+    ? { ...eventConfig.welcomeScreen, overlayLayers: hydratedWelcomeLayers }
+    : undefined;
 
   if (hydratedLayers.length > 0) {
-    return { ...eventConfig, overlayLayers: hydratedLayers, overlayDataUrl: undefined };
+    return {
+      ...eventConfig,
+      overlayLayers: hydratedLayers,
+      overlayDataUrl: undefined,
+      welcomeScreen
+    };
   }
 
   return {
     ...eventConfig,
-    overlayLayers: getEffectiveOverlayLayers(eventConfig)
+    overlayLayers: getEffectiveOverlayLayers(eventConfig),
+    welcomeScreen
   };
 }

@@ -32,12 +32,19 @@
   --booth-surface-container: #F0EDE8;
   --booth-surface-container-high: #EBE7E2;
   --booth-surface-container-high-alt: #E5E1DB;
+  --booth-surface-container-highest: #DFDBD5;
   --booth-on-surface: #1C1B1A;
   --booth-on-surface-variant: #484643;
 
   /* Outline */
   --booth-outline: #797672;
   --booth-outline-variant: #C9C6C1;
+  --booth-border-subtle: rgba(72, 70, 67, 0.18);
+
+  /* Canvas transparency preview */
+  --booth-checker-base: #EEEAE4;
+  --booth-checker-tile: #D6D1CA;
+  --booth-guide-ring-offset: rgba(255, 255, 255, 0.82);
 
   /* Error */
   --booth-error: #ba1a1a;
@@ -82,36 +89,43 @@ html[data-theme="dark"] {
   color-scheme: dark;
 
   /* Primary – muted teal for dark surfaces */
-  --booth-primary: #88C9BF;
-  --booth-on-primary: #003731;
-  --booth-primary-container: #1E5049;
-  --booth-on-primary-container: #A4E5DB;
+  --booth-primary: #83B8AE;
+  --booth-on-primary: #092E29;
+  --booth-primary-container: #244A44;
+  --booth-on-primary-container: #B7DCD5;
 
   /* Secondary */
-  --booth-secondary: #C3B8B3;
-  --booth-secondary-container: #4B3F3B;
-  --booth-on-secondary-container: #E8D9D4;
+  --booth-secondary: #ADA49F;
+  --booth-secondary-container: #403A37;
+  --booth-on-secondary-container: #D8CFCA;
 
   /* Tertiary */
-  --booth-tertiary: #DEB99C;
-  --booth-tertiary-container: #59402C;
-  --booth-on-tertiary-container: #FFDCC6;
+  --booth-tertiary: #C7A78F;
+  --booth-tertiary-container: #4B382A;
+  --booth-on-tertiary-container: #E8CDBA;
 
   /* Surface hierarchy – dark */
-  --booth-surface: #111110;
-  --booth-surface-dim: #111110;
-  --booth-surface-bright: #3A3836;
-  --booth-surface-container-lowest: #0B0B0A;
-  --booth-surface-container-low: #181716;
-  --booth-surface-container: #1E1D1C;
-  --booth-surface-container-high: #282726;
-  --booth-surface-container-high-alt: #313030;
-  --booth-on-surface: #E8E5E1;
-  --booth-on-surface-variant: #C9C5C0;
+  --booth-surface: #171715;
+  --booth-surface-dim: #141412;
+  --booth-surface-bright: #343431;
+  --booth-surface-container-lowest: #181816;
+  --booth-surface-container-low: #1B1B19;
+  --booth-surface-container: #21211F;
+  --booth-surface-container-high: #282825;
+  --booth-surface-container-high-alt: #2E2E2A;
+  --booth-surface-container-highest: #343430;
+  --booth-on-surface: #DEDBD5;
+  --booth-on-surface-variant: #AAA7A0;
 
   /* Outline */
-  --booth-outline: #918F8B;
-  --booth-outline-variant: #48464E;
+  --booth-outline: #74716C;
+  --booth-outline-variant: #393835;
+  --booth-border-subtle: rgba(222, 219, 213, 0.12);
+
+  /* Softer checkerboard and spotlight edge on dark surfaces */
+  --booth-checker-base: #262624;
+  --booth-checker-tile: #373734;
+  --booth-guide-ring-offset: rgba(28, 28, 26, 0.88);
 
   /* Error */
   --booth-error: #FFB4AB;
@@ -135,6 +149,13 @@ html[data-theme="dark"] {
 
 * {
   box-sizing: border-box;
+  /* Tailwind's default border color is too bright on dark surfaces. This is
+     the safe fallback; explicit border-color utilities still take priority. */
+  border-color: var(--booth-border-subtle);
+}
+
+html {
+  interpolate-size: allow-keywords;
 }
 
 html,
@@ -166,6 +187,54 @@ select {
   font: inherit;
 }
 
+button,
+a,
+summary,
+input,
+select,
+textarea {
+  transition-duration: var(--booth-duration-short);
+  transition-timing-function: var(--booth-ease-standard);
+}
+
+button,
+a,
+summary {
+  transition-property: color, background-color, border-color, box-shadow, opacity, transform, filter;
+}
+
+input,
+select,
+textarea {
+  transition-property: color, background-color, border-color, box-shadow;
+}
+
+.booth-checkerboard {
+  background-color: var(--booth-checker-base);
+  background-image:
+    linear-gradient(45deg, var(--booth-checker-tile) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--booth-checker-tile) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--booth-checker-tile) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--booth-checker-tile) 75%);
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+  background-size: 20px 20px;
+}
+
+details::details-content {
+  block-size: 0;
+  opacity: 0;
+  overflow: clip;
+  transition:
+    block-size var(--booth-duration-medium) var(--booth-ease-standard),
+    opacity var(--booth-duration-short) var(--booth-ease-standard),
+    content-visibility var(--booth-duration-medium) allow-discrete;
+}
+
+details[open]::details-content {
+  block-size: auto;
+  opacity: 1;
+}
+
 /* ─── Focus Ring ─── */
 
 .booth-focus-ring {
@@ -189,6 +258,29 @@ html[data-theme="dark"] .booth-focus-ring {
 .motion-pop {
   animation: motion-pop var(--booth-duration-short) var(--booth-ease-emphasized) both;
 }
+
+.motion-section {
+  animation: motion-section var(--booth-duration-medium) var(--booth-ease-emphasized) both;
+}
+
+.motion-fade {
+  animation: motion-fade var(--booth-duration-short) var(--booth-ease-standard) both;
+}
+
+.motion-welcome-exit {
+  animation: motion-welcome-exit 240ms var(--booth-ease-standard) both;
+  pointer-events: none;
+}
+
+.motion-stagger > * {
+  animation: motion-card var(--booth-duration-medium) var(--booth-ease-emphasized) both;
+}
+
+.motion-stagger > *:nth-child(2) { animation-delay: 45ms; }
+.motion-stagger > *:nth-child(3) { animation-delay: 90ms; }
+.motion-stagger > *:nth-child(4) { animation-delay: 135ms; }
+.motion-stagger > *:nth-child(5) { animation-delay: 180ms; }
+.motion-stagger > *:nth-child(6) { animation-delay: 225ms; }
 
 .motion-toast-enter {
   animation: motion-toast-enter var(--booth-duration-medium) var(--booth-ease-emphasized) both;
@@ -298,6 +390,37 @@ html[data-theme="dark"] .booth-focus-ring {
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes motion-section {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes motion-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes motion-welcome-exit {
+  from {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.015);
+    filter: blur(3px);
   }
 }
 

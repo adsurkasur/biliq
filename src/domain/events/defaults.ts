@@ -7,6 +7,7 @@ import type {
   CaptureMode,
   EventConfig,
   GifCaptureSettings,
+  WelcomeScreenConfig,
   VideoCaptureSettings
 } from "@/domain/events/types";
 import { createEntityId } from "@/shared/lib/id";
@@ -98,10 +99,114 @@ export function createDefaultEventConfig(
     outputHeight: preset.height,
     layoutId: DEFAULT_LAYOUT_ID,
     framePlacement: "fit",
+    welcomeScreen: createDefaultWelcomeScreenConfig(preset.width, preset.height),
     printerMode: "browser-print",
     createdAt: now,
     updatedAt: now,
     ...overrides
+  };
+}
+
+export function createDefaultWelcomeScreenConfig(
+  canvasWidth: number,
+  canvasHeight: number
+): WelcomeScreenConfig {
+  return {
+    enabled: true,
+    showCamera: true,
+    cameraFacingMode: "user",
+    cameraFit: "cover",
+    canvasWidth,
+    canvasHeight,
+    backgroundColor: "#171715",
+    overlayLayers: [],
+    elements: [
+      {
+        id: "welcome-title",
+        type: "title",
+        text: "Welcome!",
+        x: Math.round(canvasWidth * 0.08),
+        y: Math.round(canvasHeight * 0.12),
+        width: Math.round(canvasWidth * 0.84),
+        height: Math.round(canvasHeight * 0.12),
+        rotation: 0,
+        opacity: 1,
+        fontSize: Math.round(canvasWidth * 0.065),
+        fontWeight: 800,
+        color: "#FFFFFF",
+        borderRadius: 0,
+        visible: true
+      },
+      {
+        id: "welcome-subtitle",
+        type: "subtitle",
+        text: "Tap below when you're ready to create a memory.",
+        x: Math.round(canvasWidth * 0.12),
+        y: Math.round(canvasHeight * 0.24),
+        width: Math.round(canvasWidth * 0.76),
+        height: Math.round(canvasHeight * 0.1),
+        rotation: 0,
+        opacity: 0.92,
+        fontSize: Math.round(canvasWidth * 0.026),
+        fontWeight: 600,
+        color: "#FFFFFF",
+        borderRadius: 0,
+        visible: true
+      },
+      {
+        id: "welcome-start-button",
+        type: "start-button",
+        text: "Start",
+        x: Math.round(canvasWidth * 0.2),
+        y: Math.round(canvasHeight * 0.78),
+        width: Math.round(canvasWidth * 0.6),
+        height: Math.round(canvasHeight * 0.1),
+        rotation: 0,
+        opacity: 1,
+        fontSize: Math.round(canvasWidth * 0.035),
+        fontWeight: 800,
+        color: "#092E29",
+        backgroundColor: "#A7D8CF",
+        borderRadius: 999,
+        visible: true
+      }
+    ]
+  };
+}
+
+export function getWelcomeScreenConfig(event: EventConfig): WelcomeScreenConfig {
+  const fallback = createDefaultWelcomeScreenConfig(event.outputWidth, event.outputHeight);
+  const configured = event.welcomeScreen;
+  if (!configured) return fallback;
+
+  const sourceWidth = configured.canvasWidth || event.outputWidth;
+  const sourceHeight = configured.canvasHeight || event.outputHeight;
+  const scaleX = event.outputWidth / sourceWidth;
+  const scaleY = event.outputHeight / sourceHeight;
+  const scaleText = Math.min(scaleX, scaleY);
+
+  return {
+    ...fallback,
+    ...configured,
+    canvasWidth: event.outputWidth,
+    canvasHeight: event.outputHeight,
+    overlayLayers: (configured.overlayLayers ?? []).map((layer) => ({
+      ...layer,
+      x: Math.round(layer.x * scaleX),
+      y: Math.round(layer.y * scaleY),
+      width: Math.round(layer.width * scaleX),
+      height: Math.round(layer.height * scaleY)
+    })),
+    elements: (configured.elements?.length ? configured.elements : fallback.elements).map(
+      (element) => ({
+        ...element,
+        x: Math.round(element.x * scaleX),
+        y: Math.round(element.y * scaleY),
+        width: Math.round(element.width * scaleX),
+        height: Math.round(element.height * scaleY),
+        fontSize: Math.max(12, Math.round(element.fontSize * scaleText))
+      })
+    )
   };
 }
 

@@ -24,7 +24,7 @@ Not implemented:
 ## Install And Run
 
 ```powershell
-cd "F:\My Files\Projects\client-gita"
+cd "F:\My Files\Projects\biliq"
 npm.cmd install
 npm.cmd run dev -- --hostname 127.0.0.1 --port 3000
 ```
@@ -46,6 +46,39 @@ npm.cmd run check
 ```
 
 `check` runs TypeScript and the production build.
+
+## Semantic Versioning
+
+Biliq follows `MAJOR.MINOR.PATCH` semantic versioning. While the product is
+below `1.0.0`, a minor bump can still represent a substantial compatible
+feature milestone.
+
+```powershell
+npm.cmd run version:help
+npm.cmd run version:show
+npm.cmd run version:check
+
+# Compatible bug fix: 0.2.0 -> 0.2.1
+npm.cmd run version:patch
+
+# Compatible feature release: 0.2.0 -> 0.3.0
+npm.cmd run version:minor
+
+# Breaking release: 0.2.0 -> 1.0.0
+npm.cmd run version:major
+
+# Start or advance a beta release
+npm.cmd run version:prerelease
+
+# Promote a beta to its stable version
+npm.cmd run version:release
+
+# Set an explicit valid SemVer
+npm.cmd run version:set -- 0.4.0
+```
+
+These commands synchronize `package.json` and `package-lock.json`. They do not
+create Git commits or tags, so the version change remains reviewable.
 
 ## Main Routes
 

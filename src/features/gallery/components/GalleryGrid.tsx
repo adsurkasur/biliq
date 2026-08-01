@@ -72,7 +72,7 @@ export function GalleryGrid({ eventSlug }: GalleryGridProps) {
 
   return (
     <div className="grid gap-4" data-app-guide="gallery-content">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="motion-stagger grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {photos.map((photo) => (
           <Card
             as="article"

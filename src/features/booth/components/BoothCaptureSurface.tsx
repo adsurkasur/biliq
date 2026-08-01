@@ -1,11 +1,10 @@
 "use client";
 
 import type { RefObject } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { Camera, Images, Repeat2, Video } from "lucide-react";
 import {
   getEnabledCaptureModes,
+  getWelcomeScreenConfig,
   getVideoCaptureSettings
 } from "@/domain/events/defaults";
 import { getCaptureModeLabel } from "@/domain/events/captureModes";
@@ -20,6 +19,8 @@ import { EventNavigation } from "@/shared/components/navigation/EventNavigation"
 
 interface BoothCaptureSurfaceProps {
   eventConfig: EventConfig;
+  showWelcomeScreen: boolean;
+  welcomeScreenExiting: boolean;
   activeMode: CaptureMode;
   captureState: CaptureState;
   cameraMessage: string;
@@ -31,11 +32,14 @@ interface BoothCaptureSurfaceProps {
   onCameraReady: () => void;
   onCameraError: (message: string) => void;
   onModeChange: (mode: CaptureMode) => void;
+  onEnterBooth: () => void;
   onStart: () => void;
 }
 
 export function BoothCaptureSurface({
   eventConfig,
+  showWelcomeScreen,
+  welcomeScreenExiting,
   activeMode,
   captureState,
   cameraMessage,
@@ -47,6 +51,7 @@ export function BoothCaptureSurface({
   onCameraReady,
   onCameraError,
   onModeChange,
+  onEnterBooth,
   onStart
 }: BoothCaptureSurfaceProps) {
   const totalShots = getCaptureCountForEvent(eventConfig);
@@ -54,8 +59,8 @@ export function BoothCaptureSurface({
   const canStart = captureState === "ready";
   const frameRatio = eventConfig.outputWidth / eventConfig.outputHeight;
   const frameHeightRatio = eventConfig.outputHeight / eventConfig.outputWidth;
-  const pathname = usePathname();
-  const returnToQuery = `?returnTo=${encodeURIComponent(pathname)}`;
+  const welcomeScreen = getWelcomeScreenConfig(eventConfig);
+  const isWelcomeVisible = showWelcomeScreen && welcomeScreen.enabled;
 
   return (
     <main className="h-dvh overflow-hidden bg-stone-950 text-white">
@@ -72,10 +77,13 @@ export function BoothCaptureSurface({
 
         <CameraPreview
           videoRef={videoRef}
-          preferredFacingMode="environment"
+          preferredFacingMode={isWelcomeVisible ? welcomeScreen.cameraFacingMode : "environment"}
           outputWidth={eventConfig.outputWidth}
           outputHeight={eventConfig.outputHeight}
           eventConfig={eventConfig}
+          overlayLayers={isWelcomeVisible ? [] : undefined}
+          videoVisible={isWelcomeVisible ? welcomeScreen.showCamera : true}
+          videoFit={isWelcomeVisible ? welcomeScreen.cameraFit : "cover"}
           includeAudio={getVideoCaptureSettings(eventConfig).includeAudio}
           onReady={onCameraReady}
           onError={onCameraError}
@@ -87,16 +95,26 @@ export function BoothCaptureSurface({
             maxHeight: "100dvh"
           }}
         >
-          <CountdownOverlay
-            value={countdown}
-            label={
-              shotProgress
-                ? `${activeMode === "photo" ? "Photo" : "Frame"} ${shotProgress.current} of ${shotProgress.total}`
-                : getCaptureModeLabel(activeMode)
-            }
-          />
+          {isWelcomeVisible ? (
+            <WelcomeScreenOverlay
+              config={welcomeScreen}
+              isExiting={welcomeScreenExiting}
+              onEnterBooth={onEnterBooth}
+            />
+          ) : (
+            <div className="motion-section" key="capture-experience">
+              <CountdownOverlay
+                value={countdown}
+                label={
+                  shotProgress
+                    ? `${activeMode === "photo" ? "Photo" : "Frame"} ${shotProgress.current} of ${shotProgress.total}`
+                    : getCaptureModeLabel(activeMode)
+                }
+              />
+            </div>
+          )}
 
-          {captureFeedbackKey > 0 ? (
+          {!isWelcomeVisible && captureFeedbackKey > 0 ? (
             <div
               key={captureFeedbackKey}
               className="capture-flash pointer-events-none absolute inset-0 z-40 bg-white"
@@ -104,7 +122,7 @@ export function BoothCaptureSurface({
             />
           ) : null}
 
-          {captureFeedbackKey > 0 && captureState === "processing" ? (
+          {!isWelcomeVisible && captureFeedbackKey > 0 && captureState === "processing" ? (
             <div
               key={`pulse-${captureFeedbackKey}`}
               className="capture-success-pulse pointer-events-none absolute left-1/2 top-1/2 z-40 -translate-x-1/2 -translate-y-1/2 rounded-[var(--booth-radius-full)] bg-white/95 px-5 py-2 text-lg font-black text-stone-950 shadow-[var(--booth-elevation-3)]"
@@ -113,7 +131,8 @@ export function BoothCaptureSurface({
             </div>
           ) : null}
 
-          <div data-app-guide="capture-controls" className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-4 p-5 text-center">
+          {!isWelcomeVisible ? (
+          <div data-app-guide="capture-controls" className="motion-section pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-4 p-5 text-center">
             {canStart && enabledModes.length > 1 ? (
               <div
                 className="pointer-events-auto grid max-w-2xl grid-cols-2 gap-2 rounded-[var(--booth-radius-2xl)] border border-white/10 bg-stone-950/72 p-2 shadow-[var(--booth-elevation-3)] backdrop-blur-md sm:grid-cols-4"
@@ -169,9 +188,100 @@ export function BoothCaptureSurface({
               {startButtonLabel(activeMode, totalShots)}
             </button>
           </div>
+          ) : null}
         </CameraPreview>
       </div>
     </main>
+  );
+}
+
+function WelcomeScreenOverlay({
+  config,
+  isExiting,
+  onEnterBooth
+}: {
+  config: ReturnType<typeof getWelcomeScreenConfig>;
+  isExiting: boolean;
+  onEnterBooth: () => void;
+}) {
+  return (
+    <div
+      className={`${isExiting ? "motion-welcome-exit" : "motion-section"} absolute inset-0`}
+      key="welcome-experience"
+      style={{
+        backgroundColor: config.showCamera ? undefined : config.backgroundColor,
+        containerType: "inline-size"
+      }}
+    >
+      <div
+        className="pointer-events-none absolute inset-0 z-0"
+        style={{
+          background: config.showCamera
+            ? "linear-gradient(to bottom, rgba(0,0,0,.48), rgba(0,0,0,.06) 45%, rgba(0,0,0,.58))"
+            : config.backgroundColor
+        }}
+      />
+
+      {config.overlayLayers.filter((layer) => layer.visible).map((layer) => (
+        <img
+          key={layer.id}
+          src={layer.imageDataUrl}
+          alt=""
+          aria-hidden="true"
+          className="pointer-events-none absolute object-fill"
+          style={{
+            left: `${(layer.x / config.canvasWidth) * 100}%`,
+            top: `${(layer.y / config.canvasHeight) * 100}%`,
+            width: `${(layer.width / config.canvasWidth) * 100}%`,
+            height: `${(layer.height / config.canvasHeight) * 100}%`,
+            transform: `rotate(${layer.rotation}deg)`,
+            opacity: layer.opacity,
+            zIndex: 10 + layer.zIndex
+          }}
+        />
+      ))}
+
+      {config.elements.filter((element) => element.visible).map((element) => {
+        const style = {
+          left: `${(element.x / config.canvasWidth) * 100}%`,
+          top: `${(element.y / config.canvasHeight) * 100}%`,
+          width: `${(element.width / config.canvasWidth) * 100}%`,
+          height: `${(element.height / config.canvasHeight) * 100}%`,
+          transform: `rotate(${element.rotation}deg)`,
+          opacity: element.opacity,
+          color: element.color,
+          backgroundColor: element.type === "start-button" ? element.backgroundColor : "transparent",
+          borderRadius: element.borderRadius,
+          fontSize: `clamp(14px, ${(element.fontSize / config.canvasWidth) * 100}cqw, ${element.fontSize}px)`,
+          fontWeight: element.fontWeight,
+          zIndex: 40
+        };
+
+        if (element.type === "start-button") {
+          return (
+            <button
+              key={element.id}
+              type="button"
+              onClick={onEnterBooth}
+              className="booth-focus-ring booth-start-enter absolute grid place-items-center px-4 text-center leading-tight shadow-[var(--booth-elevation-3)] transition-all hover:brightness-110 active:scale-95"
+              style={style}
+            >
+              {element.text}
+            </button>
+          );
+        }
+
+        return (
+          <div
+            key={element.id}
+            className="pointer-events-none absolute grid place-items-center px-3 text-center leading-tight"
+            style={style}
+          >
+            {element.text}
+          </div>
+        );
+      })}
+    </div>
   );
 }
 

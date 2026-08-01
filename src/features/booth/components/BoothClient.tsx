@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { BoothCaptureSurface } from "@/features/booth/components/BoothCaptureSurface";
 import { BoothReviewPanel } from "@/features/booth/components/BoothReviewPanel";
@@ -16,6 +17,8 @@ interface BoothClientProps {
 }
 
 export function BoothClient({ eventSlug }: BoothClientProps) {
+  const [showWelcomeScreen, setShowWelcomeScreen] = useState(true);
+  const [isLeavingWelcome, setIsLeavingWelcome] = useState(false);
   const {
     activeMode,
     cameraMessage,
@@ -72,6 +75,8 @@ export function BoothClient({ eventSlug }: BoothClientProps) {
     return (
       <BoothCaptureSurface
         eventConfig={eventConfig}
+        showWelcomeScreen={showWelcomeScreen}
+        welcomeScreenExiting={isLeavingWelcome}
         activeMode={activeMode}
         captureState={captureState}
         cameraMessage={cameraMessage}
@@ -83,6 +88,14 @@ export function BoothClient({ eventSlug }: BoothClientProps) {
         onCameraReady={handleCameraReady}
         onCameraError={handleCameraError}
         onModeChange={handleModeChange}
+        onEnterBooth={() => {
+          if (isLeavingWelcome) return;
+          setIsLeavingWelcome(true);
+          window.setTimeout(
+            () => setShowWelcomeScreen(false),
+            document.documentElement.dataset.motion === "reduced" ? 1 : 240
+          );
+        }}
         onStart={handleStart}
       />
     );
