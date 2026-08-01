@@ -204,7 +204,7 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
               </button>
             </div>
             <p className="hidden text-sm text-[var(--booth-on-surface-variant)] md:block">
-              Drag items directly on the canvas. Use Advanced only for exact values.
+              Drag freely beyond the canvas; edges and centers stay magnetic. Use Ctrl/Cmd to bypass snapping.
             </p>
           </div>
 

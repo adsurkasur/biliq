@@ -8,9 +8,10 @@ interface TooltipProps {
   content: React.ReactNode;
   children: React.ReactElement;
   delayMs?: number;
+  touchHold?: boolean;
 }
 
-export function Tooltip({ content, children, delayMs = 300 }: TooltipProps) {
+export function Tooltip({ content, children, delayMs = 300, touchHold = false }: TooltipProps) {
   const tooltipId = useId();
   const [isOpen, setIsOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -18,9 +19,16 @@ export function Tooltip({ content, children, delayMs = 300 }: TooltipProps) {
   const triggerRef = useRef<HTMLElement | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
+  const holdTriggeredRef = useRef(false);
+  const holdTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const holdStartRef = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+    };
   }, []);
 
   const openTooltip = useCallback(() => {
@@ -51,13 +59,24 @@ export function Tooltip({ content, children, delayMs = 300 }: TooltipProps) {
     closeTooltip();
   };
 
-  const handleClick = () => {
+  const handleClick = (event: React.MouseEvent) => {
+    if (holdTriggeredRef.current) {
+      event.preventDefault();
+      event.stopPropagation();
+      holdTriggeredRef.current = false;
+      return;
+    }
     // Toggle on tap, useful for touch devices
     if (isOpen) {
       closeTooltip();
     } else {
       openTooltip();
     }
+  };
+
+  const clearHoldTimer = () => {
+    if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+    holdTimerRef.current = null;
   };
 
   // Close on Escape or Outside interaction
@@ -160,8 +179,44 @@ export function Tooltip({ content, children, delayMs = 300 }: TooltipProps) {
       childProps.onBlur?.(e);
     },
     onClick: (e: any) => {
-      handleClick();
+      handleClick(e);
+      if (e.defaultPrevented) return;
       childProps.onClick?.(e);
+    },
+    onPointerDown: (e: React.PointerEvent) => {
+      if (touchHold && e.pointerType === "touch") {
+        clearHoldTimer();
+        holdStartRef.current = { x: e.clientX, y: e.clientY };
+        holdTimerRef.current = setTimeout(() => {
+          holdTriggeredRef.current = true;
+          openTooltip();
+        }, 450);
+      }
+      childProps.onPointerDown?.(e);
+    },
+    onPointerUp: (e: React.PointerEvent) => {
+      clearHoldTimer();
+      holdStartRef.current = null;
+      childProps.onPointerUp?.(e);
+    },
+    onPointerCancel: (e: React.PointerEvent) => {
+      clearHoldTimer();
+      holdStartRef.current = null;
+      childProps.onPointerCancel?.(e);
+    },
+    onPointerMove: (e: React.PointerEvent) => {
+      if (e.pointerType === "touch" && holdStartRef.current) {
+        const distance = Math.hypot(
+          e.clientX - holdStartRef.current.x,
+          e.clientY - holdStartRef.current.y
+        );
+        if (distance > 8) clearHoldTimer();
+      }
+      childProps.onPointerMove?.(e);
+    },
+    onContextMenu: (e: React.MouseEvent) => {
+      if (holdTriggeredRef.current) e.preventDefault();
+      childProps.onContextMenu?.(e);
     },
     "aria-describedby": isOpen ? tooltipId : childProps["aria-describedby"],
   } as any);
@@ -177,7 +232,7 @@ export function Tooltip({ content, children, delayMs = 300 }: TooltipProps) {
           className={cn(
             "fixed z-[100] max-w-[240px] rounded-[var(--booth-radius-md)] px-3 py-2 text-xs font-medium leading-relaxed",
             "bg-[var(--booth-on-surface)] text-[var(--booth-surface)] shadow-[var(--booth-elevation-2)]",
-            "pointer-events-none motion-enter"
+            "pointer-events-none motion-pop"
           )}
           style={{
             ...style,

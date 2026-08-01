@@ -246,15 +246,15 @@ export function normalizeLayoutSlot(
   const width = clampInteger(
     Number(slot.width) || canvasWidth,
     1,
-    canvasWidth
+    canvasWidth * 2
   );
   const height = clampInteger(
     Number(slot.height) || canvasHeight,
     1,
-    canvasHeight
+    canvasHeight * 2
   );
-  const x = clampInteger(Number(slot.x) || 0, 0, Math.max(0, canvasWidth - width));
-  const y = clampInteger(Number(slot.y) || 0, 0, Math.max(0, canvasHeight - height));
+  const x = clampInteger(Number(slot.x) || 0, -canvasWidth, canvasWidth);
+  const y = clampInteger(Number(slot.y) || 0, -canvasHeight, canvasHeight);
   const borderRadiusValue =
     slot.borderRadius === undefined ? undefined : Number(slot.borderRadius);
 

@@ -44,6 +44,7 @@ describe("capture mode defaults", () => {
     const welcome = getWelcomeScreenConfig(event);
 
     expect(welcome.enabled).toBe(true);
+    expect(welcome.orientation).toBe("portrait");
     expect(welcome.showCamera).toBe(true);
     expect(welcome.cameraFacingMode).toBe("user");
     expect(welcome.elements.map((element) => element.type)).toEqual([
@@ -51,6 +52,19 @@ describe("capture mode defaults", () => {
       "subtitle",
       "start-button"
     ]);
+  });
+
+  it("supports a welcome orientation independent from the photo output", () => {
+    const event = createDefaultEventConfig();
+    event.welcomeScreen = {
+      ...event.welcomeScreen!,
+      orientation: "landscape"
+    };
+
+    const welcome = getWelcomeScreenConfig(event);
+    expect(welcome.orientation).toBe("landscape");
+    expect(welcome.canvasWidth).toBe(1600);
+    expect(welcome.canvasHeight).toBe(1200);
   });
 
   it("rescales a welcome design when the event output changes", () => {

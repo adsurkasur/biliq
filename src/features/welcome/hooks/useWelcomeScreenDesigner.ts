@@ -1,13 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getWelcomeScreenConfig } from "@/domain/events/defaults";
+import {
+  getWelcomeScreenCanvasSize,
+  getWelcomeScreenConfig
+} from "@/domain/events/defaults";
 import { getEventBySlug, upsertEventConfig } from "@/domain/events/storage";
 import type {
   EventConfig,
   OverlayLayer,
   WelcomeScreenConfig,
-  WelcomeScreenElement
+  WelcomeScreenElement,
+  WelcomeScreenOrientation
 } from "@/domain/events/types";
 import { useToast } from "@/shared/components/ui/toast/useToast";
 import { createEntityId } from "@/shared/lib/id";
@@ -85,6 +89,44 @@ export function useWelcomeScreenDesigner(eventSlug: string) {
     setHasUnsavedChanges(true);
   }
 
+  function updateOrientation(orientation: WelcomeScreenOrientation) {
+    if (!eventConfig) return;
+    setWelcomeScreen((current) => {
+      if (!current || current.orientation === orientation) return current;
+      const { width, height } = getWelcomeScreenCanvasSize(
+        eventConfig.outputWidth,
+        eventConfig.outputHeight,
+        orientation
+      );
+      const scaleX = width / current.canvasWidth;
+      const scaleY = height / current.canvasHeight;
+      const scaleText = Math.min(scaleX, scaleY);
+      return {
+        ...current,
+        orientation,
+        canvasWidth: width,
+        canvasHeight: height,
+        overlayLayers: current.overlayLayers.map((layer) => ({
+          ...layer,
+          x: Math.round(layer.x * scaleX),
+          y: Math.round(layer.y * scaleY),
+          width: Math.round(layer.width * scaleX),
+          height: Math.round(layer.height * scaleY),
+          updatedAt: new Date().toISOString()
+        })),
+        elements: current.elements.map((element) => ({
+          ...element,
+          x: Math.round(element.x * scaleX),
+          y: Math.round(element.y * scaleY),
+          width: Math.round(element.width * scaleX),
+          height: Math.round(element.height * scaleY),
+          fontSize: Math.max(12, Math.round(element.fontSize * scaleText))
+        }))
+      };
+    });
+    setHasUnsavedChanges(true);
+  }
+
   async function addFrameLayer(file?: File) {
     if (!file || !welcomeScreen) return;
     if (!file.type.startsWith("image/")) {
@@ -141,9 +183,7 @@ export function useWelcomeScreenDesigner(eventSlug: string) {
       const saved = await upsertEventConfig({
         ...eventConfig,
         welcomeScreen: {
-          ...welcomeScreen,
-          canvasWidth: eventConfig.outputWidth,
-          canvasHeight: eventConfig.outputHeight
+          ...welcomeScreen
         }
       });
       setEventConfig(saved);
@@ -168,6 +208,7 @@ export function useWelcomeScreenDesigner(eventSlug: string) {
     updateWelcome,
     updateElement,
     updateLayer,
+    updateOrientation,
     addFrameLayer,
     removeLayer,
     saveWelcomeScreen

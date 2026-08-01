@@ -57,10 +57,16 @@ export function BoothCaptureSurface({
   const totalShots = getCaptureCountForEvent(eventConfig);
   const enabledModes = getEnabledCaptureModes(eventConfig);
   const canStart = captureState === "ready";
-  const frameRatio = eventConfig.outputWidth / eventConfig.outputHeight;
-  const frameHeightRatio = eventConfig.outputHeight / eventConfig.outputWidth;
   const welcomeScreen = getWelcomeScreenConfig(eventConfig);
   const isWelcomeVisible = showWelcomeScreen && welcomeScreen.enabled;
+  const activeCanvasWidth = isWelcomeVisible
+    ? welcomeScreen.canvasWidth
+    : eventConfig.outputWidth;
+  const activeCanvasHeight = isWelcomeVisible
+    ? welcomeScreen.canvasHeight
+    : eventConfig.outputHeight;
+  const frameRatio = activeCanvasWidth / activeCanvasHeight;
+  const frameHeightRatio = activeCanvasHeight / activeCanvasWidth;
 
   return (
     <main className="h-dvh overflow-hidden bg-stone-950 text-white">
@@ -78,8 +84,8 @@ export function BoothCaptureSurface({
         <CameraPreview
           videoRef={videoRef}
           preferredFacingMode={isWelcomeVisible ? welcomeScreen.cameraFacingMode : "environment"}
-          outputWidth={eventConfig.outputWidth}
-          outputHeight={eventConfig.outputHeight}
+          outputWidth={activeCanvasWidth}
+          outputHeight={activeCanvasHeight}
           eventConfig={eventConfig}
           overlayLayers={isWelcomeVisible ? [] : undefined}
           videoVisible={isWelcomeVisible ? welcomeScreen.showCamera : true}

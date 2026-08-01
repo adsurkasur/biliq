@@ -12,6 +12,12 @@ import {
   DesignerTransformHandles,
   type TransformAction
 } from "@/features/designer/components/DesignerTransformHandles";
+import {
+  snapMovedRect,
+  snapResizedRect,
+  type CanvasRect,
+  type CanvasSnapGuide
+} from "@/features/designer/lib/canvasSnapping";
 import type { WelcomeSelection } from "@/features/welcome/hooks/useWelcomeScreenDesigner";
 import { cn } from "@/shared/lib/classNames";
 
@@ -38,6 +44,7 @@ interface DragState {
   initialRotation: number;
   initialPointerAngle: number;
   aspectRatioLocked: boolean;
+  aspectRatio: number;
 }
 
 export function WelcomeCanvas({
@@ -50,6 +57,7 @@ export function WelcomeCanvas({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const [dragState, setDragState] = useState<DragState | null>(null);
+  const [snapGuides, setSnapGuides] = useState<CanvasSnapGuide[]>([]);
 
   useEffect(() => {
     if (!dragState) return;
@@ -57,17 +65,41 @@ export function WelcomeCanvas({
     const handlePointerMove = (event: PointerEvent) => {
       if (!canvasRef.current) return;
       const rect = canvasRef.current.getBoundingClientRect();
-      const deltaX = (event.clientX - dragState.startX) * (config.canvasWidth / rect.width);
-      const deltaY = (event.clientY - dragState.startY) * (config.canvasHeight / rect.height);
+      let deltaX = (event.clientX - dragState.startX) * (config.canvasWidth / rect.width);
+      let deltaY = (event.clientY - dragState.startY) * (config.canvasHeight / rect.height);
       let x = dragState.initialX;
       let y = dragState.initialY;
       let width = dragState.initialWidth;
       let height = dragState.initialHeight;
       let rotation = dragState.initialRotation;
+      let guides: CanvasSnapGuide[] = [];
+      const bypassSnapping = event.ctrlKey || event.metaKey;
+      const otherRects: CanvasRect[] = [
+        ...config.elements
+          .filter((element) => !(dragState.kind === "element" && element.id === dragState.id))
+          .map(({ x, y, width, height }) => ({ x, y, width, height })),
+        ...config.overlayLayers
+          .filter((layer) => layer.visible && !(dragState.kind === "layer" && layer.id === dragState.id))
+          .map(({ x, y, width, height }) => ({ x, y, width, height }))
+      ];
 
       if (dragState.action === "move") {
+        if (event.shiftKey) {
+          if (Math.abs(deltaX) >= Math.abs(deltaY)) deltaY = 0;
+          else deltaX = 0;
+        }
         x += deltaX;
         y += deltaY;
+        if (!bypassSnapping) {
+          const snapped = snapMovedRect({
+            rect: { x, y, width, height },
+            canvasWidth: config.canvasWidth,
+            canvasHeight: config.canvasHeight,
+            otherRects
+          });
+          ({ x, y, width, height } = snapped.rect);
+          guides = snapped.guides;
+        }
       } else if (dragState.action === "rotate") {
         const centerX = dragState.initialX + dragState.initialWidth / 2;
         const centerY = dragState.initialY + dragState.initialHeight / 2;
@@ -76,6 +108,7 @@ export function WelcomeCanvas({
         const currentAngle = Math.atan2(event.clientY - screenCenterY, event.clientX - screenCenterX);
         rotation = dragState.initialRotation +
           (currentAngle - dragState.initialPointerAngle) * (180 / Math.PI);
+        if (event.shiftKey) rotation = Math.round(rotation / 15) * 15;
       } else {
         const action = dragState.action;
         const isLeft = ["resize-tl", "resize-bl", "resize-l"].includes(action);
@@ -94,7 +127,7 @@ export function WelcomeCanvas({
           heightDelta *= vertical ? 2 : 1;
         }
 
-        const ratio = dragState.initialWidth / dragState.initialHeight;
+        const ratio = dragState.aspectRatio;
         if (keepRatio) {
           if (!vertical || Math.abs(widthDelta) >= Math.abs(heightDelta)) {
             heightDelta = widthDelta / ratio;
@@ -120,7 +153,24 @@ export function WelcomeCanvas({
               ? dragState.initialY + (dragState.initialHeight - height) / 2
               : dragState.initialY;
         }
+
+        if (!bypassSnapping) {
+          const snapped = snapResizedRect({
+            rect: { x, y, width, height },
+            canvasWidth: config.canvasWidth,
+            canvasHeight: config.canvasHeight,
+            otherRects,
+            edges: { left: isLeft, right: isRight, top: isTop, bottom: isBottom },
+            preserveAspect: keepRatio,
+            aspectRatio: ratio,
+            centered: event.altKey
+          });
+          ({ x, y, width, height } = snapped.rect);
+          guides = snapped.guides;
+        }
       }
+
+      setSnapGuides(guides);
 
       const updates = {
         x: Math.round(x),
@@ -133,7 +183,10 @@ export function WelcomeCanvas({
       else onUpdateLayer(dragState.id, updates);
     };
 
-    const handlePointerUp = () => setDragState(null);
+    const handlePointerUp = () => {
+      setDragState(null);
+      setSnapGuides([]);
+    };
     window.addEventListener("pointermove", handlePointerMove);
     window.addEventListener("pointerup", handlePointerUp);
     window.addEventListener("pointercancel", handlePointerUp);
@@ -176,7 +229,8 @@ export function WelcomeCanvas({
       initialHeight: object.height,
       initialRotation: object.rotation,
       initialPointerAngle,
-      aspectRatioLocked
+      aspectRatioLocked,
+      aspectRatio: object.width / object.height
     });
   }
 
@@ -188,7 +242,7 @@ export function WelcomeCanvas({
           <h2 className="mt-1 text-xl font-bold">{config.canvasWidth} × {config.canvasHeight}px</h2>
         </div>
         <p className="text-sm text-[var(--booth-on-surface-variant)]">
-          Drag elements · side handles resize one axis · corners resize both
+          Shift: axis/ratio · Alt: resize from center · Ctrl/Cmd: free placement
         </p>
       </div>
 
@@ -210,10 +264,12 @@ export function WelcomeCanvas({
           videoFit={config.cameraFit}
           className="h-full w-full rounded-[var(--booth-radius-lg)] ring-1 ring-[var(--booth-outline-variant)]/35"
           style={{ backgroundColor: config.backgroundColor }}
-        >
+        />
+
+        <div className="pointer-events-none absolute inset-0 z-30 overflow-visible rounded-[var(--booth-radius-lg)]">
           <div
             className={cn(
-              "absolute inset-0 transition-opacity duration-[var(--booth-duration-medium)]",
+              "absolute inset-0 rounded-[var(--booth-radius-lg)] transition-opacity duration-[var(--booth-duration-medium)]",
               config.showCamera
                 ? "bg-gradient-to-b from-black/45 via-transparent to-black/55"
                 : "opacity-100"
@@ -222,10 +278,20 @@ export function WelcomeCanvas({
           />
 
           {!config.showCamera ? (
-            <div className="pointer-events-none absolute inset-0 grid place-items-center text-white/35">
+            <div className="absolute inset-0 grid place-items-center text-white/35">
               <Camera className="h-20 w-20" />
             </div>
           ) : null}
+
+          {snapGuides.map((guide, index) => (
+            <div
+              key={`${guide.type}-${guide.pos}-${index}`}
+              className="absolute z-[70] bg-[var(--booth-primary)] shadow-[0_0_0_1px_rgba(255,255,255,.25)]"
+              style={guide.type === "vertical"
+                ? { left: `${(guide.pos / config.canvasWidth) * 100}%`, top: "-8%", bottom: "-8%", width: 1 }
+                : { top: `${(guide.pos / config.canvasHeight) * 100}%`, left: "-8%", right: "-8%", height: 1 }}
+            />
+          ))}
 
           {config.overlayLayers.filter((layer) => layer.visible).map((layer) => {
             const selected = selection.kind === "layer" && selection.id === layer.id;
@@ -241,7 +307,7 @@ export function WelcomeCanvas({
                     }
                     beginInteraction(event, "layer", layer.id, "move", layer, Boolean(layer.aspectRatioLocked));
                   }}
-                  className={cn("absolute touch-none", selected ? "ring-2 ring-[var(--booth-primary)]" : "hover:ring-2 hover:ring-[var(--booth-primary)]/45")}
+                  className={cn("pointer-events-auto absolute touch-none", selected ? "ring-2 ring-[var(--booth-primary)]" : "hover:ring-2 hover:ring-[var(--booth-primary)]/45")}
                   style={{
                     left: `${(layer.x / config.canvasWidth) * 100}%`,
                     top: `${(layer.y / config.canvasHeight) * 100}%`,
@@ -252,7 +318,7 @@ export function WelcomeCanvas({
                     zIndex: 20 + layer.zIndex
                   }}
                 >
-                  <img src={layer.imageDataUrl} alt="" className="pointer-events-none h-full w-full object-fill" draggable={false} />
+                  <img src={layer.imageDataUrl} alt="" className="pointer-events-none h-full w-full select-none object-fill" draggable={false} />
                 </button>
                 {selected && !layer.locked ? (
                   <DesignerTransformHandles
@@ -280,7 +346,7 @@ export function WelcomeCanvas({
                   type="button"
                   onPointerDown={(event) => beginInteraction(event, "element", element.id, "move", element, false)}
                   className={cn(
-                    "absolute grid touch-none place-items-center overflow-hidden px-3 text-center leading-tight",
+                    "pointer-events-auto absolute grid touch-none place-items-center overflow-hidden px-3 text-center leading-tight",
                     selected ? "ring-2 ring-[var(--booth-primary)]" : "hover:ring-2 hover:ring-[var(--booth-primary)]/45"
                   )}
                   style={{
@@ -318,7 +384,7 @@ export function WelcomeCanvas({
               </div>
             );
           })}
-        </CameraPreview>
+        </div>
       </div>
     </section>
   );

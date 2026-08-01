@@ -338,6 +338,7 @@ export function DesignerCanvasPreview({
         nextRotation = dragState.initialRotation + deltaAngle * (180 / Math.PI);
         nextRotation = Math.round(nextRotation) % 360;
         if (nextRotation < 0) nextRotation += 360;
+        if (e.shiftKey) nextRotation = Math.round(nextRotation / 15) * 15;
       }
 
       setSnapGuides(guides);
@@ -417,12 +418,12 @@ export function DesignerCanvasPreview({
 
       <div
         ref={canvasRef}
-        className="relative mx-auto w-full max-w-[720px] overflow-hidden rounded-[var(--booth-radius-lg)] border border-[var(--booth-outline-variant)]/30 bg-[var(--booth-surface-container)]"
+        className="relative mx-auto w-full max-w-[720px] overflow-visible rounded-[var(--booth-radius-lg)] border border-[var(--booth-outline-variant)]/30 bg-[var(--booth-surface-container)]"
         data-guide-target="live-layout-preview canvas-viewport"
         style={{ aspectRatio: `${eventConfig.outputWidth} / ${eventConfig.outputHeight}` }}
       >
         <div
-          className="absolute inset-0"
+          className="pointer-events-none absolute inset-0 overflow-hidden rounded-[var(--booth-radius-lg)]"
           style={{
             background:
               "linear-gradient(45deg, rgba(0,121,107,0.06) 25%, transparent 25%), linear-gradient(-45deg, rgba(0,121,107,0.06) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, rgba(0,121,107,0.06) 75%), linear-gradient(-45deg, transparent 75%, rgba(0,121,107,0.06) 75%)",

@@ -156,38 +156,38 @@ export function EventConsole() {
                   </div>
                 </div>
 
-                <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5" data-app-guide="event-actions">
+                <div className="grid gap-2 sm:grid-cols-3" data-app-guide="event-actions">
                   <Link
                     href={routes.setup(event.slug)}
-                    className={buttonClassName({ variant: "secondary", size: "sm" })}
+                    className={buttonClassName({ variant: "secondary", size: "sm", className: "whitespace-nowrap" })}
                   >
                     <Settings className="h-4 w-4" aria-hidden="true" />
                     Setup
                   </Link>
                   <Link
                     href={routes.welcome(event.slug)}
-                    className={buttonClassName({ variant: "secondary", size: "sm" })}
+                    className={buttonClassName({ variant: "secondary", size: "sm", className: "whitespace-nowrap" })}
                   >
                     <Sparkles className="h-4 w-4" aria-hidden="true" />
                     Welcome
                   </Link>
                   <Link
                     href={routes.designer(event.slug)}
-                    className={buttonClassName({ variant: "tonal", size: "sm" })}
+                    className={buttonClassName({ variant: "tonal", size: "sm", className: "whitespace-nowrap" })}
                   >
                     <Palette className="h-4 w-4" aria-hidden="true" />
                     Designer
                   </Link>
                   <Link
                     href={routes.booth(event.slug)}
-                    className={buttonClassName({ variant: "dark", size: "sm" })}
+                    className={buttonClassName({ variant: "dark", size: "sm", className: "whitespace-nowrap" })}
                   >
                     <Camera className="h-4 w-4" aria-hidden="true" />
                     Open booth
                   </Link>
                   <Link
                     href={routes.gallery(event.slug)}
-                    className={buttonClassName({ variant: "secondary", size: "sm" })}
+                    className={buttonClassName({ variant: "secondary", size: "sm", className: "whitespace-nowrap" })}
                   >
                     <GalleryHorizontal className="h-4 w-4" aria-hidden="true" />
                     Gallery

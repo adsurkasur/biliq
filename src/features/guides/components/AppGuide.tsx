@@ -8,13 +8,14 @@ import {
   ArrowRight,
   CheckCircle2,
   HelpCircle,
+  House,
   Settings,
   Sparkles,
   X
 } from "lucide-react";
 import { BiliqLogo } from "@/shared/components/brand/BiliqLogo";
 import { Button } from "@/shared/components/ui/Button";
-import { APP_VERSION_LABEL } from "@/shared/config/appVersion";
+import { Tooltip } from "@/shared/components/ui/Tooltip";
 import { routes } from "@/shared/config/routes";
 
 const WELCOME_SEEN_KEY = "biliq-app-welcome-seen.v1";
@@ -208,34 +209,39 @@ export function AppGuide() {
   return (
     <>
       {!phase ? (
-        <div className={`motion-pop no-print fixed right-4 z-[90] flex items-center gap-1.5 rounded-full border border-[var(--booth-outline-variant)]/30 bg-[var(--booth-surface-container-lowest)]/92 p-1.5 shadow-[var(--booth-elevation-3)] backdrop-blur-md ${pathname.startsWith("/booth/") ? "top-20" : "bottom-4"}`}>
-          <Link
-            href={routes.about}
-            className="booth-focus-ring rounded-full px-2.5 py-2 text-xs font-bold text-[var(--booth-on-surface-variant)] hover:bg-[var(--booth-surface-container)] hover:text-[var(--booth-on-surface)]"
-            aria-label={`Biliq ${APP_VERSION_LABEL}. Open About`}
-          >
-            {APP_VERSION_LABEL}
-          </Link>
-          {pathname !== routes.settings ? (
+        <div className={`motion-pop no-print fixed right-4 z-[90] flex items-center gap-1 rounded-full border border-[var(--booth-outline-variant)]/30 bg-[var(--booth-surface-container-lowest)]/92 p-1.5 shadow-[var(--booth-elevation-3)] backdrop-blur-md ${pathname.startsWith("/booth/") ? "top-20" : "bottom-4"}`}>
+          <Tooltip content="Home" delayMs={220} touchHold>
             <Link
-              href={`${routes.settings}?returnTo=${encodeURIComponent(pathname)}`}
-              data-app-guide="global-settings"
-              className="booth-focus-ring inline-flex min-h-10 items-center gap-2 rounded-full px-3 py-2 text-sm font-bold text-[var(--booth-on-surface-variant)] hover:bg-[var(--booth-surface-container)] hover:text-[var(--booth-on-surface)]"
-              aria-label="Open app settings"
+              href={routes.home}
+              className="booth-focus-ring grid h-10 w-10 place-items-center rounded-full text-[var(--booth-on-surface-variant)] transition-all hover:-translate-y-0.5 hover:bg-[var(--booth-surface-container)] hover:text-[var(--booth-on-surface)] active:translate-y-0"
+              aria-label="Home"
+              aria-current={pathname === routes.home ? "page" : undefined}
             >
-              <Settings className="h-4 w-4" />
-              <span className="hidden sm:inline">Settings</span>
+              <House className="h-[18px] w-[18px]" />
             </Link>
+          </Tooltip>
+          {pathname !== routes.settings ? (
+            <Tooltip content="Settings" delayMs={220} touchHold>
+              <Link
+                href={`${routes.settings}?returnTo=${encodeURIComponent(pathname)}`}
+                data-app-guide="global-settings"
+                className="booth-focus-ring grid h-10 w-10 place-items-center rounded-full text-[var(--booth-on-surface-variant)] transition-all hover:-translate-y-0.5 hover:bg-[var(--booth-surface-container)] hover:text-[var(--booth-on-surface)] active:translate-y-0"
+                aria-label="Settings"
+              >
+                <Settings className="h-[18px] w-[18px]" />
+              </Link>
+            </Tooltip>
           ) : null}
-          <button
-            type="button"
-            onClick={openGuide}
-            className="booth-focus-ring inline-flex min-h-10 items-center gap-2 rounded-full bg-[var(--booth-primary-container)] px-3 py-2 text-sm font-bold text-[var(--booth-on-primary-container)] hover:-translate-y-0.5 hover:brightness-105 active:translate-y-0"
-            aria-label={`Open ${guide.label} guide`}
-          >
-            <HelpCircle className="h-4 w-4" />
-            Guide
-          </button>
+          <Tooltip content={`${guide.label} guide`} delayMs={220} touchHold>
+            <button
+              type="button"
+              onClick={openGuide}
+              className="booth-focus-ring grid h-10 w-10 place-items-center rounded-full bg-[var(--booth-primary-container)] text-[var(--booth-on-primary-container)] transition-all hover:-translate-y-0.5 hover:brightness-105 active:translate-y-0"
+              aria-label={`Open ${guide.label} guide`}
+            >
+              <HelpCircle className="h-[18px] w-[18px]" />
+            </button>
+          </Tooltip>
         </div>
       ) : null}
 
@@ -481,8 +487,9 @@ function getPageGuide(pathname: string): PageGuide {
     return {
       label: "Events",
       steps: [
-        { title: "Your event workspace", description: "Every event lives here, with one clear path from setup to booth operation.", selector: "[data-app-guide='page-header']" },
-        { title: "Create an event", description: "Start here. Biliq will ask only for the guest experience first, then visual output.", selector: "[data-app-guide='create-event']" },
+        { title: "Welcome to Biliq", description: "The root page now introduces the complete booth workflow before moving into operator tasks.", selector: "[data-app-guide='home-welcome']" },
+        { title: "Open the studio", description: "Continue to your saved events, or create a new event directly from the welcome screen.", selector: "[data-app-guide='open-studio']" },
+        { title: "Your event workspace", description: "Every saved event lives here, with one clear path from setup to booth operation.", selector: "[data-app-guide='page-header']" },
         { title: "Continue an event", description: "Each card follows the same order: Setup, Welcome, Designer, Booth, then Gallery.", selector: "[data-app-guide='event-list']" },
         { title: "Adjust the app", description: "Theme and motion settings follow this device. Settings stays available from every page.", selector: "[data-app-guide='global-settings']" }
       ]
@@ -554,7 +561,8 @@ function getPageGuide(pathname: string): PageGuide {
       label: "Welcome Screen",
       steps: [
         { title: "Welcome canvas", description: "This canvas is shown before guests enter the booth. The real booth keeps its camera active behind these elements.", selector: "[data-app-guide='welcome-canvas']" },
-        { title: "Move and transform", description: "Drag an item to move it. Side handles resize one axis, corner handles resize both, and the top handle rotates. Hold Shift for proportions or Alt to resize from the center.", selector: "[data-app-guide='welcome-canvas']" },
+        { title: "Portrait or landscape", description: "Choose the welcome orientation independently. Biliq rescales the design while preserving every element and frame layer.", selector: "[data-app-guide='welcome-orientation']" },
+        { title: "Move and transform", description: "Drag an item to move it. Side handles resize one axis, corner handles resize both, and the top handle rotates. Hold Shift for axis/proportions, Alt to resize from center, or Ctrl/Cmd to bypass magnetic snapping.", selector: "[data-app-guide='welcome-canvas']" },
         { title: "Screen elements", description: "Select the title, subtitle, start button, or a custom frame layer. Eye controls hide items; frame locks prevent accidental canvas movement.", selector: "[data-app-guide='welcome-elements']" },
         { title: "Precise properties", description: "Edit wording, position, size, rotation, opacity, and colors here. Canvas dragging and property values always update the same selected item.", selector: "[data-app-guide='welcome-properties']" },
         { title: "Camera behavior", description: "Keep the live camera visible for the familiar mirror-like Lumabooth experience, or hide it for a branded splash screen.", selector: "[data-app-guide='welcome-camera']" },

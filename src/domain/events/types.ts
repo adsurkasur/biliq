@@ -36,6 +36,7 @@ export interface OverlayLayer {
 }
 
 export type WelcomeScreenElementType = "title" | "subtitle" | "start-button";
+export type WelcomeScreenOrientation = "portrait" | "landscape";
 
 export interface WelcomeScreenElement {
   id: string;
@@ -57,6 +58,7 @@ export interface WelcomeScreenElement {
 
 export interface WelcomeScreenConfig {
   enabled: boolean;
+  orientation: WelcomeScreenOrientation;
   showCamera: boolean;
   cameraFacingMode: "user" | "environment";
   cameraFit: "cover" | "contain";

@@ -9,6 +9,8 @@ import {
   EyeOff,
   ImagePlus,
   Lock,
+  RectangleHorizontal,
+  RectangleVertical,
   Save,
   Sparkles,
   Trash2,
@@ -23,6 +25,7 @@ import { Button, buttonClassName } from "@/shared/components/ui/Button";
 import { Card } from "@/shared/components/ui/Card";
 import { EmptyState } from "@/shared/components/ui/EmptyState";
 import { LoadingIndicator } from "@/shared/components/ui/LoadingIndicator";
+import { RangeSlider } from "@/shared/components/ui/RangeSlider";
 import { routes } from "@/shared/config/routes";
 import { cn } from "@/shared/lib/classNames";
 
@@ -47,6 +50,7 @@ export function WelcomeScreenDesignerClient({ eventSlug }: WelcomeScreenDesigner
     updateWelcome,
     updateElement,
     updateLayer,
+    updateOrientation,
     addFrameLayer,
     removeLayer,
     saveWelcomeScreen
@@ -146,6 +150,35 @@ export function WelcomeScreenDesignerClient({ eventSlug }: WelcomeScreenDesigner
               <Camera className="h-4 w-4" />
               {welcomeScreen.showCamera ? "Live camera on" : "Camera hidden"}
             </Button>
+            <div
+              className="inline-flex rounded-full bg-[var(--booth-surface-container)] p-1"
+              role="group"
+              aria-label="Welcome orientation"
+              data-app-guide="welcome-orientation"
+            >
+              <Button
+                type="button"
+                size="sm"
+                variant={welcomeScreen.orientation === "portrait" ? "tonal" : "ghost-surface"}
+                onClick={() => updateOrientation("portrait")}
+                aria-pressed={welcomeScreen.orientation === "portrait"}
+                className="min-h-9 px-3"
+              >
+                <RectangleVertical className="h-4 w-4" />
+                Portrait
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={welcomeScreen.orientation === "landscape" ? "tonal" : "ghost-surface"}
+                onClick={() => updateOrientation("landscape")}
+                aria-pressed={welcomeScreen.orientation === "landscape"}
+                className="min-h-9 px-3"
+              >
+                <RectangleHorizontal className="h-4 w-4" />
+                Landscape
+              </Button>
+            </div>
             <select
               className={compactSelectClass}
               value={welcomeScreen.cameraFacingMode}
@@ -166,7 +199,7 @@ export function WelcomeScreenDesignerClient({ eventSlug }: WelcomeScreenDesigner
             </select>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap justify-end gap-2 sm:ml-auto">
             <Link href={routes.booth(eventConfig.slug)} className={buttonClassName({ variant: "secondary", size: "sm" })}>
               Test in Booth
             </Link>
@@ -385,7 +418,7 @@ function WelcomeElementEditor({
         </div>
         <label className="grid gap-1.5 text-sm font-semibold">
           Opacity · {Math.round(element.opacity * 100)}%
-          <input type="range" min="0" max="1" step="0.05" value={element.opacity} onChange={(event) => updateNumber("opacity", event.target.value)} />
+          <RangeSlider min={0} max={1} step={0.05} value={element.opacity} onChange={(event) => updateNumber("opacity", event.target.value)} />
         </label>
         <div className="grid grid-cols-2 gap-3">
           <ColorField label="Text color" value={element.color} onChange={(color) => onUpdate(element.id, { color })} />
@@ -431,7 +464,7 @@ function WelcomeLayerEditor({
       </div>
       <label className="mt-4 grid gap-1.5 text-sm font-semibold">
         Opacity · {Math.round(layer.opacity * 100)}%
-        <input type="range" min="0" max="1" step="0.05" value={layer.opacity} onChange={(event) => updateNumber("opacity", event.target.value)} />
+        <RangeSlider min={0} max={1} step={0.05} value={layer.opacity} onChange={(event) => updateNumber("opacity", event.target.value)} />
       </label>
       <label className="mt-4 flex items-center gap-2 text-sm font-semibold">
         <input type="checkbox" checked={Boolean(layer.aspectRatioLocked)} onChange={(event) => onUpdate(layer.id, { aspectRatioLocked: event.target.checked })} />

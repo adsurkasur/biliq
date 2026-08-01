@@ -8,6 +8,7 @@ import type {
   EventConfig,
   GifCaptureSettings,
   WelcomeScreenConfig,
+  WelcomeScreenOrientation,
   VideoCaptureSettings
 } from "@/domain/events/types";
 import { createEntityId } from "@/shared/lib/id";
@@ -113,6 +114,7 @@ export function createDefaultWelcomeScreenConfig(
 ): WelcomeScreenConfig {
   return {
     enabled: true,
+    orientation: canvasHeight >= canvasWidth ? "portrait" : "landscape",
     showCamera: true,
     cameraFacingMode: "user",
     cameraFit: "cover",
@@ -181,15 +183,23 @@ export function getWelcomeScreenConfig(event: EventConfig): WelcomeScreenConfig 
 
   const sourceWidth = configured.canvasWidth || event.outputWidth;
   const sourceHeight = configured.canvasHeight || event.outputHeight;
-  const scaleX = event.outputWidth / sourceWidth;
-  const scaleY = event.outputHeight / sourceHeight;
+  const orientation: WelcomeScreenOrientation =
+    configured.orientation ?? (sourceHeight >= sourceWidth ? "portrait" : "landscape");
+  const { width: targetWidth, height: targetHeight } = getWelcomeScreenCanvasSize(
+    event.outputWidth,
+    event.outputHeight,
+    orientation
+  );
+  const scaleX = targetWidth / sourceWidth;
+  const scaleY = targetHeight / sourceHeight;
   const scaleText = Math.min(scaleX, scaleY);
 
   return {
     ...fallback,
     ...configured,
-    canvasWidth: event.outputWidth,
-    canvasHeight: event.outputHeight,
+    orientation,
+    canvasWidth: targetWidth,
+    canvasHeight: targetHeight,
     overlayLayers: (configured.overlayLayers ?? []).map((layer) => ({
       ...layer,
       x: Math.round(layer.x * scaleX),
@@ -208,6 +218,18 @@ export function getWelcomeScreenConfig(event: EventConfig): WelcomeScreenConfig 
       })
     )
   };
+}
+
+export function getWelcomeScreenCanvasSize(
+  outputWidth: number,
+  outputHeight: number,
+  orientation: WelcomeScreenOrientation
+): { width: number; height: number } {
+  const shortSide = Math.min(outputWidth, outputHeight);
+  const longSide = Math.max(outputWidth, outputHeight);
+  return orientation === "portrait"
+    ? { width: shortSide, height: longSide }
+    : { width: longSide, height: shortSide };
 }
 
 function clampNumber(

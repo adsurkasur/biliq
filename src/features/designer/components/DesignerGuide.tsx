@@ -216,6 +216,10 @@ const GUIDE_STEPS: GuideStep[] = [
           </li>
           <li className="flex gap-2">
             <span className="mt-0.5 text-[var(--booth-primary)]">•</span>
+            Elements may intentionally extend beyond the canvas. Edge snapping remains active, and the final exported output safely clips anything outside it.
+          </li>
+          <li className="flex gap-2">
+            <span className="mt-0.5 text-[var(--booth-primary)]">•</span>
             Hold <kbd className="rounded bg-[var(--booth-surface-container-high)] px-1.5 py-0.5 text-xs font-mono text-[var(--booth-on-surface)]">Ctrl</kbd> (or <kbd className="rounded bg-[var(--booth-surface-container-high)] px-1.5 py-0.5 text-xs font-mono text-[var(--booth-on-surface)]">Cmd</kbd> on Mac) to bypass snapping temporarily for free placement.
           </li>
         </ul>
