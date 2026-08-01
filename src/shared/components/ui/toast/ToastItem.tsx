@@ -27,7 +27,7 @@ export function ToastItem({ toast }: ToastItemProps) {
     if (isExiting) {
       const timer = setTimeout(() => {
         removeToast(toast.id);
-      }, 350); // Matches the modal exit animation duration
+      }, 500);
       return () => clearTimeout(timer);
     }
   }, [isExiting, removeToast, toast.id]);
@@ -43,9 +43,12 @@ export function ToastItem({ toast }: ToastItemProps) {
     <div
       role={toast.tone === "error" ? "alert" : "status"}
       aria-live={toast.tone === "error" ? "assertive" : "polite"}
+      onAnimationEnd={() => {
+        if (isExiting) removeToast(toast.id);
+      }}
       className={cn(
-        "pointer-events-auto flex items-start gap-3 rounded-[var(--booth-radius-lg)] p-4 shadow-[var(--booth-elevation-3)]",
-        isExiting ? "modal-panel-exit" : "motion-toast",
+        "pointer-events-auto flex w-[min(92vw,380px)] items-start gap-3 rounded-[var(--booth-radius-lg)] p-4 shadow-[var(--booth-elevation-3)]",
+        isExiting ? "motion-toast-exit" : "motion-toast-enter",
         toast.tone === "success" &&
           "bg-[var(--booth-primary-container)] text-[var(--booth-on-primary-container)]",
         toast.tone === "info" &&

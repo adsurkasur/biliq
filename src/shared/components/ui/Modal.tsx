@@ -29,7 +29,7 @@ export function Modal({ children, title, onClose, className }: ModalProps) {
     if (isClosing) {
       const timer = setTimeout(() => {
         onClose();
-      }, 250); // Match CSS exit animation duration
+      }, document.documentElement.dataset.motion === "reduced" ? 1 : 200);
       return () => clearTimeout(timer);
     }
   }, [isClosing, onClose]);

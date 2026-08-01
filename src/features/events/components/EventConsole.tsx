@@ -68,7 +68,7 @@ export function EventConsole() {
 
   return (
     <PageShell>
-      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--booth-outline-variant)]/30 pb-6">
+      <header data-app-guide="page-header" className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--booth-outline-variant)]/30 pb-6">
         <div>
           <div className="mb-2 flex items-center gap-3">
             <BiliqLogo variant="mark" size="sm" />
@@ -86,6 +86,7 @@ export function EventConsole() {
         <div className="flex items-center gap-3">
           <Link
             href={routes.setup()}
+            data-app-guide="create-event"
             className={buttonClassName({ variant: "primary", size: "lg" })}
           >
             <Plus className="h-5 w-5" aria-hidden="true" />
@@ -93,6 +94,7 @@ export function EventConsole() {
           </Link>
           <Link
             href={routes.settings}
+            data-app-guide="app-settings"
             className={buttonClassName({ variant: "ghost-surface", size: "icon" })}
             title="Settings"
             aria-label="Open app settings"
@@ -103,7 +105,7 @@ export function EventConsole() {
       </header>
 
       {events.length ? (
-        <section className="grid gap-4">
+        <section className="grid gap-4" data-app-guide="event-list">
           <div className="flex items-center gap-2 text-[var(--booth-on-surface-variant)]">
             <Sparkles className="h-5 w-5 text-[var(--booth-primary)]" aria-hidden="true" />
             <h2 className="text-xl font-semibold text-[var(--booth-on-surface)]">
@@ -163,27 +165,27 @@ export function EventConsole() {
                   </div>
                 </div>
 
-                <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto_auto]">
+                <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4" data-app-guide="event-actions">
                   <Link
-                    href={routes.booth(event.slug)}
-                    className={buttonClassName({ variant: "dark", size: "md" })}
+                    href={routes.setup(event.slug)}
+                    className={buttonClassName({ variant: "secondary", size: "sm" })}
                   >
-                    <Camera className="h-4 w-4" aria-hidden="true" />
-                    Test & launch booth
+                    <Settings className="h-4 w-4" aria-hidden="true" />
+                    Setup
                   </Link>
                   <Link
                     href={routes.designer(event.slug)}
                     className={buttonClassName({ variant: "tonal", size: "sm" })}
                   >
                     <Palette className="h-4 w-4" aria-hidden="true" />
-                    Design
+                    Designer
                   </Link>
                   <Link
-                    href={routes.setup(event.slug)}
-                    className={buttonClassName({ variant: "secondary", size: "sm" })}
+                    href={routes.booth(event.slug)}
+                    className={buttonClassName({ variant: "dark", size: "sm" })}
                   >
-                    <Settings className="h-4 w-4" aria-hidden="true" />
-                    Edit
+                    <Camera className="h-4 w-4" aria-hidden="true" />
+                    Open booth
                   </Link>
                   <Link
                     href={routes.gallery(event.slug)}

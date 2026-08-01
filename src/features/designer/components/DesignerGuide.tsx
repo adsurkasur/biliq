@@ -117,7 +117,7 @@ const GUIDE_STEPS: GuideStep[] = [
     body: (
       <div>
         <p className="text-[var(--booth-on-surface-variant)]">
-          Select an element on the canvas to reveal corner resize handles. Drag a corner to resize it.
+          Select an element to reveal resize handles. Drag a side to change only width or height, or drag a corner to change both.
         </p>
         <ul className="mt-3 space-y-2 text-sm text-[var(--booth-on-surface-variant)]">
           <li className="flex gap-2">

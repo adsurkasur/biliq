@@ -1,13 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   AlignCenter,
   Camera,
   Check,
   Circle,
-  HelpCircle,
   Maximize2,
   Save,
   SlidersHorizontal,
@@ -70,6 +69,12 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
     goPrevStep,
     completeCheckpoint
   } = useDesignerGuide();
+
+  useEffect(() => {
+    const handleOpenGuide = () => openGuide();
+    window.addEventListener("biliq:open-designer-guide", handleOpenGuide);
+    return () => window.removeEventListener("biliq:open-designer-guide", handleOpenGuide);
+  }, [openGuide]);
 
   if (!isLoaded) {
     return (
@@ -163,21 +168,7 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
             </div>
           </div>
 
-          <EventNavigation
-            eventSlug={eventConfig.slug}
-            activeRoute="designer"
-            prefixActions={
-              <Button
-                type="button"
-                variant="ghost-surface"
-                size="sm"
-                onClick={openGuide}
-              >
-                <HelpCircle className="h-4 w-4" />
-                Guide
-              </Button>
-            }
-          />
+          <EventNavigation eventSlug={eventConfig.slug} activeRoute="designer" />
         </header>
 
         <Card elevation={0} className="flex flex-wrap items-center justify-between gap-4 border border-[var(--booth-outline-variant)]/35 p-3">
@@ -233,8 +224,8 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
           </Button>
         </Card>
 
-        <div className="grid items-start gap-5 lg:grid-cols-[240px_minmax(360px,1fr)_300px] 2xl:grid-cols-[260px_minmax(460px,1fr)_340px]">
-          <div className="grid gap-5 lg:sticky lg:top-5">
+        <div className="grid min-w-0 items-start gap-5 lg:grid-cols-[280px_minmax(360px,1fr)_300px] 2xl:grid-cols-[300px_minmax(460px,1fr)_340px]">
+          <div className="grid min-w-0 gap-5 lg:sticky lg:top-5">
             <DesignerLayerList
               layout={layout}
               overlayLayers={overlayLayers}
@@ -324,7 +315,7 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
                     <div>
                       <h2 className="text-xl font-bold">Photo {selectedSlotIndex + 1}</h2>
                       <p className="mt-1 text-sm leading-6 text-[var(--booth-on-surface-variant)]">
-                        Drag to move, then pull a corner to resize. Choose how the camera image fills this area.
+                        Drag to move. Pull a side to resize one direction, or a corner to resize both. Choose how the camera image fills this area.
                       </p>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
@@ -343,21 +334,9 @@ export function LayoutDesignerClient({ eventSlug }: LayoutDesignerClientProps) {
                         Show all
                       </Button>
                     </div>
-                    <div>
-                      <p className="mb-2 text-sm font-bold">Quick layout</p>
-                      <div className="grid grid-cols-4 gap-2">
-                        {[1, 2, 3, 4].map((count) => (
-                          <button
-                            key={count}
-                            type="button"
-                            className="booth-focus-ring rounded-[var(--booth-radius-md)] bg-[var(--booth-surface-container)] px-2 py-3 text-sm font-bold hover:bg-[var(--booth-primary-container)]"
-                            onClick={() => resetToDefaultLayout(count)}
-                          >
-                            {count}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                    <p className="rounded-[var(--booth-radius-md)] bg-[var(--booth-surface-container)] p-3 text-xs leading-5 text-[var(--booth-on-surface-variant)]">
+                      The number of photo areas follows Event Setup. Use Advanced only when you need a custom composition.
+                    </p>
                   </div>
                 ) : (
                   <div className="mt-4 rounded-[var(--booth-radius-lg)] bg-[var(--booth-surface-container)] p-4 text-sm leading-6 text-[var(--booth-on-surface-variant)]">

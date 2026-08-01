@@ -17,17 +17,19 @@ import {
 import type {
   CaptureMode,
   EventConfig,
+  FramePlacementMode,
   OverlayLayer
 } from "@/domain/events/types";
 import {
   clampCaptureCount,
   CUSTOM_LAYOUT_ID,
-  getLayoutById,
   getRecommendedLayoutIdForCaptureCount
 } from "@/domain/layouts/defaultLayouts";
+import { calculateFramePlacement } from "@/features/setup/lib/framePlacement";
 import { useToast } from "@/shared/components/ui/toast/useToast";
 import { routes } from "@/shared/config/routes";
 import { createEntityId } from "@/shared/lib/id";
+import { getImageDimensions, type ImageDimensions } from "@/shared/lib/image";
 import { toSlug } from "@/shared/lib/slug";
 
 type SaveDestination = "home" | "designer" | "booth";
@@ -54,6 +56,7 @@ export function useEventSetupForm() {
           existing
             ? {
                 ...existing,
+                framePlacement: existing.framePlacement ?? "stretch",
                 captureModes: getEnabledCaptureModes(existing),
                 gifSettings: getGifCaptureSettings(existing),
                 videoSettings: getVideoCaptureSettings(existing)
@@ -146,23 +149,73 @@ export function useEventSetupForm() {
     });
   }
 
-  function handleLayoutChange(layoutId: string) {
-    const layout = getLayoutById(layoutId);
-    updateConfig({
-      layoutId: layout.id,
-      captureCount: layout.slots.length,
-      customLayout: undefined
-    });
-  }
-
-  function handleOutputPresetChange(presetId: string) {
+  function handleOutputPresetChange(
+    presetId: string,
+    sourceDimensions?: ImageDimensions | null
+  ) {
     const preset = OUTPUT_PRESETS.find((option) => option.id === presetId);
     if (preset) {
+      const placement =
+        primaryOverlay && sourceDimensions
+          ? calculateFramePlacement(
+              sourceDimensions.width,
+              sourceDimensions.height,
+              preset.width,
+              preset.height,
+              eventConfig?.framePlacement ?? "fit"
+            )
+          : null;
       updateConfig({
         outputWidth: preset.width,
-        outputHeight: preset.height
+        outputHeight: preset.height,
+        overlayLayers: placement
+          ? overlayLayers.map((layer) =>
+              layer.id === primaryOverlay.id
+                ? {
+                    ...layer,
+                    ...placement,
+                    aspectRatioLocked: eventConfig?.framePlacement !== "stretch",
+                    updatedAt: new Date().toISOString()
+                  }
+                : layer
+            )
+          : eventConfig?.overlayLayers
       });
     }
+  }
+
+  function handleFramePlacementChange(
+    framePlacement: FramePlacementMode,
+    sourceDimensions?: ImageDimensions | null
+  ) {
+    if (!eventConfig) return;
+
+    const placement =
+      primaryOverlay && sourceDimensions
+        ? calculateFramePlacement(
+            sourceDimensions.width,
+            sourceDimensions.height,
+            eventConfig.outputWidth,
+            eventConfig.outputHeight,
+            framePlacement
+          )
+        : null;
+
+    updateConfig({
+      framePlacement,
+      overlayLayers: placement
+        ? overlayLayers.map((layer) =>
+            layer.id === primaryOverlay.id
+              ? {
+                  ...layer,
+                  ...placement,
+                  aspectRatioLocked: framePlacement !== "stretch",
+                  updatedAt: new Date().toISOString()
+                }
+              : layer
+          )
+        : eventConfig.overlayLayers
+    });
   }
 
   async function handleOverlayUpload(file?: File) {
@@ -179,28 +232,35 @@ export function useEventSetupForm() {
 
     try {
       const imageDataUrl = await readFileAsDataUrl(file);
+      const sourceDimensions = await getImageDimensions(imageDataUrl);
       const existingLayer = overlayLayers.length === 1 ? overlayLayers[0] : undefined;
       const now = new Date().toISOString();
+      const framePlacement = eventConfig.framePlacement ?? "fit";
+      const placement = calculateFramePlacement(
+        sourceDimensions.width,
+        sourceDimensions.height,
+        eventConfig.outputWidth,
+        eventConfig.outputHeight,
+        framePlacement
+      );
       const nextLayer: OverlayLayer = {
         id: existingLayer?.id ?? createEntityId("layer"),
         assetId: existingLayer?.assetId,
         name: file.name,
         imageDataUrl,
-        x: 0,
-        y: 0,
-        width: eventConfig.outputWidth,
-        height: eventConfig.outputHeight,
+        ...placement,
         rotation: 0,
         opacity: 1,
         zIndex: 0,
         visible: true,
         locked: false,
-        aspectRatioLocked: true,
+        aspectRatioLocked: framePlacement !== "stretch",
         createdAt: existingLayer?.createdAt ?? now,
         updatedAt: now
       };
 
       updateConfig({
+        framePlacement,
         overlayDataUrl: undefined,
         overlayLayers: [nextLayer]
       });
@@ -280,7 +340,7 @@ export function useEventSetupForm() {
   return {
     eventConfig,
     handleCaptureCountChange,
-    handleLayoutChange,
+    handleFramePlacementChange,
     handleOutputPresetChange,
     handleOverlayUpload,
     isLoaded,

@@ -96,7 +96,7 @@ export function PhotoDetailClient({ photoId }: PhotoDetailClientProps) {
         </header>
 
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <Card className="result-reveal p-4">
+          <Card className="result-reveal p-4" data-app-guide="capture-result">
             {kind === "video" && photo.mediaDataUrl ? (
               <video
                 src={photo.mediaDataUrl}
@@ -114,7 +114,7 @@ export function PhotoDetailClient({ photoId }: PhotoDetailClientProps) {
             )}
           </Card>
 
-          <aside className="grid content-start gap-4">
+          <aside className="grid content-start gap-4" data-app-guide="capture-actions">
             <Card className="motion-card p-5">
               <p className="text-sm font-semibold uppercase tracking-wide text-[var(--booth-on-surface-variant)]">
                 Saved

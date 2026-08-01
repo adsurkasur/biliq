@@ -113,7 +113,7 @@ export function BoothCaptureSurface({
             </div>
           ) : null}
 
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-4 p-5 text-center">
+          <div data-app-guide="capture-controls" className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-4 p-5 text-center">
             {canStart && enabledModes.length > 1 ? (
               <div
                 className="pointer-events-auto grid max-w-2xl grid-cols-2 gap-2 rounded-[var(--booth-radius-2xl)] border border-white/10 bg-stone-950/72 p-2 shadow-[var(--booth-elevation-3)] backdrop-blur-md sm:grid-cols-4"

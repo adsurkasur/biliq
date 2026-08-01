@@ -8,6 +8,10 @@ export type TransformAction =
   | "resize-tr" 
   | "resize-bl" 
   | "resize-br" 
+  | "resize-t"
+  | "resize-r"
+  | "resize-b"
+  | "resize-l"
   | "rotate";
 
 interface DesignerTransformHandlesProps {
@@ -44,6 +48,8 @@ export function DesignerTransformHandles({
 
   const handleClass =
     "absolute h-6 w-6 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/40 bg-[var(--booth-primary)] shadow-md touch-none pointer-events-auto hover:scale-110 active:scale-95 transition-transform grid place-items-center";
+  const sideHandleClass =
+    "absolute rounded-full border border-white/55 bg-[var(--booth-primary)] shadow-md touch-none pointer-events-auto transition-transform hover:scale-110 active:scale-95";
 
   return (
     <div
@@ -84,6 +90,50 @@ export function DesignerTransformHandles({
       {/* Resize handles */}
       {canResize && (
         <>
+            <button
+              type="button"
+              className={cn(sideHandleClass, "left-1/2 top-0 h-3 w-8 -translate-x-1/2 -translate-y-1/2 cursor-ns-resize")}
+              aria-label="Resize height from top"
+              title="Drag to resize vertically. Hold Shift to keep proportions."
+              onPointerDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onPointerDown(e, "resize-t");
+              }}
+            />
+            <button
+              type="button"
+              className={cn(sideHandleClass, "right-0 top-1/2 h-8 w-3 translate-x-1/2 -translate-y-1/2 cursor-ew-resize")}
+              aria-label="Resize width from right"
+              title="Drag to resize horizontally. Hold Shift to keep proportions."
+              onPointerDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onPointerDown(e, "resize-r");
+              }}
+            />
+            <button
+              type="button"
+              className={cn(sideHandleClass, "bottom-0 left-1/2 h-3 w-8 -translate-x-1/2 translate-y-1/2 cursor-ns-resize")}
+              aria-label="Resize height from bottom"
+              title="Drag to resize vertically. Hold Shift to keep proportions."
+              onPointerDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onPointerDown(e, "resize-b");
+              }}
+            />
+            <button
+              type="button"
+              className={cn(sideHandleClass, "left-0 top-1/2 h-8 w-3 -translate-x-1/2 -translate-y-1/2 cursor-ew-resize")}
+              aria-label="Resize width from left"
+              title="Drag to resize horizontally. Hold Shift to keep proportions."
+              onPointerDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onPointerDown(e, "resize-l");
+              }}
+            />
             <button
               type="button"
               className={cn(handleClass, "left-0 top-0 cursor-nwse-resize")}

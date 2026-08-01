@@ -4,6 +4,8 @@ export type PrinterMode = "browser-print";
 
 export type CaptureMode = "photo" | "gif" | "boomerang" | "video";
 
+export type FramePlacementMode = "fit" | "fill" | "stretch";
+
 export interface GifCaptureSettings {
   frameCount: number;
   frameDelayMs: number;
@@ -46,6 +48,7 @@ export interface EventConfig {
   outputHeight: number;
   layoutId: string;
   customLayout?: LayoutDefinition;
+  framePlacement?: FramePlacementMode;
   overlayDataUrl?: string; // Legacy fallback
   overlayLayers?: OverlayLayer[];
   overlayUrl?: string;

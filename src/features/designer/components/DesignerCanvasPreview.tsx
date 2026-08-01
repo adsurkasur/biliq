@@ -89,20 +89,28 @@ export function DesignerCanvasPreview({
 
       if (dragState.action === "move" || dragState.action.startsWith("resize-")) {
         const isResize = dragState.action.startsWith("resize-");
-        const isLeft = isResize && dragState.action.includes("l");
-        const isTop = isResize && dragState.action.includes("t");
+        const isLeft = isResize && ["resize-tl", "resize-bl", "resize-l"].includes(dragState.action);
+        const isRight = isResize && ["resize-tr", "resize-br", "resize-r"].includes(dragState.action);
+        const isTop = isResize && ["resize-tl", "resize-tr", "resize-t"].includes(dragState.action);
+        const isBottom = isResize && ["resize-bl", "resize-br", "resize-b"].includes(dragState.action);
+        const affectsHorizontal = isLeft || isRight;
+        const affectsVertical = isTop || isBottom;
+        const isCorner = affectsHorizontal && affectsVertical;
+        const preserveAspect = Boolean(
+          isResize && (e.shiftKey || (isCorner && dragState.aspectRatioLocked))
+        );
 
         if (isResize) {
-          let dw = isLeft ? -rawDeltaX : rawDeltaX;
-          let dh = isTop ? -rawDeltaY : rawDeltaY;
+          let dw = affectsHorizontal ? (isLeft ? -rawDeltaX : rawDeltaX) : 0;
+          let dh = affectsVertical ? (isTop ? -rawDeltaY : rawDeltaY) : 0;
 
           if (e.altKey) {
-            dw *= 2;
-            dh *= 2;
+            if (affectsHorizontal) dw *= 2;
+            if (affectsVertical) dh *= 2;
           }
 
-          if (dragState.aspectRatioLocked || e.shiftKey) {
-            if (Math.abs(dw) > Math.abs(dh)) {
+          if (preserveAspect) {
+            if (!affectsVertical || Math.abs(dw) > Math.abs(dh)) {
               dh = dw / dragState.aspectRatio;
             } else {
               dw = dh * dragState.aspectRatio;
@@ -112,7 +120,7 @@ export function DesignerCanvasPreview({
           nextWidth = Math.max(MIN_SIZE, dragState.initialWidth + dw);
           nextHeight = Math.max(MIN_SIZE, dragState.initialHeight + dh);
 
-          if (dragState.aspectRatioLocked || e.shiftKey) {
+          if (preserveAspect) {
             if (nextWidth === MIN_SIZE) {
               nextHeight = nextWidth / dragState.aspectRatio;
             } else if (nextHeight === MIN_SIZE) {
@@ -126,8 +134,16 @@ export function DesignerCanvasPreview({
             nextX = cx - nextWidth / 2;
             nextY = cy - nextHeight / 2;
           } else {
-            nextX = isLeft ? dragState.initialX + dragState.initialWidth - nextWidth : dragState.initialX;
-            nextY = isTop ? dragState.initialY + dragState.initialHeight - nextHeight : dragState.initialY;
+            nextX = isLeft
+              ? dragState.initialX + dragState.initialWidth - nextWidth
+              : preserveAspect && !affectsHorizontal
+                ? dragState.initialX + (dragState.initialWidth - nextWidth) / 2
+                : dragState.initialX;
+            nextY = isTop
+              ? dragState.initialY + dragState.initialHeight - nextHeight
+              : preserveAspect && !affectsVertical
+                ? dragState.initialY + (dragState.initialHeight - nextHeight) / 2
+                : dragState.initialY;
           }
         } else {
           nextX = dragState.initialX + rawDeltaX;
@@ -220,7 +236,7 @@ export function DesignerCanvasPreview({
 
           const snapsX: (SnapPoint | null)[] = [];
           if (!isResize || isLeft) snapsX.push(evaluateSnap(nextX, vTargetsLeft, "vertical"));
-          if (!isResize || !isLeft) snapsX.push(evaluateSnap(nextX + nextWidth, vTargetsRight, "vertical"));
+          if (!isResize || isRight) snapsX.push(evaluateSnap(nextX + nextWidth, vTargetsRight, "vertical"));
           if (!isResize) snapsX.push(evaluateSnap(nextX + nextWidth / 2, vTargetsCenter, "vertical"));
 
           for (const s of snapsX) {
@@ -229,7 +245,7 @@ export function DesignerCanvasPreview({
 
           const snapsY: (SnapPoint | null)[] = [];
           if (!isResize || isTop) snapsY.push(evaluateSnap(nextY, hTargetsTop, "horizontal"));
-          if (!isResize || !isTop) snapsY.push(evaluateSnap(nextY + nextHeight, hTargetsBottom, "horizontal"));
+          if (!isResize || isBottom) snapsY.push(evaluateSnap(nextY + nextHeight, hTargetsBottom, "horizontal"));
           if (!isResize) snapsY.push(evaluateSnap(nextY + nextHeight / 2, hTargetsCenter, "horizontal"));
 
           for (const s of snapsY) {
@@ -237,7 +253,7 @@ export function DesignerCanvasPreview({
           }
 
           if (isResize) {
-            if (dragState.aspectRatioLocked || e.shiftKey) {
+            if (preserveAspect) {
               let snap: SnapPoint | null = null;
               if (bestSnapX && bestSnapY) {
                 snap = Math.abs(bestSnapX.delta) < Math.abs(bestSnapY.delta) ? bestSnapX : bestSnapY;
@@ -264,8 +280,16 @@ export function DesignerCanvasPreview({
                   nextX = dragState.initialX + dragState.initialWidth / 2 - nextWidth / 2;
                   nextY = dragState.initialY + dragState.initialHeight / 2 - nextHeight / 2;
                 } else {
-                  nextX = isLeft ? dragState.initialX + dragState.initialWidth - nextWidth : dragState.initialX;
-                  nextY = isTop ? dragState.initialY + dragState.initialHeight - nextHeight : dragState.initialY;
+                  nextX = isLeft
+                    ? dragState.initialX + dragState.initialWidth - nextWidth
+                    : !affectsHorizontal
+                      ? dragState.initialX + (dragState.initialWidth - nextWidth) / 2
+                      : dragState.initialX;
+                  nextY = isTop
+                    ? dragState.initialY + dragState.initialHeight - nextHeight
+                    : !affectsVertical
+                      ? dragState.initialY + (dragState.initialHeight - nextHeight) / 2
+                      : dragState.initialY;
                 }
                 guides.push({ type: snap.type, pos: snap.pos });
               }

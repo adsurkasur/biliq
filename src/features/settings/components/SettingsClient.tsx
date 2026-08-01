@@ -48,12 +48,19 @@ function SegmentedControl<T extends string>({
 }
 
 export function SettingsClient() {
-  const { themeMode, motionPreference, setThemeMode, setMotionPreference } = useAppPreferences();
+  const {
+    themeMode,
+    motionPreference,
+    resolvedTheme,
+    resolvedMotion,
+    setThemeMode,
+    setMotionPreference
+  } = useAppPreferences();
 
   return (
     <div className="grid gap-6">
       {/* Appearance */}
-      <Card className="motion-card grid gap-5 p-6">
+      <Card className="motion-card grid gap-5 p-6" data-app-guide="theme-settings">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-[var(--booth-primary)]">
             Appearance
@@ -77,13 +84,14 @@ export function SettingsClient() {
           ]}
         />
 
-        <p className="text-xs text-[var(--booth-on-surface-variant)]">
-          Stored in your browser as <code className="font-mono bg-[var(--booth-surface-container-high)] px-1 rounded text-[0.75rem]">biliq-theme-mode</code>. Resets if you clear browser storage.
+        <p className="rounded-[var(--booth-radius-md)] bg-[var(--booth-surface-container)] px-4 py-3 text-sm text-[var(--booth-on-surface-variant)]">
+          Currently using <strong className="text-[var(--booth-on-surface)]">{resolvedTheme} mode</strong>
+          {themeMode === "system" ? " from your device setting." : "."}
         </p>
       </Card>
 
       {/* Motion */}
-      <Card className="motion-card grid gap-5 p-6">
+      <Card className="motion-card grid gap-5 p-6" data-app-guide="motion-settings">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-[var(--booth-primary)]">
             Accessibility
@@ -107,13 +115,14 @@ export function SettingsClient() {
           ]}
         />
 
-        <p className="text-xs text-[var(--booth-on-surface-variant)]">
-          Stored as <code className="font-mono bg-[var(--booth-surface-container-high)] px-1 rounded text-[0.75rem]">biliq-motion-preference</code>. System mode uses OS <code className="font-mono bg-[var(--booth-surface-container-high)] px-1 rounded text-[0.75rem]">prefers-reduced-motion</code>.
+        <p className="rounded-[var(--booth-radius-md)] bg-[var(--booth-surface-container)] px-4 py-3 text-sm text-[var(--booth-on-surface-variant)]">
+          Currently using <strong className="text-[var(--booth-on-surface)]">{resolvedMotion} motion</strong>
+          {motionPreference === "system" ? " from your device setting." : "."}
         </p>
       </Card>
 
       {/* Help & About */}
-      <Card className="motion-card grid gap-4 p-6">
+      <Card className="motion-card grid gap-4 p-6" data-app-guide="help-settings">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-[var(--booth-primary)]">
             Help

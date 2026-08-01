@@ -97,6 +97,7 @@ export function createDefaultEventConfig(
     outputWidth: preset.width,
     outputHeight: preset.height,
     layoutId: DEFAULT_LAYOUT_ID,
+    framePlacement: "fit",
     printerMode: "browser-print",
     createdAt: now,
     updatedAt: now,

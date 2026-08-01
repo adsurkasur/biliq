@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import {
+  AlertTriangle,
   ArrowLeft,
   ArrowRight,
   Camera,
@@ -11,6 +12,9 @@ import {
   ImagePlus,
   Images,
   LayoutTemplate,
+  Maximize2,
+  Minimize2,
+  MoveDiagonal2,
   Palette,
   Play,
   Repeat2,
@@ -28,12 +32,12 @@ import {
   CAPTURE_MODE_DESCRIPTIONS,
   CAPTURE_MODE_LABELS
 } from "@/domain/events/captureModes";
-import type { CaptureMode } from "@/domain/events/types";
+import type { CaptureMode, FramePlacementMode } from "@/domain/events/types";
 import {
   clampCaptureCount,
-  defaultLayouts,
   getLayoutById
 } from "@/domain/layouts/defaultLayouts";
+import { hasAspectRatioMismatch } from "@/features/setup/lib/framePlacement";
 import { CAPTURE_COUNT_OPTIONS } from "@/features/setup/lib/eventFormDefaults";
 import { useEventSetupForm } from "@/features/setup/hooks/useEventSetupForm";
 import { useOverlayDimensions } from "@/features/setup/hooks/useOverlayDimensions";
@@ -67,7 +71,7 @@ export function EventSetupForm() {
   const {
     eventConfig,
     handleCaptureCountChange,
-    handleLayoutChange,
+    handleFramePlacementChange,
     handleOutputPresetChange,
     handleOverlayUpload,
     isExistingEvent,
@@ -103,6 +107,16 @@ export function EventSetupForm() {
   const enabledCaptureModes = getEnabledCaptureModes(eventConfig);
   const gifSettings = getGifCaptureSettings(eventConfig);
   const videoSettings = getVideoCaptureSettings(eventConfig);
+  const framePlacement = eventConfig.framePlacement ?? "fit";
+  const frameHasRatioMismatch = Boolean(
+    overlayDimensions &&
+      hasAspectRatioMismatch(
+        overlayDimensions.width,
+        overlayDimensions.height,
+        eventConfig.outputWidth,
+        eventConfig.outputHeight
+      )
+  );
   function goNext() {
     if (step === 0 && !eventConfig?.name.trim()) return;
     setStep((current) => Math.min(current + 1, STEPS.length - 1));
@@ -110,7 +124,7 @@ export function EventSetupForm() {
 
   return (
     <div className="grid gap-6">
-      <Card elevation={0} className="border border-[var(--booth-outline-variant)]/35 p-3">
+      <Card elevation={0} className="border border-[var(--booth-outline-variant)]/35 p-3" data-app-guide="setup-progress">
         <ol className="grid gap-2 md:grid-cols-3" aria-label="Event setup progress">
           {STEPS.map((item, index) => {
             const isActive = index === step;
@@ -159,7 +173,7 @@ export function EventSetupForm() {
       </Card>
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden" data-app-guide="setup-form">
           <div className="border-b border-[var(--booth-outline-variant)]/25 px-6 py-5 sm:px-8">
             <div className="flex items-start gap-3">
               <span className="grid h-10 w-10 flex-none place-items-center rounded-full bg-[var(--booth-primary-container)] text-[var(--booth-on-primary-container)]">
@@ -432,11 +446,14 @@ export function EventSetupForm() {
                     </select>
                   </label>
 
-                  <details className="rounded-[var(--booth-radius-lg)] border border-[var(--booth-outline-variant)]/35 bg-[var(--booth-surface-container-low)] p-4">
-                    <summary className="cursor-pointer text-sm font-bold text-[var(--booth-on-surface)]">
-                      Advanced event address
+                  <details className="self-end overflow-hidden rounded-[var(--booth-radius-lg)] border border-[var(--booth-outline-variant)]/35 bg-[var(--booth-surface-container-low)]">
+                    <summary className="booth-focus-ring flex min-h-12 cursor-pointer items-center justify-between gap-3 px-4 py-3 text-sm font-bold text-[var(--booth-on-surface)]">
+                      <span>Advanced event address</span>
+                      <span className="min-w-0 truncate text-xs font-medium text-[var(--booth-on-surface-variant)]">
+                        /{eventConfig.slug}
+                      </span>
                     </summary>
-                    <label className="mt-4 grid gap-2">
+                    <label className="grid gap-2 px-4 pb-4 pt-1">
                       <span className="text-xs font-bold uppercase tracking-wide text-[var(--booth-on-surface-variant)]">
                         Event slug
                       </span>
@@ -464,7 +481,7 @@ export function EventSetupForm() {
                         <button
                           key={preset.id}
                           type="button"
-                          onClick={() => handleOutputPresetChange(preset.id)}
+                          onClick={() => handleOutputPresetChange(preset.id, overlayDimensions)}
                           className={cn(
                             "booth-focus-ring flex items-center gap-4 rounded-[var(--booth-radius-lg)] border p-4 text-left transition-all",
                             isSelected
@@ -489,36 +506,6 @@ export function EventSetupForm() {
                   </div>
                 </fieldset>
 
-                <fieldset className="grid gap-3">
-                  <legend className="text-sm font-bold text-[var(--booth-on-surface)]">
-                    Starting layout
-                  </legend>
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                    {defaultLayouts.map((layout) => {
-                      const isSelected = !eventConfig.customLayout && eventConfig.layoutId === layout.id;
-                      return (
-                        <button
-                          key={layout.id}
-                          type="button"
-                          onClick={() => handleLayoutChange(layout.id)}
-                          className={cn(
-                            "booth-focus-ring rounded-[var(--booth-radius-lg)] border p-3 text-left transition-all",
-                            isSelected
-                              ? "border-[var(--booth-primary)] bg-[var(--booth-primary-container)]/35"
-                              : "border-[var(--booth-outline-variant)]/45 hover:border-[var(--booth-primary)]"
-                          )}
-                          aria-pressed={isSelected}
-                        >
-                          <LayoutTemplate className="h-5 w-5 text-[var(--booth-primary)]" />
-                          <span className="mt-3 block text-sm font-bold">
-                            {layout.slots.length} photo{layout.slots.length > 1 ? "s" : ""}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </fieldset>
-
                 <section className="grid gap-4 rounded-[var(--booth-radius-xl)] border border-[var(--booth-outline-variant)]/35 bg-[var(--booth-surface-container-low)] p-5 sm:grid-cols-[1fr_220px]">
                   <div>
                     <div className="flex items-center gap-2">
@@ -527,8 +514,44 @@ export function EventSetupForm() {
                       <Badge tone="neutral">Optional</Badge>
                     </div>
                     <p className="mt-2 text-sm leading-6 text-[var(--booth-on-surface-variant)]">
-                      Upload a transparent PNG. Biliq will fit it to the full canvas; use Designer for precise layers.
+                      Upload a transparent PNG, then choose how it sits on the output. The photo layout already follows the session count from Step 1.
                     </p>
+                    <fieldset className="mt-4 grid gap-2">
+                      <legend className="text-xs font-bold uppercase tracking-wide text-[var(--booth-on-surface-variant)]">
+                        Frame placement
+                      </legend>
+                      <div className="grid gap-2 sm:grid-cols-3">
+                        {([
+                          { id: "fit", label: "Fit", helper: "Show all", icon: Minimize2 },
+                          { id: "fill", label: "Fill", helper: "Crop edges", icon: Maximize2 },
+                          { id: "stretch", label: "Stretch", helper: "Fill exactly", icon: MoveDiagonal2 }
+                        ] as const).map(({ id, label, helper, icon: Icon }) => (
+                          <button
+                            key={id}
+                            type="button"
+                            className={cn(
+                              "booth-focus-ring rounded-[var(--booth-radius-md)] border p-3 text-left transition-all",
+                              framePlacement === id
+                                ? "border-[var(--booth-primary)] bg-[var(--booth-primary-container)]/35"
+                                : "border-[var(--booth-outline-variant)]/45 bg-[var(--booth-surface-container-lowest)] hover:border-[var(--booth-primary)]"
+                            )}
+                            aria-pressed={framePlacement === id}
+                            onClick={() =>
+                              handleFramePlacementChange(
+                                id as FramePlacementMode,
+                                overlayDimensions
+                              )
+                            }
+                          >
+                            <Icon className="h-4 w-4 text-[var(--booth-primary)]" />
+                            <span className="mt-2 block text-sm font-bold">{label}</span>
+                            <span className="block text-xs text-[var(--booth-on-surface-variant)]">
+                              {helper}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </fieldset>
                     <div className="mt-4 flex flex-wrap gap-2">
                       <label className="booth-focus-ring inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full bg-[var(--booth-primary)] px-5 py-2.5 font-semibold text-[var(--booth-on-primary)]">
                         <ImagePlus className="h-4 w-4" />
@@ -559,9 +582,21 @@ export function EventSetupForm() {
                         </p>
                         <p>
                           {overlayDimensions
-                            ? `Source ${overlayDimensions.width} × ${overlayDimensions.height}px · fitted to ${eventConfig.outputWidth} × ${eventConfig.outputHeight}px`
+                            ? `Source ${overlayDimensions.width} × ${overlayDimensions.height}px · ${framePlacement} on ${eventConfig.outputWidth} × ${eventConfig.outputHeight}px`
                             : "Checking image…"}
                         </p>
+                        {frameHasRatioMismatch ? (
+                          <div className="mt-3 flex items-start gap-2 rounded-[var(--booth-radius-md)] bg-[var(--booth-tertiary-container)] p-3 text-[var(--booth-on-tertiary-container)]">
+                            <AlertTriangle className="mt-0.5 h-4 w-4 flex-none" />
+                            <p>
+                              Aspect ratios differ. {framePlacement === "fit"
+                                ? "Fit keeps the full frame and may leave empty space."
+                                : framePlacement === "fill"
+                                  ? "Fill keeps proportions but crops the frame edges."
+                                  : "Stretch fills the canvas but can distort the frame."}
+                            </p>
+                          </div>
+                        ) : null}
                         {overlayLayers.length > 1 ? (
                           <p className="mt-1 text-[var(--booth-tertiary)]">
                             Uploading here replaces the current {overlayLayers.length}-layer design.
@@ -579,7 +614,13 @@ export function EventSetupForm() {
                       <img
                         src={primaryOverlay.imageDataUrl}
                         alt="Current event frame preview"
-                        className="absolute inset-0 h-full w-full object-fill"
+                        className="absolute max-w-none object-fill"
+                        style={{
+                          left: `${(primaryOverlay.x / eventConfig.outputWidth) * 100}%`,
+                          top: `${(primaryOverlay.y / eventConfig.outputHeight) * 100}%`,
+                          width: `${(primaryOverlay.width / eventConfig.outputWidth) * 100}%`,
+                          height: `${(primaryOverlay.height / eventConfig.outputHeight) * 100}%`
+                        }}
                       />
                     ) : (
                       <div className="absolute inset-0 grid place-items-center p-5 text-center text-xs font-semibold text-[var(--booth-on-surface-variant)]">
@@ -706,7 +747,7 @@ export function EventSetupForm() {
           )}
         </Card>
 
-        <Card className="sticky top-6 overflow-hidden p-5">
+        <Card className="sticky top-6 overflow-hidden p-5" data-app-guide="setup-summary">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-xs font-bold uppercase tracking-wide text-[var(--booth-primary)]">
@@ -726,18 +767,19 @@ export function EventSetupForm() {
                 .map((mode) => CAPTURE_MODE_LABELS[mode])
                 .join(", ")}
             />
-            {enabledCaptureModes.includes("photo") ? (
-              <SummaryRow label="Photo layout" value={`${eventConfig.captureCount} shots`} />
-            ) : null}
-            <SummaryRow label="Countdown" value={`${eventConfig.countdownSeconds}s`} />
             <SummaryRow
-              label="Canvas"
+              label="Session"
+              value={enabledCaptureModes.includes("photo")
+                ? `${eventConfig.captureCount} photo${eventConfig.captureCount === 1 ? "" : "s"} · ${eventConfig.countdownSeconds}s timer`
+                : `${eventConfig.countdownSeconds}s timer`}
+            />
+            <SummaryRow
+              label="Output"
               value={`${eventConfig.outputWidth} × ${eventConfig.outputHeight}`}
             />
-            <SummaryRow label="Layout" value={selectedLayout.name} />
             <SummaryRow
               label="Frame"
-              value={overlayLayers.length ? `${overlayLayers.length} layer` : "None"}
+              value={overlayLayers.length ? `${framePlacement} · ${overlayLayers.length} layer` : "None"}
             />
           </div>
 

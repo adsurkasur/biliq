@@ -33,7 +33,7 @@ export function DesignerLayerList({
   const reversedLayers = [...overlayLayers].sort((a, b) => b.zIndex - a.zIndex);
 
   return (
-    <Card className="motion-card flex flex-col overflow-hidden" data-guide-target="layer-list">
+    <Card className="motion-card flex min-w-0 flex-col overflow-hidden" data-guide-target="layer-list">
       <div className="flex flex-col border-b border-[var(--booth-outline-variant)]/30 p-4">
         <p className="text-sm font-semibold uppercase tracking-wide text-[var(--booth-primary)]">
           Canvas elements
@@ -43,19 +43,19 @@ export function DesignerLayerList({
         </h2>
       </div>
 
-      <div className="flex-1 overflow-x-hidden overflow-y-auto p-4">
-        <div className="grid gap-2">
+      <div className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto p-4">
+        <div className="grid min-w-0 gap-2">
           {reversedLayers.map((layer) => (
             <div
               key={layer.id}
               className={cn(
-                "flex items-center gap-2 rounded-[var(--booth-radius-md)] border p-2 transition-all",
+                "flex min-w-0 items-center gap-2 overflow-hidden rounded-[var(--booth-radius-md)] border p-2 transition-all",
                 selectedLayerId === layer.id
                   ? "border-[var(--booth-primary)] bg-[var(--booth-primary-container)]/15"
                   : "border-[var(--booth-outline-variant)]/30 bg-[var(--booth-surface-container)] hover:border-[var(--booth-outline-variant)]"
               )}
             >
-              <GripVertical className="h-4 w-4 text-[var(--booth-on-surface-variant)]/50" />
+              <GripVertical className="h-4 w-4 flex-none text-[var(--booth-on-surface-variant)]/50" />
               <button
                 type="button"
                 className="flex min-w-0 flex-1 items-center gap-2 text-left"
@@ -75,7 +75,7 @@ export function DesignerLayerList({
                 </span>
               </button>
 
-              <div className="flex items-center gap-1">
+              <div className="flex flex-none items-center gap-1">
                 <Tooltip content="Prevent this layer from being moved, resized, or rotated.">
                   <button
                     type="button"
@@ -117,7 +117,7 @@ export function DesignerLayerList({
               <div
                 key={`slot-${index}`}
                 className={cn(
-                  "mt-2 flex items-center gap-2 rounded-[var(--booth-radius-md)] border p-2 transition-all",
+                  "mt-2 flex min-w-0 items-center gap-2 overflow-hidden rounded-[var(--booth-radius-md)] border p-2 transition-all",
                   selectedSlotIndex === index
                     ? "border-[var(--booth-primary)] bg-[var(--booth-primary-container)]/15"
                     : "border-[var(--booth-outline-variant)]/30 bg-[var(--booth-surface-container)] hover:border-[var(--booth-outline-variant)]"
@@ -125,7 +125,7 @@ export function DesignerLayerList({
               >
                 <button
                   type="button"
-                  className="flex flex-1 items-center gap-3 pl-2 text-left"
+                  className="flex min-w-0 flex-1 items-center gap-3 pl-2 text-left"
                   onClick={() => onSelectSlot(index)}
                 >
                   <Camera className="h-4 w-4 text-[var(--booth-on-surface-variant)]" />
