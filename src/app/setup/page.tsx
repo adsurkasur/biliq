@@ -16,13 +16,16 @@ export default async function SetupPage({ searchParams }: SetupPageProps) {
           <div>
             <div className="flex items-center gap-3 mb-2">
               <BiliqLogo variant="mark" size="sm" />
-              <p className="text-sm font-semibold uppercase tracking-wide text-[var(--booth-primary)] m-0">
-                Event setup
+              <p className="m-0 text-sm font-semibold uppercase tracking-wide text-[var(--booth-primary)]">
+                Event builder
               </p>
             </div>
             <h1 className="mt-2 text-3xl font-bold text-[var(--booth-on-surface)] sm:text-4xl">
-              Configure booth event
+              Build an event guests will love
             </h1>
+            <p className="mt-2 max-w-2xl text-sm font-medium text-[var(--booth-on-surface-variant)]">
+              Start simple, preview every choice, and open advanced controls only when you need them.
+            </p>
           </div>
           <EventNavigation eventSlug={slug} activeRoute="setup" />
         </header>

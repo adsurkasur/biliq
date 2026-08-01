@@ -7,34 +7,61 @@ import {
   OUTPUT_PRESETS
 } from "@/domain/events/defaults";
 import {
-  ensureUniqueSlug,
+  getEffectiveOverlayLayers,
   getEventBySlug,
   upsertEventConfig
 } from "@/domain/events/storage";
-import type { EventConfig } from "@/domain/events/types";
+import type { EventConfig, OverlayLayer } from "@/domain/events/types";
 import {
   clampCaptureCount,
   CUSTOM_LAYOUT_ID,
   getLayoutById,
   getRecommendedLayoutIdForCaptureCount
 } from "@/domain/layouts/defaultLayouts";
-import { routes } from "@/shared/config/routes";
-
 import { useToast } from "@/shared/components/ui/toast/useToast";
+import { routes } from "@/shared/config/routes";
+import { createEntityId } from "@/shared/lib/id";
+import { toSlug } from "@/shared/lib/slug";
+
+type SaveDestination = "home" | "designer" | "booth";
 
 export function useEventSetupForm() {
   const router = useRouter();
   const { toast } = useToast();
   const [eventConfig, setEventConfig] = useState<EventConfig | null>(null);
-  const [overlayFileName, setOverlayFileName] = useState("");
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isProcessingOverlay, setIsProcessingOverlay] = useState(false);
+  const [slugTouched, setSlugTouched] = useState(false);
+  const [isExistingEvent, setIsExistingEvent] = useState(false);
 
   useEffect(() => {
+    let isActive = true;
     const params = new URLSearchParams(window.location.search);
     const slug = params.get("slug");
-    const existing = slug ? getEventBySlug(slug) : undefined;
 
-    setEventConfig(existing ?? createDefaultEventConfig());
-    setOverlayFileName(existing?.overlayDataUrl ? "Stored overlay" : "");
+    Promise.resolve(slug ? getEventBySlug(slug) : undefined)
+      .then((existing) => {
+        if (!isActive) return;
+        setEventConfig(existing ?? createDefaultEventConfig());
+        setSlugTouched(Boolean(existing));
+        setIsExistingEvent(Boolean(existing));
+      })
+      .catch((error) => {
+        if (!isActive) return;
+        toast(
+          error instanceof Error ? error.message : "The event setup could not load.",
+          "error"
+        );
+        setEventConfig(createDefaultEventConfig());
+      })
+      .finally(() => {
+        if (isActive) setIsLoaded(true);
+      });
+
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   const selectedPresetId = useMemo(() => {
@@ -51,8 +78,31 @@ export function useEventSetupForm() {
     );
   }, [eventConfig]);
 
+  const overlayLayers = useMemo(
+    () => (eventConfig ? getEffectiveOverlayLayers(eventConfig) : []),
+    [eventConfig]
+  );
+  const primaryOverlay = overlayLayers[overlayLayers.length - 1];
+
   function updateConfig(next: Partial<EventConfig>) {
     setEventConfig((current) => (current ? { ...current, ...next } : current));
+  }
+
+  function updateEventName(name: string) {
+    setEventConfig((current) => {
+      if (!current) return current;
+      const shouldUpdateSlug = !slugTouched || current.slug === "new-event";
+      return {
+        ...current,
+        name,
+        slug: shouldUpdateSlug ? toSlug(name) : current.slug
+      };
+    });
+  }
+
+  function updateEventSlug(slug: string) {
+    setSlugTouched(true);
+    updateConfig({ slug: toSlug(slug) });
   }
 
   function handleCaptureCountChange(captureCountValue: number) {
@@ -83,63 +133,144 @@ export function useEventSetupForm() {
     }
   }
 
-  function handleOverlayUpload(file?: File) {
-    if (!file) {
+  async function handleOverlayUpload(file?: File) {
+    if (!file || !eventConfig || isProcessingOverlay) {
       return;
     }
 
-    setOverlayFileName(file.name);
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        updateConfig({ overlayDataUrl: reader.result });
-      }
-    };
-    reader.readAsDataURL(file);
+    if (!file.type.startsWith("image/")) {
+      toast("Choose a PNG, JPG, or WebP image.", "error");
+      return;
+    }
+
+    setIsProcessingOverlay(true);
+
+    try {
+      const imageDataUrl = await readFileAsDataUrl(file);
+      const existingLayer = overlayLayers.length === 1 ? overlayLayers[0] : undefined;
+      const now = new Date().toISOString();
+      const nextLayer: OverlayLayer = {
+        id: existingLayer?.id ?? createEntityId("layer"),
+        assetId: existingLayer?.assetId,
+        name: file.name,
+        imageDataUrl,
+        x: 0,
+        y: 0,
+        width: eventConfig.outputWidth,
+        height: eventConfig.outputHeight,
+        rotation: 0,
+        opacity: 1,
+        zIndex: 0,
+        visible: true,
+        locked: false,
+        aspectRatioLocked: true,
+        createdAt: existingLayer?.createdAt ?? now,
+        updatedAt: now
+      };
+
+      updateConfig({
+        overlayDataUrl: undefined,
+        overlayLayers: [nextLayer]
+      });
+      toast(
+        overlayLayers.length > 1
+          ? "The previous layer stack was replaced with this frame."
+          : "Frame ready. Save the event to keep it.",
+        "success"
+      );
+    } catch {
+      toast("The image could not be read. Try a different file.", "error");
+    } finally {
+      setIsProcessingOverlay(false);
+    }
   }
 
   function removeOverlay() {
-    setOverlayFileName("");
-    updateConfig({ overlayDataUrl: undefined });
+    updateConfig({ overlayDataUrl: undefined, overlayLayers: [] });
+    toast("Frame removed. Save the event to apply this change.", "info");
   }
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (!eventConfig) {
+  async function saveEvent(destination: SaveDestination = "home") {
+    if (!eventConfig || isSaving || isProcessingOverlay) {
       return;
     }
 
-    const hasCustomLayout = Boolean(eventConfig.customLayout);
-    const captureCount = hasCustomLayout
-      ? clampCaptureCount(eventConfig.customLayout?.slots.length ?? eventConfig.captureCount)
-      : clampCaptureCount(eventConfig.captureCount);
-    const slug = ensureUniqueSlug(eventConfig.slug || eventConfig.name, eventConfig.id);
-    const saved = upsertEventConfig({
-      ...eventConfig,
-      name: eventConfig.name.trim() || "Untitled Event",
-      slug,
-      countdownSeconds: Math.max(0, Math.round(eventConfig.countdownSeconds)),
-      captureCount,
-      layoutId: hasCustomLayout
-        ? CUSTOM_LAYOUT_ID
-        : getRecommendedLayoutIdForCaptureCount(captureCount)
-    });
+    if (!eventConfig.name.trim()) {
+      toast("Give this event a name before continuing.", "error");
+      return;
+    }
 
-    toast("Event saved", "success");
-    router.push(routes.booth(saved.slug));
+    setIsSaving(true);
+
+    try {
+      const hasCustomLayout = Boolean(eventConfig.customLayout);
+      const captureCount = hasCustomLayout
+        ? clampCaptureCount(
+            eventConfig.customLayout?.slots.length ?? eventConfig.captureCount
+          )
+        : clampCaptureCount(eventConfig.captureCount);
+      const saved = await upsertEventConfig({
+        ...eventConfig,
+        name: eventConfig.name.trim(),
+        slug: eventConfig.slug || eventConfig.name,
+        countdownSeconds: Math.max(0, Math.round(eventConfig.countdownSeconds)),
+        captureCount,
+        layoutId: hasCustomLayout
+          ? CUSTOM_LAYOUT_ID
+          : getRecommendedLayoutIdForCaptureCount(captureCount),
+        overlayDataUrl: undefined,
+        overlayLayers
+      });
+
+      setEventConfig(saved);
+      toast("Event saved", "success");
+
+      if (destination === "designer") {
+        router.push(routes.designer(saved.slug));
+      } else if (destination === "booth") {
+        router.push(routes.booth(saved.slug));
+      } else {
+        router.push(routes.home);
+      }
+    } catch (error) {
+      toast(
+        error instanceof Error ? error.message : "The event could not be saved.",
+        "error"
+      );
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   return {
     eventConfig,
-    overlayFileName,
-    selectedPresetId,
     handleCaptureCountChange,
     handleLayoutChange,
     handleOutputPresetChange,
     handleOverlayUpload,
-    handleSubmit,
+    isLoaded,
+    isExistingEvent,
+    isProcessingOverlay,
+    isSaving,
+    overlayLayers,
+    primaryOverlay,
     removeOverlay,
-    updateConfig
+    saveEvent,
+    selectedPresetId,
+    updateConfig,
+    updateEventName,
+    updateEventSlug
   };
+}
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () =>
+      typeof reader.result === "string"
+        ? resolve(reader.result)
+        : reject(new Error("Invalid image result"));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
 }

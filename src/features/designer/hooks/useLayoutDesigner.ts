@@ -29,17 +29,37 @@ export function useLayoutDesigner(eventSlug: string) {
   
   const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(0);
   const [selectedLayerId, setSelectedLayerId] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   useEffect(() => {
-    const event = getEventBySlug(eventSlug) ?? null;
-    setEventConfig(event);
-    setLayout(event ? getScaledLayoutForEvent(event) : null);
-    
-    if (event) {
-      setOverlayLayers(getEffectiveOverlayLayers(event));
-    }
+    let isActive = true;
 
-    setIsLoaded(true);
+    getEventBySlug(eventSlug)
+      .then((event) => {
+        if (!isActive) return;
+        const resolvedEvent = event ?? null;
+        setEventConfig(resolvedEvent);
+        setLayout(resolvedEvent ? getScaledLayoutForEvent(resolvedEvent) : null);
+        setOverlayLayers(
+          resolvedEvent ? getEffectiveOverlayLayers(resolvedEvent) : []
+        );
+      })
+      .catch((error) => {
+        if (isActive) {
+          toast(
+            error instanceof Error ? error.message : "The designer could not load.",
+            "error"
+          );
+        }
+      })
+      .finally(() => {
+        if (isActive) setIsLoaded(true);
+      });
+
+    return () => {
+      isActive = false;
+    };
   }, [eventSlug]);
 
   function selectSlot(index: number) {
@@ -67,24 +87,33 @@ export function useLayoutDesigner(eventSlug: string) {
           // fallback to output size
         }
 
+        const scale = Math.min(
+          1,
+          eventConfig.outputWidth / dimensions.width,
+          eventConfig.outputHeight / dimensions.height
+        );
+        const fittedWidth = Math.max(1, Math.round(dimensions.width * scale));
+        const fittedHeight = Math.max(1, Math.round(dimensions.height * scale));
         const newLayer: OverlayLayer = {
           id: createEntityId("layer"),
           name: file.name,
           imageDataUrl,
-          x: (eventConfig.outputWidth - dimensions.width) / 2,
-          y: (eventConfig.outputHeight - dimensions.height) / 2,
-          width: dimensions.width,
-          height: dimensions.height,
+          x: Math.round((eventConfig.outputWidth - fittedWidth) / 2),
+          y: Math.round((eventConfig.outputHeight - fittedHeight) / 2),
+          width: fittedWidth,
+          height: fittedHeight,
           rotation: 0,
           opacity: 1,
           zIndex: overlayLayers.length,
           visible: true,
           locked: false,
+          aspectRatioLocked: true,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         };
         
         setOverlayLayers((current) => [...current, newLayer]);
+        setHasUnsavedChanges(true);
         selectLayer(newLayer.id);
         toast("Overlay layer added", "success");
       }
@@ -98,6 +127,7 @@ export function useLayoutDesigner(eventSlug: string) {
       setSelectedLayerId(null);
     }
     toast("Overlay layer removed", "info");
+    setHasUnsavedChanges(true);
   }
 
   function updateOverlayLayer(id: string, updates: Partial<OverlayLayer>) {
@@ -106,6 +136,7 @@ export function useLayoutDesigner(eventSlug: string) {
         layer.id === id ? { ...layer, ...updates, updatedAt: new Date().toISOString() } : layer
       )
     );
+    setHasUnsavedChanges(true);
   }
 
   function updateLayerNumber(id: string, field: LayerNumberField, value?: number) {
@@ -157,6 +188,7 @@ export function useLayoutDesigner(eventSlug: string) {
     });
     selectSlot(Math.min(nextSelectedIndex, MAX_CAPTURE_COUNT - 1));
     toast("Added a photo slot. Save to apply it to the booth.", "info");
+    setHasUnsavedChanges(true);
   }
 
   function removeSlot(index: number) {
@@ -174,6 +206,7 @@ export function useLayoutDesigner(eventSlug: string) {
       return nextLayout;
     });
     toast("Removed a photo slot. Save to apply it to the booth.", "info");
+    setHasUnsavedChanges(true);
   }
 
   function updateSlotNumber(index: number, field: SlotNumberField, value?: number) {
@@ -193,6 +226,7 @@ export function useLayoutDesigner(eventSlug: string) {
 
       return normalizeDraftLayout({ ...current, slots });
     });
+    setHasUnsavedChanges(true);
   }
 
   function updateSlotBoolean(index: number, field: "aspectRatioLocked", value: boolean) {
@@ -212,6 +246,7 @@ export function useLayoutDesigner(eventSlug: string) {
 
       return normalizeDraftLayout({ ...current, slots });
     });
+    setHasUnsavedChanges(true);
   }
 
   function updateSlotFit(index: number, fit: SlotFit) {
@@ -227,6 +262,7 @@ export function useLayoutDesigner(eventSlug: string) {
         )
       };
     });
+    setHasUnsavedChanges(true);
   }
 
   function resetToDefaultLayout(captureCount: number) {
@@ -248,13 +284,16 @@ export function useLayoutDesigner(eventSlug: string) {
         name: `Custom ${preset.slots.length}-photo layout`
       })
     );
+    setHasUnsavedChanges(true);
     selectSlot(0);
   }
 
-  function saveLayout() {
-    if (!eventConfig || !layout) {
+  async function saveLayout() {
+    if (!eventConfig || !layout || isSaving) {
       return;
     }
+
+    setIsSaving(true);
 
     const customLayout = normalizeLayoutDefinition(
       {
@@ -270,17 +309,29 @@ export function useLayoutDesigner(eventSlug: string) {
       }
     );
 
-    const saved = upsertEventConfig({
-      ...eventConfig,
-      layoutId: CUSTOM_LAYOUT_ID,
-      captureCount: customLayout.slots.length,
-      customLayout,
-      overlayLayers
-    });
+    try {
+      const saved = await upsertEventConfig({
+        ...eventConfig,
+        layoutId: CUSTOM_LAYOUT_ID,
+        captureCount: customLayout.slots.length,
+        customLayout,
+        overlayDataUrl: undefined,
+        overlayLayers
+      });
 
-    setEventConfig(saved);
-    setLayout(getScaledLayoutForEvent(saved));
-    toast("Custom layout and overlays saved", "success");
+      setEventConfig(saved);
+      setLayout(getScaledLayoutForEvent(saved));
+      setOverlayLayers(getEffectiveOverlayLayers(saved));
+      setHasUnsavedChanges(false);
+      toast("Design saved and ready for the booth", "success");
+    } catch (error) {
+      toast(
+        error instanceof Error ? error.message : "The design could not be saved.",
+        "error"
+      );
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   function updateLayout(
@@ -300,7 +351,9 @@ export function useLayoutDesigner(eventSlug: string) {
 
   return {
     eventConfig,
+    hasUnsavedChanges,
     isLoaded,
+    isSaving,
     layout,
     overlayLayers,
     selectedSlotIndex,

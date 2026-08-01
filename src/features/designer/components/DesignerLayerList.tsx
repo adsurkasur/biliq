@@ -36,14 +36,14 @@ export function DesignerLayerList({
     <Card className="motion-card flex flex-col overflow-hidden" data-guide-target="layer-list">
       <div className="flex flex-col border-b border-[var(--booth-outline-variant)]/30 p-4">
         <p className="text-sm font-semibold uppercase tracking-wide text-[var(--booth-primary)]">
-          Layers
+          Canvas elements
         </p>
         <h2 className="mt-1 text-xl font-bold text-[var(--booth-on-surface)]">
-          Hierarchy
+          What’s on the canvas
         </h2>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-x-hidden overflow-y-auto p-4">
         <div className="grid gap-2">
           {reversedLayers.map((layer) => (
             <div
@@ -58,7 +58,7 @@ export function DesignerLayerList({
               <GripVertical className="h-4 w-4 text-[var(--booth-on-surface-variant)]/50" />
               <button
                 type="button"
-                className="flex flex-1 items-center gap-2 text-left"
+                className="flex min-w-0 flex-1 items-center gap-2 text-left"
                 onClick={() => onSelectLayer(layer.id)}
               >
                 <div
@@ -70,7 +70,7 @@ export function DesignerLayerList({
                     backgroundRepeat: "no-repeat"
                   }}
                 />
-                <span className="truncate text-sm font-semibold text-[var(--booth-on-surface)]">
+                <span className="min-w-0 truncate text-sm font-semibold text-[var(--booth-on-surface)]">
                   {layer.name}
                 </span>
               </button>
@@ -81,6 +81,7 @@ export function DesignerLayerList({
                     type="button"
                     className="booth-focus-ring rounded p-1.5 text-[var(--booth-on-surface-variant)] transition-colors hover:bg-[var(--booth-surface-container-highest)] hover:text-[var(--booth-on-surface)]"
                     onClick={() => onToggleLayerLock(layer.id)}
+                    aria-label={layer.locked ? `Unlock ${layer.name}` : `Lock ${layer.name}`}
                   >
                     {layer.locked ? (
                       <Lock className="h-4 w-4" />
@@ -94,6 +95,7 @@ export function DesignerLayerList({
                     type="button"
                     className="booth-focus-ring rounded p-1.5 text-[var(--booth-on-surface-variant)] transition-colors hover:bg-[var(--booth-surface-container-highest)] hover:text-[var(--booth-on-surface)]"
                     onClick={() => onToggleLayerVisibility(layer.id)}
+                    aria-label={layer.visible ? `Hide ${layer.name}` : `Show ${layer.name}`}
                   >
                     {layer.visible ? (
                       <Eye className="h-4 w-4" />
@@ -109,7 +111,7 @@ export function DesignerLayerList({
           {/* Group slots below the overlays conceptually */}
           <div className="my-2 border-t border-[var(--booth-outline-variant)]/30 pt-4">
             <h3 className="mb-2 text-xs font-semibold uppercase text-[var(--booth-on-surface-variant)]">
-              Camera Slots
+              Photo areas
             </h3>
             {layout.slots.map((slot, index) => (
               <div
@@ -140,7 +142,7 @@ export function DesignerLayerList({
       <div className="border-t border-[var(--booth-outline-variant)]/30 p-4">
         <label className="booth-focus-ring flex cursor-pointer items-center justify-center gap-2 rounded-[var(--booth-radius-md)] bg-[var(--booth-primary-container)] px-4 py-2.5 text-sm font-semibold text-[var(--booth-on-primary-container)] transition-all hover:brightness-110 active:scale-95">
           <ImagePlus className="h-4 w-4" aria-hidden="true" />
-          Add Overlay
+          Add image layer
           <input
             type="file"
             accept="image/png,image/jpeg,image/webp"

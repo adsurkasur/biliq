@@ -83,11 +83,12 @@ export function DesignerTransformHandles({
 
       {/* Resize handles */}
       {canResize && (
-        <Tooltip content="Drag to resize. Hold Shift to keep aspect ratio. Hold Alt/Option to resize from center.">
-          <>
+        <>
             <button
               type="button"
               className={cn(handleClass, "left-0 top-0 cursor-nwse-resize")}
+              aria-label="Resize from top left"
+              title="Drag to resize. Hold Shift to keep proportions."
               onPointerDown={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -97,6 +98,8 @@ export function DesignerTransformHandles({
             <button
               type="button"
               className={cn(handleClass, "right-0 top-0 translate-x-1/2 cursor-nesw-resize")}
+              aria-label="Resize from top right"
+              title="Drag to resize. Hold Shift to keep proportions."
               onPointerDown={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -106,6 +109,8 @@ export function DesignerTransformHandles({
             <button
               type="button"
               className={cn(handleClass, "bottom-0 left-0 translate-y-1/2 cursor-nesw-resize")}
+              aria-label="Resize from bottom left"
+              title="Drag to resize. Hold Shift to keep proportions."
               onPointerDown={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -115,14 +120,15 @@ export function DesignerTransformHandles({
             <button
               type="button"
               className={cn(handleClass, "bottom-0 right-0 translate-x-1/2 translate-y-1/2 cursor-nwse-resize")}
+              aria-label="Resize from bottom right"
+              title="Drag to resize. Hold Shift to keep proportions."
               onPointerDown={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 onPointerDown(e, "resize-br");
               }}
             />
-          </>
-        </Tooltip>
+        </>
       )}
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type PointerEvent } from "react";
+import { useEffect, useId, useRef, useState, type PointerEvent } from "react";
 import { Tooltip } from "@/shared/components/ui/Tooltip";
 import { cn } from "@/shared/lib/classNames";
 
@@ -23,6 +23,7 @@ export function ScrubbableNumberField({
   disabled = false,
   onChange
 }: ScrubbableNumberFieldProps) {
+  const inputId = useId();
   const [isDragging, setIsDragging] = useState(false);
   const dragStartValueRef = useRef(value);
   const dragStartXRef = useRef(0);
@@ -113,10 +114,12 @@ export function ScrubbableNumberField({
           )}
           onPointerDown={handlePointerDown}
         >
-          <span className="flex-none">{label}</span>
+          <label htmlFor={inputId} className="flex-none">{label}</label>
         </div>
       </Tooltip>
       <input
+        id={inputId}
+        aria-label={label}
         type="number"
         value={inputValue}
         onChange={handleInputChange}

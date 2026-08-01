@@ -49,10 +49,10 @@ export function SlotEditor({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-[var(--booth-primary)]">
-            Photo slots
+            Photo areas
           </p>
           <h2 className="mt-1 text-xl font-bold text-[var(--booth-on-surface)]">
-            Numeric layout
+            Exact position & size
           </h2>
         </div>
         <Button
@@ -82,7 +82,8 @@ export function SlotEditor({
       </div>
 
       <div className="mt-5 grid gap-4">
-        {layout.slots.map((slot, index) => (
+        {layout.slots.map((slot, index) =>
+          index === selectedSlotIndex ? (
           <article
             key={index}
             className={cn(
@@ -179,7 +180,8 @@ export function SlotEditor({
               </Tooltip>
             </div>
           </article>
-        ))}
+          ) : null
+        )}
       </div>
     </Card>
   );

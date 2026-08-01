@@ -380,14 +380,14 @@ export function DesignerCanvasPreview({
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-[var(--booth-primary)]">
-            Live layout preview
+            Canvas preview
           </p>
           <h2 className="mt-1 text-xl font-bold text-[var(--booth-on-surface)]">
             {eventConfig.outputWidth} x {eventConfig.outputHeight} px
           </h2>
         </div>
         <p className="text-sm font-semibold text-[var(--booth-on-surface-variant)]">
-          {layout.slots.length} slot{layout.slots.length === 1 ? "" : "s"}, {overlayLayers.length} layer{overlayLayers.length === 1 ? "" : "s"}
+          {layout.slots.length} photo area{layout.slots.length === 1 ? "" : "s"}, {overlayLayers.length} overlay{overlayLayers.length === 1 ? "" : "s"}
         </p>
       </div>
 

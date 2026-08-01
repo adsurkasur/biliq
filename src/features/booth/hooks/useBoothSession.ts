@@ -36,10 +36,30 @@ export function useBoothSession(eventSlug: string) {
   const [savedPhoto, setSavedPhoto] = useState<PhotoRecord | null>(null);
 
   useEffect(() => {
-    setEventConfig(getEventBySlug(eventSlug) ?? null);
-    setIsEventLoaded(true);
+    let isActive = true;
+
+    getEventBySlug(eventSlug)
+      .then((event) => {
+        if (isActive) {
+          setEventConfig(event ?? null);
+        }
+      })
+      .catch((error) => {
+        if (isActive) {
+          setCameraMessage(
+            error instanceof Error ? error.message : "The event could not be loaded."
+          );
+          setEventConfig(null);
+        }
+      })
+      .finally(() => {
+        if (isActive) {
+          setIsEventLoaded(true);
+        }
+      });
 
     return () => {
+      isActive = false;
       captureTokenRef.current += 1;
       busyRef.current = false;
     };

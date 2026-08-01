@@ -9,6 +9,12 @@ import {
 import { isBrowser } from "@/shared/lib/browser";
 import { toSlug } from "@/shared/lib/slug";
 import { storageKeys } from "@/shared/config/storageKeys";
+import {
+  deleteOverlayAssetsByEventId,
+  hydrateOverlayLayers,
+  persistOverlayLayers,
+  stripOverlayPayloads
+} from "@/domain/events/overlayAssets";
 
 export function getEvents(): EventConfig[] {
   if (!isBrowser()) {
@@ -28,15 +34,17 @@ export function getEvents(): EventConfig[] {
   }
 }
 
-export function getEventBySlug(slug: string): EventConfig | undefined {
-  return getEvents().find((event) => event.slug === slug);
+export async function getEventBySlug(slug: string): Promise<EventConfig | undefined> {
+  const event = getEvents().find((candidate) => candidate.slug === slug);
+  return event ? hydrateEventOverlayLayers(event) : undefined;
 }
 
-export function getEventById(id: string): EventConfig | undefined {
-  return getEvents().find((event) => event.id === id);
+export async function getEventById(id: string): Promise<EventConfig | undefined> {
+  const event = getEvents().find((candidate) => candidate.id === id);
+  return event ? hydrateEventOverlayLayers(event) : undefined;
 }
 
-export function upsertEventConfig(eventConfig: EventConfig): EventConfig {
+export async function upsertEventConfig(eventConfig: EventConfig): Promise<EventConfig> {
   const events = getEvents();
   const existingIndex = events.findIndex((event) => event.id === eventConfig.id);
   const customLayout = eventConfig.customLayout
@@ -59,36 +67,79 @@ export function upsertEventConfig(eventConfig: EventConfig): EventConfig {
         ? presetLayout.id
         : getRecommendedLayoutIdForCaptureCount(captureCount);
   }
-  const nextEvent = {
+  const canonicalLayers = getEffectiveOverlayLayers(eventConfig);
+  const hydratedLayers = await persistOverlayLayers(eventConfig.id, canonicalLayers);
+  const nextEvent: EventConfig = {
     ...eventConfig,
     customLayout,
     captureCount,
     layoutId,
+    overlayDataUrl: undefined,
+    overlayLayers: hydratedLayers,
     slug: toSlug(eventConfig.slug || eventConfig.name),
     updatedAt: new Date().toISOString()
   };
 
+  const persistedEvent: EventConfig = {
+    ...nextEvent,
+    overlayLayers: stripOverlayPayloads(hydratedLayers)
+  };
+
+  const migratedEvents = await Promise.all(
+    events.map(async (event) => {
+      if (event.id === eventConfig.id) {
+        return event;
+      }
+
+      const layers = getEffectiveOverlayLayers(event);
+      const hasEmbeddedPayload = Boolean(event.overlayDataUrl) ||
+        layers.some((layer) => Boolean(layer.imageDataUrl));
+
+      if (!hasEmbeddedPayload) {
+        return event;
+      }
+
+      const migratedLayers = await persistOverlayLayers(event.id, layers);
+      return {
+        ...event,
+        overlayDataUrl: undefined,
+        overlayLayers: stripOverlayPayloads(migratedLayers)
+      };
+    })
+  );
+
   const nextEvents =
     existingIndex >= 0
-      ? events.map((event, index) => (index === existingIndex ? nextEvent : event))
-      : [nextEvent, ...events];
+      ? migratedEvents.map((event, index) =>
+          index === existingIndex ? persistedEvent : event
+        )
+      : [persistedEvent, ...migratedEvents];
 
-  window.localStorage.setItem(storageKeys.events, JSON.stringify(nextEvents));
+  try {
+    window.localStorage.setItem(storageKeys.events, JSON.stringify(nextEvents));
+  } catch {
+    throw new Error(
+      "The event could not be saved. Check that browser storage is available and try again."
+    );
+  }
   return nextEvent;
 }
 
-export function deleteEventConfig(id: string): void {
+export async function deleteEventConfig(id: string): Promise<void> {
   const nextEvents = getEvents().filter((event) => event.id !== id);
+  await deleteOverlayAssetsByEventId(id);
   window.localStorage.setItem(storageKeys.events, JSON.stringify(nextEvents));
 }
 
-export function deleteEventBySlug(slug: string): EventConfig | undefined {
+export async function deleteEventBySlug(slug: string): Promise<EventConfig | undefined> {
   const events = getEvents();
   const eventToDelete = events.find((event) => event.slug === slug);
 
   if (!eventToDelete) {
     return undefined;
   }
+
+  await deleteOverlayAssetsByEventId(eventToDelete.id);
 
   window.localStorage.setItem(
     storageKeys.events,
@@ -139,4 +190,17 @@ export function getEffectiveOverlayLayers(eventConfig: EventConfig): import("@/d
   }
 
   return [];
+}
+
+async function hydrateEventOverlayLayers(eventConfig: EventConfig): Promise<EventConfig> {
+  const hydratedLayers = await hydrateOverlayLayers(eventConfig.overlayLayers ?? []);
+
+  if (hydratedLayers.length > 0) {
+    return { ...eventConfig, overlayLayers: hydratedLayers, overlayDataUrl: undefined };
+  }
+
+  return {
+    ...eventConfig,
+    overlayLayers: getEffectiveOverlayLayers(eventConfig)
+  };
 }

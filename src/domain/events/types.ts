@@ -4,6 +4,7 @@ export type PrinterMode = "browser-print";
 
 export interface OverlayLayer {
   id: string;
+  assetId?: string;
   name: string;
   imageDataUrl: string;
   x: number;
